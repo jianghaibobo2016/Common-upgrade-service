@@ -1,0 +1,11 @@
+hardware_version=01.00
+uboot_version=01.00
+kernel_version=01.00
+main_rootfs_version=01.02
+backup_rootfs_version=01.01
+media_app_version=01.00
+server_app_version=01.00
+upgrade_version=01.01
+web_version=01.03
+nand_version=01.02
+product_version=01.02
