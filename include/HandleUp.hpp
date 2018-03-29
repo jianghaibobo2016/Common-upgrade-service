@@ -28,10 +28,14 @@ INT32 HandleUp::devReplyHandle(INT8 *sendtoBuff, T &s_devReply,
 		s_devReply.Result = 1;
 	} else if (result == retError) {
 		s_devReply.Result = 0;
+		printf("result0000000: %u\n", s_devReply.Result);
 	} else
 		return retError;
 	cout << "Result : " << s_devReply.Result << endl;
 	UINT8 FailReasonLen = strlen(failReason);
+	printf("FailReasonLen: %u\n", FailReasonLen);
+//	cout << "fail : len : "<<FailReasonLen<<endl;
+	cout << " fail content : " << failReason<<endl;
 	s_devReply.header.DataLen = sizeof(s_devReply.DevID)
 			+ sizeof(s_devReply.Result) + sizeof(FailReasonLen)
 			+ strlen(failReason);
@@ -49,7 +53,7 @@ INT32 HandleUp::devReplyHandle(INT8 *sendtoBuff, T &s_devReply,
 template<typename T>
 INT32 HandleUp::writeFileFromPC(INT8 *recvBuff, const INT8 *fileName) {
 	T *PCReply = (T*) recvBuff;
-	cout << "filename " << fileName << endl;
+//	cout << "filename " << fileName << endl;
 #if 1
 	/////////////app
 	ofstream fout(fileName, ios::app | ios::binary); //加入文件名

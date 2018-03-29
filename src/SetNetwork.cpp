@@ -98,7 +98,6 @@ bool SetNetworkTerminal::getNetworkConfig() {
 		Logger::GetInstance().Error("Create sock fail : %s !", strerror(errno));
 		return false;
 	}
-
 	memset(&ifr, 0, sizeof(ifr));
 	if (IFNAME == NULL) {
 		Logger::GetInstance().Error("Please set IFNAME !");
@@ -118,7 +117,6 @@ bool SetNetworkTerminal::getNetworkConfig() {
 		m_netWorkConfig.macAddr = SetNetworkTerminal::ByteToHexString(
 				ifr.ifr_hwaddr.sa_data, 6);
 	}
-
 	//ip addr
 	if (ioctl(sock, SIOCGIFADDR, &ifr) != 0) {
 
@@ -142,7 +140,7 @@ bool SetNetworkTerminal::getNetworkConfig() {
 		memcpy(&sin, &ifr.ifr_netmask, sizeof(sin));
 		m_netWorkConfig.netmaskAddr = inet_ntoa(sin.sin_addr);
 	}
-	close(sock);
+	close (sock);
 
 	//gateway
 

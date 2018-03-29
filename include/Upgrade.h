@@ -60,7 +60,7 @@ public:
 	bool upgradeStepUpgrade();
 
 	INT32 parserFileName();
-	INT32 parserItemPackage();
+	INT32 parserItemPackage(INT8 *PCRequestVersion);
 
 	INT8 *getUpgradeFile() {
 		return upgradeFile;
@@ -80,6 +80,9 @@ public:
 	INT8 *getLocalVersion() {
 		return localVersion;
 	}
+	INT8 *getUpgraderecord() {
+		return upgraderecord;
+	}
 	bool getUpResult() {
 		return upResult;
 	}
@@ -89,7 +92,7 @@ public:
 	void setUpStatus(upgradeFileStatus status) {
 		upStatus = status;
 	}
-	void setUpgraderecord(INT8 *record) {
+	void setUpgraderecord(const INT8 *record) {
 		memset(upgraderecord, 0, msgLen);
 		memcpy(upgraderecord, record, strlen(record));
 	}
@@ -140,6 +143,9 @@ public:
 	bool getEachItemUpResult() {
 		return eachItemUpStatus;
 	}
+	void setEachItemUpResult(bool result) {
+		eachItemUpStatus = result;
+	}
 	map<INT32, string>& getExtractItem() {
 		return mUpSubItem;
 	}
@@ -157,7 +163,6 @@ private:
 	map<INT32, string> mSubItems;
 	map<INT32, string> mUpSubItem;
 	UpgradeDSP *aUpSubItem;
-//	vector<UpgradeDSP*> vSubItems;
 
 };
 #endif

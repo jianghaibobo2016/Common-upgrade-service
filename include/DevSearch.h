@@ -25,8 +25,9 @@ public:
     static bool getSoftwareVersion(const INT8* item, INT8* version, const INT8* pathVersionFile);
 
     DEV_Reply_GetDevMsg *devReplyMsg;
-private:
+    //modify to private !
     SetNetworkTerminal *setNetworkTerminal;
+private:
 
 };
 

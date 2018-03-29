@@ -197,6 +197,7 @@ else
     strncpy(getnetwork.IFNAME, ifname, strlen(ifname));
     getnetwork.getNetworkConfig();
     SetNetworkTerminal terminalNet(getnetwork);
+    cout << "start ifname : "<<terminalNet.IFNAME<<endl;
     UpgradeService upgradeService(&terminalNet);
     upgradeService.start();
 

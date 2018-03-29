@@ -8,6 +8,44 @@ HandleUp::HandleUp() {
 HandleUp::~HandleUp() {
 }
 
+HandleUp& HandleUp::getInstance() {
+	static HandleUp handle;
+	return handle;
+}
+
+void HandleUp::devSearchCMDHandle(sockaddr_in recvAddr,
+		SetNetworkTerminal *setNetworkTerminal, INT32 sockfd) {
+	int tmp_server_addr_len = sizeof(struct sockaddr_in);
+	DevSearchTerminal devSearchTerminal(setNetworkTerminal);
+	SmartPtr<DEV_Reply_GetDevMsg> tmpReMsg(new DEV_Reply_GetDevMsg);
+	devSearchHandle(*tmpReMsg.get(), &devSearchTerminal);
+	cout << "headtasearchgudp  "
+			<< devSearchTerminal.devReplyMsg->header.HeadTag << endl;
+	cout << "headtag  " << tmpReMsg->header.HeadTag << endl;
+	cout << "HeadCmd  " << tmpReMsg->header.HeadCmd << endl;
+	cout << "DataLen  " << tmpReMsg->header.DataLen << endl;
+	struct sockaddr_in sin;
+	sin.sin_addr.s_addr = tmpReMsg->DevServerIP;
+	INT8 *devIP = NULL;
+	devIP = inet_ntoa(sin.sin_addr);
+	cout << "DevIP  " << tmpReMsg->DevIP << endl;
+	cout << "DevMask  " << tmpReMsg->DevMask << endl;
+	cout << "DevGateway  " << tmpReMsg->DevGateway << endl;
+	cout << "DevServerIP  " << devIP << endl;
+	cout << "DevServerPort  " << tmpReMsg->DevServerPort << endl;
+	cout << "DevMACAddress  " << tmpReMsg->DevMACAddress << endl;
+	cout << "DevID  " << tmpReMsg->DevID << endl;
+	cout << "DevType  " << tmpReMsg->DevType << endl;
+	cout << "HardVersion  " << tmpReMsg->HardVersion << endl;
+	cout << "SoftVersion  " << tmpReMsg->SoftVersion << endl;
+	cout << "DevName  " << tmpReMsg->DevName << endl;
+	sendto(sockfd, tmpReMsg.get(), sizeof(DEV_Reply_GetDevMsg), 0,
+			(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+	printf("found clint IP is:%s\n", inet_ntoa(recvAddr.sin_addr));
+	/* sendto */
+
+}
+
 INT32 HandleUp::setNetworkHandle(INT8 *recvBuff, INT8 *sendtoBuff,
 		DEV_Reply_ParameterSetting &devReplySetPara,
 		SetNetworkTerminal *setNetworkTerminal) {
@@ -45,10 +83,6 @@ INT32 HandleUp::devSearchHandle(DEV_Reply_GetDevMsg &devMsg,
 		DevSearchTerminal *devSearch) {
 
 	devMsg = *devSearch->getDevMsg(pathXml, pathVersionFile);
-	cout << "headtag  " << devMsg.header.HeadTag << endl;
-	cout << "headtasearchg  "
-			<< devSearch->getDevMsg(pathXml, pathVersionFile)->header.HeadTag
-			<< endl;
 	return retOk;
 }
 INT32 HandleUp::upgradePCrequestHandle(INT8 *recvBuff, INT8 *sendtoBuff,
@@ -67,19 +101,20 @@ INT32 HandleUp::upgradePCrequestHandle(INT8 *recvBuff, INT8 *sendtoBuff,
 	} else if (retUpStatus == lowerVersion) {
 		retUpStatus = retError;
 		strcpy(failReason, "Upgrade version Error !");
-	} else if (retUpStatus == equalVersion){
+	} else if (retUpStatus == equalVersion) {
 		retUpStatus = retError;
 		strcpy(failReason, "No need to upgrade !");
-	}else if (retUpStatus == errorVersionStatus){
+	} else if (retUpStatus == errorVersionStatus) {
 		retUpStatus = retError;
 		strcpy(failReason, "Upgrade operation Error !");
 	}
+	cout << "failReason : no need : " << failReason << endl;
 	if (devReplyHandle<DEV_Reply_DevUpgrade>(sendtoBuff, devReply, failReason,
 			retUpStatus, setNetworkTerminal) == retOk) {
 		cout << "handle ok! " << endl;
 	}
 
-	return retOk;
+	return retUpStatus;
 }
 
 INT32 HandleUp::devRequestFileInit(DEV_Request_FileProtocal &request,
@@ -97,7 +132,7 @@ INT32 HandleUp::devRequestFileInit(DEV_Request_FileProtocal &request,
 			strlen(upFileAttr.getNewSoftVersion()));
 	request.StartPosition = fileTrans.getStartPos();
 	request.FileDataLen = fileTrans.getSendLen();
-	cout << "request len : "<< request.FileDataLen <<__FUNCTION__<<endl;
+	cout << "request len : " << request.FileDataLen << __FUNCTION__ << endl;
 	return retOk;
 }
 
@@ -105,6 +140,6 @@ INT32 HandleUp::devRequestFile(DEV_Request_FileProtocal &request,
 		FileTrans &fileTrans) {
 	request.StartPosition = fileTrans.getStartPos();
 	request.FileDataLen = fileTrans.getSendLen();
-	cout << "request len : "<< request.FileDataLen <<__FUNCTION__<<endl;
+	cout << "request len : " << request.FileDataLen << __FUNCTION__ << endl;
 	return retOk;
 }

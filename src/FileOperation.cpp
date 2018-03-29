@@ -112,11 +112,11 @@ bool FileOperation::alterFileName(string filename, string newname) {
 #if 1
 bool FileOperation::extractTarFile(string fileName,
 		map<INT32, string> &subItems) {
-	if (isExistFile(fileName) != true){
-		cout << "not exist file " <<fileName<<endl;
+	if (isExistFile(fileName) != true) {
+		cout << "not exist file " << fileName << endl;
 		return false;
 	}
-	cout << " exist file " <<fileName<<endl;
+//	cout << " exist file " << fileName << endl;
 	FILE *fstream = NULL;
 	char buff[fileDownloadPathSize] = { 0 };
 	memset(buff, 0, sizeof(buff));
@@ -129,16 +129,17 @@ bool FileOperation::extractTarFile(string fileName,
 		fprintf(stderr, "execute command failed: %s", strerror(errno));
 		return false;
 	}
-	system("ls /nand/Update_File/");
+//	system("ls /nand/Update_File/");
 	char items[][32] = { 0 };
 	int num = 1, ch = 0, bufflen = 0;
 	while (NULL != fgets(buff, sizeof(buff), fstream)) {
 		printf("buff: %s\n", buff);
-		buff[strlen(buff) -1] = '\0';
+		buff[strlen(buff) - 1] = '\0';
 		subItems.insert(pair<INT32, string>(num, buff));
 		num++;
 	}
-	cout << "nusubint:: " << subItems.size() << endl;
+
+//	cout << "nusubint:: " << subItems.size() << endl;
 	map<INT32, string>::iterator iter;
 	for (iter = subItems.begin(); iter != subItems.end(); iter++)
 		cout << iter->first << ' ' << iter->second << endl;

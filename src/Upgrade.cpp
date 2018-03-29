@@ -194,10 +194,10 @@ upgradeFileStatus UpgradeDSP::getVersion() {
 					localVersion, pathVersionFile);
 		}
 	}
-	cout << "new version : " << newVersion << "local version : " << localVersion
-			<< endl;
+//	cout << "new version : " << newVersion << "local version : " << localVersion
+//			<< endl;
 	INT32 retUpStatus = compareUpgradeItem(newVersion, localVersion);
-	cout << "111retstatuc : " << retUpStatus << endl;
+//	cout << "111retstatuc : " << retUpStatus << endl;
 	if (retUpStatus > 0)
 		return higherVerison;
 	else if (retUpStatus == 0)
@@ -210,35 +210,46 @@ upgradeFileStatus UpgradeDSP::getVersion() {
 
 INT32 UpgradeDSP::parserFileName() {
 	/*DPS9903*/
-	cout << __FUNCTION__ << " file 1: " << upgradeFile << endl;
+//	cout << __FUNCTION__ << " file 1: " << upgradeFile << endl;
 	fileWithoutPath = upgradeFile + strlen(upFilePath);
 	if (compareUpgradeItem(fileWithoutPath, TerminalDevType) != 0) {
 		return retError;
 	}
-	cout << __FUNCTION__ << " file 2: " << upgradeFile << endl;
+//	cout << __FUNCTION__ << " file 2: " << upgradeFile << endl;
 	/* get NAND*//*compare item*/
 	if (getItemName() != retOk) {
 		memset(upgraderecord, 0, msgLen);
 		strcpy(upgraderecord, "Upgrade file name error !");
 		return retError;
 	}
-	cout << "file : out par paskc 3 : " << getUpgradeFile() << endl;
-	upStatus = getVersion();
-	cout << __FUNCTION__ << " upstatus : " << upStatus << endl;
-	cout << "file : out par paskc 4 : " << getUpgradeFile() << endl;
+//	cout << "file : out par paskc 3 : " << getUpgradeFile() << endl;
+	if ((upStatus = getVersion()) != higherVerison) {
+		cout << __FUNCTION__ << "() upstatus : " << upStatus << endl;
+		return retError;
+	}
+//	cout << "file : out par paskc 4 : " << getUpgradeFile() << endl;
 	return retOk;
 }
 
-INT32 UpgradeDSP::parserItemPackage() {
-	cout << __FUNCTION__ << " file 3: " << upgradeFile << endl;
+INT32 UpgradeDSP::parserItemPackage(INT8 *PCRequestVersion) {
+//	cout << __FUNCTION__ << " file 3: " << upgradeFile << endl;
 	if (CrcCheck::parser_Package(upgradeFile, newVersion, itemName) != 0) {
-		memset(upgraderecord, 0, msgLen);
-		strcpy(upgraderecord, "Upgrade file format error !");
+
+//		memset(upgraderecord, 0, msgLen);
+//		strcpy(upgraderecord, "Upgrade file format error !");
 		return retError;
 	}
+	//need //
+//	if (PCRequestVersion != NULL) {
+//		cout << "new version : "<<newVersion<<endl;
+//		cout << "pc request :: "<<PCRequestVersion<<endl;
+//		if (compareUpgradeItem(newVersion, PCRequestVersion) != 0) {
+//			return retError;
+//		}
+//	}
 	if (FileOperation::isExistFile(newTarPackage) != true) {
-		memset(upgraderecord, 0, msgLen);
-		strcpy(upgraderecord, "Upgrade file format error !");
+//		memset(upgraderecord, 0, msgLen);
+//		strcpy(upgraderecord, "Upgrade file format error !");
 		return retError;
 	} else {
 		FileOperation::deleteFile(upgradeFile);
@@ -289,8 +300,8 @@ INT32 UpgradeDSP::modifyVersionFile() {
 	return retOk;
 }
 void UpgradeDSP::clearObj() {
-	memset(upgradeFile, 0, strlen(upgradeFile));
-	memset(fileWithoutPath, 0, strlen(fileWithoutPath));
+	upgradeFile = NULL;
+	fileWithoutPath = NULL;
 	memset(newVersion, 0, strlen(newVersion));
 	memset(localVersion, 0, strlen(localVersion));
 	upStatus = equalVersion;
@@ -395,11 +406,11 @@ UpgradeDSPSubItem::~UpgradeDSPSubItem() {
 }
 bool UpgradeDSPSubItem::getSubItems() {
 	if (FileOperation::extractTarFile(productTarFile, mSubItems) != true) {
-		cout << "items num 0 : " << mSubItems.size() << endl;
+//		cout << "items num 0 : " << mSubItems.size() << endl;
 		FileOperation::deleteFile(productTarFile);
 		return false;
 	} else {
-		cout << "items num 0.1 : " << mSubItems.size() << endl;
+//		cout << "items num 0.1 : " << mSubItems.size() << endl;
 		for (UINT32 i = 1; i <= mSubItems.size(); i++) {
 			string tmp = upFilePath;
 			tmp += mSubItems[i];
@@ -407,48 +418,54 @@ bool UpgradeDSPSubItem::getSubItems() {
 		}
 	}
 	FileOperation::deleteFile(productTarFile);
-	cout << "items num 1 : " << mSubItems.size() << endl;
-	system("ls /nand/Update_File/");
+//	cout << "items num 1 : " << mSubItems.size() << endl;
+//	system("ls /nand/Update_File/");
 	return true;
 }
 INT32 UpgradeDSPSubItem::parserSubItemsFileName(UINT32 num) {
-	cout << "parsersubfilename 1 !" << endl;
+//	cout << "parsersubfilename 1 !" << endl;
 //	for (UINT32 i = 1; i <= 1; i++) {
 
-	cout << "subitemas name push back : "
-			<< const_cast<INT8 *>(mSubItems[num].c_str()) << endl;
+//	cout << "subitemas name push back : "
+//			<< const_cast<INT8 *>(mSubItems[num].c_str()) << endl;
 	/*mSubItems is AP*/
 //		SmartPtr<UpgradeDSP> tmpU(
 //				new UpgradeDSP(const_cast<INT8 *>(mSubItems[num].c_str())));
-	cout << "parsersubfilename 1.5 !" << endl;
+//	cout << "parsersubfilename 1.5 !" << endl;
 	//		UpgradeDSP *tmpU(const_cast<INT8 *>(mSubItems[i].c_str()));
 //		*aUpSubItem = *tmpU.get();
 	aUpSubItem->setUpgradeFile(const_cast<INT8 *>(mSubItems[num].c_str()));
-	//		vSubItems.push_back(tmpU.get()); // destruct
-	cout << "parsersubfilename 2 !" << endl;
-	aUpSubItem->parserFileName(); //segmentation fault
-	cout << "parsersubfilename 3 !" << endl;
-	cout << "items num 2 : " << mSubItems.size() << endl;
-	// high lower equal
-	if (aUpSubItem->getUpStatus() != higherVerison) {
-		INT8 record[msgLen] = { 0 };
-		cout << "items num 3 : " << mSubItems.size() << endl;
+//	cout << "parsersubfilename 2 !" << endl;
+	INT8 record[msgLen] = { 0 };
+	if (aUpSubItem->parserFileName() != retOk) { //segmentation fault
+
 		sprintf(record, "Can not upgrade : %s to version %s !",
 				aUpSubItem->getMemberItemName(), aUpSubItem->getNewVersion());
-		cout << "items num 3.5 : " << mSubItems.size() << endl;
 		aUpSubItem->setUpgraderecord(record);
-		cout << "items num 4 : " << mSubItems.size() << endl;
-		cout << "vvvv00000: " << aUpSubItem->getNewVersion() << endl;
+		return retError;
+	}
+//	cout << "parsersubfilename 3 !" << endl;
+//	cout << "items num 2 : " << mSubItems.size() << endl;
+	// high lower equal
+	if (aUpSubItem->getUpStatus() != higherVerison) {
+
+//		cout << "items num 3 : " << mSubItems.size() << endl;
+		sprintf(record, "Can not upgrade : %s to version %s !",
+				aUpSubItem->getMemberItemName(), aUpSubItem->getNewVersion());
+//		cout << "items num 3.5 : " << mSubItems.size() << endl;
+		aUpSubItem->setUpgraderecord(record);
+		return retError;
+//		cout << "items num 4 : " << mSubItems.size() << endl;
+//		cout << "vvvv00000: " << aUpSubItem->getNewVersion() << endl;
 //		continue;
 		//			return retError;//one item error
 	}
-//	}
-	cout << "vvvv00001: " << aUpSubItem->getNewVersion() << endl;
+//	cout << "vvvv00001: " << aUpSubItem->getNewVersion() << endl;
 	return retOk;
 }
 INT32 UpgradeDSPSubItem::upgradeItem(UINT32 num) {
-	if (aUpSubItem->parserItemPackage() == retError) {
-		cout << "errof : " << __FUNCTION__ << endl;
+	if (aUpSubItem->parserItemPackage(NULL) == retError) {
+//		cout << "errof : " << __FUNCTION__ << endl;
 		FileOperation::deleteFile(mSubItems[num]);
 		INT8 record[msgLen] = { 0 };
 		sprintf(record, "Upgrade item : %s failed !",
@@ -485,13 +502,15 @@ INT32 UpgradeDSPSubItem::excuteUpgradeShell(UINT32 num) {
 			sprintf(record, "Upgrade item : %s successed !",
 					aUpSubItem->getMemberItemName());
 			aUpSubItem->setUpResult(true);
-		} else if (strncmp(buff, SuccessUpShellRespond,
-				strlen(SuccessUpShellRespond) == 0)) {
+		} else if (strncmp(buff, FailUpShellRespond,
+				strlen(FailUpShellRespond) == 0)) {
 			memset(record, 0, msgLen);
 			sprintf(record, "Upgrade item : %s failed !",
 					aUpSubItem->getMemberItemName());
 			aUpSubItem->setUpgraderecord(record);
-			aUpSubItem->setUpResult(true);
+			aUpSubItem->setUpResult(false);
+			pclose(fstream);
+			return retError;
 		}
 		/*tmp set*/ //wuyong
 		aUpSubItem->setUpResult(true);
@@ -558,8 +577,8 @@ INT32 UpgradeDSPSubItem::modifyVersionFile() {
 	newVersionLine += aUpSubItem->getVersionFileItemName();
 	newVersionLine += "=";
 	newVersionLine += (aUpSubItem->getNewVersion() + 1);
-	cout << "version line : "<<versionLine<<endl;
-	cout << "version newwwwwwww line : "<<newVersionLine<<endl;
+	cout << "version line : " << versionLine << endl;
+	cout << "version newwwwwwww line : " << newVersionLine << endl;
 	chmod(pathVersionFile, S_IWUSR | S_IWGRP | S_IWOTH);
 	ifstream in;
 	char line[64];

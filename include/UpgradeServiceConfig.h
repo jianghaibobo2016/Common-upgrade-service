@@ -18,6 +18,7 @@ static const INT32 msgLen = 64;
 /*file trans config*/
 static const INT32 BufferSizeMax = 1400 * 32;
 static const INT32 FileTransLen = 1024 * 32;
+static const INT32 SendBufferSizeMax = 1400;
 /*file trans config*/
 
 static const INT8 *TerminalDevTypeID = "0065";
@@ -44,6 +45,7 @@ static const INT8 *LOWERVERSION =
 static const INT8 *GETVERSIONFAILED = "Get local version failed!";
 //static const INT8 *PRODUCT_TYPE = "DSP9903";
 static const INT8 *UpgradeShell = "upgrade.sh";
+static const INT8 *UpgradeShellWithPath = "/nand/Update_File/upgrade.sh";
 static const INT8 *SuccessUpShellRespond = "Upgrade successfully this time !";
 static const INT8 *FailUpShellRespond = "Fail to upgrade this time !";
 //static const INT8 *multiUpgradeShell = "upgrade_general.sh";
