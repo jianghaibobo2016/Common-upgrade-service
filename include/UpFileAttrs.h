@@ -2,6 +2,7 @@
 #define UPFILEATTRS_H
 #include "GlobDefine.h"
 #include "RCSP.h"
+#include "FileTrans.h"
 class UpFileAttrs {
 public:
 
@@ -24,7 +25,16 @@ public:
 	INT8 *getFileMD5Code() {
 		return upFileMD5code;
 	}
+	bool getInUpgradeStatus() {
+		return inUpgrading;
+	}
 
+	void setInUpgradeStatus(bool status) {
+		inUpgrading = status;
+	}
+	void setFileTransRecord(FileTrans& fileTrans) {
+		fileTransRecord = fileTrans;
+	}
 	bool clearMemberData(UpFileAttrs &);
 	~UpFileAttrs();
 private:
@@ -32,6 +42,9 @@ private:
 	INT8 *newSoftVersion; /* 20B */
 	UINT32 newSoftFileSize;
 	INT8 *upFileMD5code; /* 16B */
+
+	bool inUpgrading;
+	FileTrans fileTransRecord;
 	UpFileAttrs();
 };
 #endif /* UPFILEATTRS_H */

@@ -89,32 +89,36 @@ INT32 HandleUp::upgradePCrequestHandle(INT8 *recvBuff, INT8 *sendtoBuff,
 		DEV_Reply_DevUpgrade &devReply, UpFileAttrs &upFileAttr,
 		SetNetworkTerminal *setNetworkTerminal) {
 	INT8 failReason[128] = { 0 };
-	INT32 retUpStatus = 0;
+	upgradeFileStatus retUpStatus = errorVersionStatus;
+	INT32 status = 0;
 	retUpStatus = CMDParserUp::parserPCUpgradeCMD(recvBuff, upFileAttr,
 			failReason);
+	if (retUpStatus == higherVerison) {
+		upFileAttr.setInUpgradeStatus(true);
+	}
 	cout << "upstatus : " << retUpStatus << endl;
 
 	devReply.header.HeadCmd = 0x0003;
 	if (retUpStatus == higherVerison) {
-		retUpStatus = retOk;
+		status = retOk;
 		strcpy(failReason, "Upgrading 0%");
 	} else if (retUpStatus == lowerVersion) {
-		retUpStatus = retError;
+		status = retError;
 		strcpy(failReason, "Upgrade version Error !");
 	} else if (retUpStatus == equalVersion) {
-		retUpStatus = retError;
+		status = retError;
 		strcpy(failReason, "No need to upgrade !");
 	} else if (retUpStatus == errorVersionStatus) {
-		retUpStatus = retError;
+		status = retError;
 		strcpy(failReason, "Upgrade operation Error !");
 	}
 	cout << "failReason : no need : " << failReason << endl;
 	if (devReplyHandle<DEV_Reply_DevUpgrade>(sendtoBuff, devReply, failReason,
-			retUpStatus, setNetworkTerminal) == retOk) {
+			status, setNetworkTerminal) == retOk) {
 		cout << "handle ok! " << endl;
 	}
 
-	return retUpStatus;
+	return status;
 }
 
 INT32 HandleUp::devRequestFileInit(DEV_Request_FileProtocal &request,

@@ -11,15 +11,16 @@
 
 #include "GlobDefine.h"
 #include "Uncopyable.h"
-#include "UpFileAttrs.h"
 
-class FileTrans : private Uncopyable
+class FileTrans
 {
 public:
     FileTrans();
     ~FileTrans();
 
-    UINT32 iniPosition(UpFileAttrs &upFileAttr);
+    FileTrans& operator=(const FileTrans& fileTrans);
+
+    UINT32 iniPosition(UINT32 newSoftFileSize);
 
     void setFileRemained(const UINT32 remainedSize){fileRemained = remainedSize;}
     void setOldPercent(const UINT32 oldPercent){UpPercentageOld = oldPercent;}

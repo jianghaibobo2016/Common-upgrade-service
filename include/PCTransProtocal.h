@@ -48,7 +48,9 @@ enum PC_DEV_COMMAND{
 	CMD_DEV_FILE_TRANSPORT = 4,			  //文件传输
 	CMD_DEV_UPGRADE_REPLY = 5,            //升级反馈
 	CMD_DEV_BROADCAST_SELF_ADDRESS = 6,   //设备广播自己地址
-	CMD_WEB_REQUEST_UPGRADE = 100
+	CMD_WEB_REQUEST_UPGRADE = 100,		  //终端web升级终端
+	CMD_REQUEST_UPGRADE = 101			  //
+
 };
 /************************************1. Package defines***********************/
 //传输包结构:

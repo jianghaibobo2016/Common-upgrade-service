@@ -69,8 +69,8 @@ INT32 UDPNetTrans::socketSelect() {
 	INT32 ret_select = 0;
 	INT32 ret_recv = 0;
 	/*  超时 */
-	SmartPtr<UpFileAttrs> upFileAttrs = UpFileAttrs::createFileAttrs();
 	FileTrans fileTrans;
+	SmartPtr<UpFileAttrs> upFileAttrs = UpFileAttrs::createFileAttrs();
 	SmartPtr<DEV_Request_FileProtocal> request(new DEV_Request_FileProtocal);
 	while (!UDPStatus) {
 
@@ -96,7 +96,7 @@ INT32 UDPNetTrans::socketSelect() {
 			ret_recv = recvfrom(m_socket, buffer, BufferSizeMax, 0,
 					(struct sockaddr *) &recvSendAddr,
 					(socklen_t *) &tmp_server_addr_len); //recv_addr为服务器端地址
-			printf("recvmsg is %s, len: %d\n", buffer, ret_recv);
+//			printf("recvmsg is %s, len: %d\n", buffer, ret_recv);
 			if (ret_recv <= 0) {
 				break;
 			}
@@ -143,16 +143,26 @@ INT32 UDPNetTrans::socketSelect() {
 				if (retHandle != retOk) {
 					break;
 				}
-
+#if 0
+				if (!upFileAttrs->getInUpgradeStatus()) {
+					cout << "upstatus 1 !"<<endl;
+					fileTrans.clearFileTrans();
+					fileTrans.iniPosition(upFileAttrs->getNewSoftFileSize());
+					upFileAttrs->setInUpgradeStatus(true);
+					cout << "first request sendlen : " << fileTrans.getSendLen()
+					<< endl;
+				} else {
+					cout << "upstatus 2 !"<<endl;
+					upFileAttrs->setFileTransRecord(fileTrans);
+				}
+#endif
+#if 1
 				fileTrans.clearFileTrans();
-				fileTrans.iniPosition(*upFileAttrs.get());
-				cout << "first request sendlen : " << fileTrans.getSendLen()
-						<< endl;
+				fileTrans.iniPosition(upFileAttrs->getNewSoftFileSize());
+#endif
 				memset(request.get(), 0, sizeof(DEV_Request_FileProtocal));
-//							cout << "test 4! " << endl;
 				if (HandleUp::devRequestFileInit(*request.get(),
 						*upFileAttrs.get(), fileTrans) == retOk) {
-//								cout << "test 5! " << endl;
 					if (socketSendto((INT8*) request.get(),
 							sizeof(PC_DEV_Header) + request->header.DataLen,
 							recvSendAddr) <= 0) {
@@ -160,7 +170,6 @@ INT32 UDPNetTrans::socketSelect() {
 					} else {
 						cout << "errorsetnet 3 " << endl;
 					}
-//								cout << "test 6! " << endl;
 				} /*end send if*/
 				ofstream f(upFileAttrs->getFileDownloadPath(), ios::trunc);
 				f.close();
@@ -177,7 +186,6 @@ INT32 UDPNetTrans::socketSelect() {
 				fileTrans.changeRemainedPos().setPersentage();
 				if (HandleUp::devRequestFile(*request.get(), fileTrans)
 						== retOk) {
-//							cout << "trans 3 !" << endl;
 					if (socketSendto((INT8*) request.get(),
 							sizeof(PC_DEV_Header) + request->header.DataLen,
 							recvSendAddr) <= 0) {
@@ -479,6 +487,10 @@ INT32 UDPNetTrans::socketSelect() {
 								recvSendAddr) <= 0) {
 							cout << "sendto 3error" << endl;
 						} else {
+#if 0
+							upFileAttrs->setInUpgradeStatus(false);
+#endif
+							fileTrans.clearFileTrans();
 							cout << "errorsetnet 5  " << endl;
 						}/*end send if*/
 						break;
@@ -493,6 +505,25 @@ INT32 UDPNetTrans::socketSelect() {
 				break;
 			case CMD_WEB_REQUEST_UPGRADE: {
 				cout << "webUpg" << endl;
+				SmartPtr<DEV_Request_UpgradeReply> upgradeReply(
+						new DEV_Request_UpgradeReply);
+				INT8 replyText[msgLen] = { 0 };
+				INT8 sendtoBuffer[SendBufferSizeMax] = { 0 };
+				INT32 retUpStatus = retOk;
+				memset(sendtoBuffer, 0, SendBufferSizeMax);
+				sprintf(replyText, "Upgrade successed !");
+				upgradeReply->header.HeadCmd = 0x0005;
+				if (HandleUp::devReplyHandle<DEV_Request_UpgradeReply>(
+						sendtoBuffer, *upgradeReply.get(), replyText,
+						retUpStatus, setNetworkTerminal) == retOk) {
+				}
+				if (socketSendto((INT8*) sendtoBuffer,
+						sizeof(PC_DEV_Header) + upgradeReply->header.DataLen,
+						recvSendAddr) <= 0) {
+					cout << "sendto 3error" << endl;
+				} else {
+					cout << "errorsetnet 5  " << endl;
+				}/*end send if*/
 			}
 				break;
 			default:

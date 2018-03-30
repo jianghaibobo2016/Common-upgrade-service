@@ -24,6 +24,11 @@ NetTrans::NetTrans(int domain, int type, int protocol)
 {
     if ((m_socket = ::socket(domain, type, protocol)) < 0)
         throw SocketException("Socket creation failed (socket)");
+    int nRecvBuf=32*1024;//设置为32K
+    setsockopt(m_socket,SOL_SOCKET,SO_RCVBUF,(const char*)&nRecvBuf,sizeof(int));
+    //发送缓冲区
+    int nSendBuf=32*1024;//设置为32K
+    setsockopt(m_socket,SOL_SOCKET,SO_SNDBUF,(const char*)&nSendBuf,sizeof(int));
 }
 //NetTrans::NetTrans()
 //:m_socket(0),

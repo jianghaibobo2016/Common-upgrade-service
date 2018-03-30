@@ -303,7 +303,7 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 		strcpy(failReason, GETVERSIONFAILED);
 		return errorVersionStatus;
 	}
-	return equalVersion;
+	return errorVersionStatus;
 }
 
 bool CMDParserUp::campareNetSetMatch(INT8 *nameLen, INT8 *name,
