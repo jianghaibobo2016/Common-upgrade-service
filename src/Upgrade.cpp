@@ -150,17 +150,13 @@ INT32 UpgradeDSP::getItemName() {
 	itemName[i] = '\0';
 	fileWithoutPath -= strlen(TerminalDevType) + 1;
 
-//	cout << __FUNCTION__ << " itemname : " << itemName << endl;
 	i = 1;
 	while (i < 12) {
 		if ((compareUpgradeItem(itemsSet[i], itemsSet[11])) != 0 && i != 11) {
-//			cout << "while 1"<<endl;
 			if ((compareUpgradeItem(itemName, itemsSet[i])) != 0) {
-//				cout << "while 2"<<endl;
 				i++;
 				continue;
 			} else {
-//				cout << "while 3"<<endl;
 				if (i == 10)
 					productItem = true;
 				break;
@@ -170,7 +166,6 @@ INT32 UpgradeDSP::getItemName() {
 			return retError;
 		}
 	}
-//	cout << __FUNCTION__ << " itemname 2 : " << itemName << endl;
 	return retOk;
 }
 
@@ -210,46 +205,28 @@ upgradeFileStatus UpgradeDSP::getVersion() {
 
 INT32 UpgradeDSP::parserFileName() {
 	/*DPS9903*/
-//	cout << __FUNCTION__ << " file 1: " << upgradeFile << endl;
 	fileWithoutPath = upgradeFile + strlen(upFilePath);
 	if (compareUpgradeItem(fileWithoutPath, TerminalDevType) != 0) {
 		return retError;
 	}
-//	cout << __FUNCTION__ << " file 2: " << upgradeFile << endl;
 	/* get NAND*//*compare item*/
 	if (getItemName() != retOk) {
 		memset(upgraderecord, 0, msgLen);
 		strcpy(upgraderecord, "Upgrade file name error !");
 		return retError;
 	}
-//	cout << "file : out par paskc 3 : " << getUpgradeFile() << endl;
 	if ((upStatus = getVersion()) != higherVerison) {
 		cout << __FUNCTION__ << "() upstatus : " << upStatus << endl;
 		return retError;
 	}
-//	cout << "file : out par paskc 4 : " << getUpgradeFile() << endl;
 	return retOk;
 }
 
 INT32 UpgradeDSP::parserItemPackage(INT8 *PCRequestVersion) {
-//	cout << __FUNCTION__ << " file 3: " << upgradeFile << endl;
 	if (CrcCheck::parser_Package(upgradeFile, newVersion, itemName) != 0) {
-
-//		memset(upgraderecord, 0, msgLen);
-//		strcpy(upgraderecord, "Upgrade file format error !");
 		return retError;
 	}
-	//need //
-//	if (PCRequestVersion != NULL) {
-//		cout << "new version : "<<newVersion<<endl;
-//		cout << "pc request :: "<<PCRequestVersion<<endl;
-//		if (compareUpgradeItem(newVersion, PCRequestVersion) != 0) {
-//			return retError;
-//		}
-//	}
 	if (FileOperation::isExistFile(newTarPackage) != true) {
-//		memset(upgraderecord, 0, msgLen);
-//		strcpy(upgraderecord, "Upgrade file format error !");
 		return retError;
 	} else {
 		FileOperation::deleteFile(upgradeFile);
@@ -267,8 +244,6 @@ INT32 UpgradeDSP::modifyVersionFile() {
 	newVersionLine += getVersionFileItemName();
 	newVersionLine += "=";
 	newVersionLine += (getNewVersion() + 1);
-	cout << "lie ver:: " << versionLine << endl;
-	cout << "lie newwwwwwwwww ver:: " << newVersionLine << endl;
 
 	chmod(pathVersionFile, S_IWUSR | S_IWGRP | S_IWOTH);
 	ifstream in;
@@ -291,9 +266,6 @@ INT32 UpgradeDSP::modifyVersionFile() {
 		out << strTemp;
 		out.close();
 	} else {
-//		strResult = "open file error";
-//		PRINT_ERROR_MSG("open file error");
-//		out.close();
 		return retError;
 	}
 	chmod(pathVersionFile, S_IRUSR | S_IRGRP | S_IROTH);
@@ -406,11 +378,9 @@ UpgradeDSPSubItem::~UpgradeDSPSubItem() {
 }
 bool UpgradeDSPSubItem::getSubItems() {
 	if (FileOperation::extractTarFile(productTarFile, mSubItems) != true) {
-//		cout << "items num 0 : " << mSubItems.size() << endl;
 		FileOperation::deleteFile(productTarFile);
 		return false;
 	} else {
-//		cout << "items num 0.1 : " << mSubItems.size() << endl;
 		for (UINT32 i = 1; i <= mSubItems.size(); i++) {
 			string tmp = upFilePath;
 			tmp += mSubItems[i];
@@ -418,54 +388,29 @@ bool UpgradeDSPSubItem::getSubItems() {
 		}
 	}
 	FileOperation::deleteFile(productTarFile);
-//	cout << "items num 1 : " << mSubItems.size() << endl;
-//	system("ls /nand/Update_File/");
 	return true;
 }
 INT32 UpgradeDSPSubItem::parserSubItemsFileName(UINT32 num) {
-//	cout << "parsersubfilename 1 !" << endl;
-//	for (UINT32 i = 1; i <= 1; i++) {
-
-//	cout << "subitemas name push back : "
-//			<< const_cast<INT8 *>(mSubItems[num].c_str()) << endl;
-	/*mSubItems is AP*/
-//		SmartPtr<UpgradeDSP> tmpU(
-//				new UpgradeDSP(const_cast<INT8 *>(mSubItems[num].c_str())));
-//	cout << "parsersubfilename 1.5 !" << endl;
-	//		UpgradeDSP *tmpU(const_cast<INT8 *>(mSubItems[i].c_str()));
-//		*aUpSubItem = *tmpU.get();
 	aUpSubItem->setUpgradeFile(const_cast<INT8 *>(mSubItems[num].c_str()));
-//	cout << "parsersubfilename 2 !" << endl;
 	INT8 record[msgLen] = { 0 };
 	if (aUpSubItem->parserFileName() != retOk) { //segmentation fault
-
 		sprintf(record, "Can not upgrade : %s to version %s !",
 				aUpSubItem->getMemberItemName(), aUpSubItem->getNewVersion());
 		aUpSubItem->setUpgraderecord(record);
 		return retError;
 	}
-//	cout << "parsersubfilename 3 !" << endl;
-//	cout << "items num 2 : " << mSubItems.size() << endl;
 	// high lower equal
 	if (aUpSubItem->getUpStatus() != higherVerison) {
 
-//		cout << "items num 3 : " << mSubItems.size() << endl;
 		sprintf(record, "Can not upgrade : %s to version %s !",
 				aUpSubItem->getMemberItemName(), aUpSubItem->getNewVersion());
-//		cout << "items num 3.5 : " << mSubItems.size() << endl;
 		aUpSubItem->setUpgraderecord(record);
 		return retError;
-//		cout << "items num 4 : " << mSubItems.size() << endl;
-//		cout << "vvvv00000: " << aUpSubItem->getNewVersion() << endl;
-//		continue;
-		//			return retError;//one item error
 	}
-//	cout << "vvvv00001: " << aUpSubItem->getNewVersion() << endl;
 	return retOk;
 }
 INT32 UpgradeDSPSubItem::upgradeItem(UINT32 num) {
 	if (aUpSubItem->parserItemPackage(NULL) == retError) {
-//		cout << "errof : " << __FUNCTION__ << endl;
 		FileOperation::deleteFile(mSubItems[num]);
 		INT8 record[msgLen] = { 0 };
 		sprintf(record, "Upgrade item : %s failed !",
@@ -484,7 +429,6 @@ INT32 UpgradeDSPSubItem::excuteUpgradeShell(UINT32 num) {
 	exeCMD += upFilePath;
 	exeCMD += " && ./";
 	exeCMD += UpgradeShell;
-	cout << "cmddddddddddddd: " << exeCMD << endl;
 	if (NULL == (fstream = popen(exeCMD.c_str(), "r"))) {
 		fprintf(stderr, "execute command failed: %s", strerror(errno));
 		INT8 record[msgLen] = { 0 };
@@ -512,10 +456,10 @@ INT32 UpgradeDSPSubItem::excuteUpgradeShell(UINT32 num) {
 			pclose(fstream);
 			return retError;
 		}
-		/*tmp set*/ //wuyong
 		aUpSubItem->setUpResult(true);
 	}
 	pclose(fstream);
+	FileOperation::deleteFile(UpgradeShellWithPath);
 	return retOk;
 }
 //S_IRUSR 拥有者读
@@ -527,41 +471,6 @@ INT32 UpgradeDSPSubItem::excuteUpgradeShell(UINT32 num) {
 //* S_IROTH 其他用户读
 //* S_IWOTH 其他用户写
 //* S_IXOTH 其他用户执行
-#if 0
-INT32 UpgradeDSPSubItem::modifyVersionFile() {
-	if (!aUpSubItem->upResult)
-	return retError;
-	chmod(pathVersionFile, S_IWUSR | S_IWGRP | S_IWOTH);
-	FILE *fd = fopen(pathVersionFile, "w");
-	const INT32 readBuffSize = 64;
-	INT8 readBuff[readBuffSize] = {0};
-	while ((fgets(readBuff, readBuffSize, fd)) != NULL) {
-		if ((strncmp(readBuff, aUpSubItem->getVersionFileItemName(),
-								strlen(aUpSubItem->getVersionFileItemName()))) == 0) {
-			if ((strncmp(readBuff + aUpSubItem->getVersionFileItemName(), "=",
-									1)) != 0) {
-				Logger::GetInstance().Error(
-						"%s() : ERROR : Incomplete item : %s.\n", __FUNCTION__,
-						aUpSubItem->getVersionFileItemName());
-				break;
-			} else {
-				string versionLine;
-				versionLine += aUpSubItem->getVersionFileItemName();
-				versionLine += "=";
-				versionLine += aUpSubItem->getNewVersion();
-				memcpy(version, "V", 1);
-				memcpy(version + 1, readBuff + item_len + 1, 5);
-				version[6] = '\0';
-				get = retOk;
-				break;
-			}
-		}
-	} /*end while*/
-
-	chmod(pathVersionFile, S_IRUSR | S_IRGRP | S_IROTH);
-	return retOk;
-}
-#endif
 //(string strPort, string strKey,
 //		string strPath, string& strResult)
 INT32 UpgradeDSPSubItem::modifyVersionFile() {
@@ -577,8 +486,6 @@ INT32 UpgradeDSPSubItem::modifyVersionFile() {
 	newVersionLine += aUpSubItem->getVersionFileItemName();
 	newVersionLine += "=";
 	newVersionLine += (aUpSubItem->getNewVersion() + 1);
-	cout << "version line : " << versionLine << endl;
-	cout << "version newwwwwwww line : " << newVersionLine << endl;
 	chmod(pathVersionFile, S_IWUSR | S_IWGRP | S_IWOTH);
 	ifstream in;
 	char line[64];
@@ -600,9 +507,6 @@ INT32 UpgradeDSPSubItem::modifyVersionFile() {
 		out << strTemp;
 		out.close();
 	} else {
-//		strResult = "open file error";
-//		PRINT_ERROR_MSG("open file error");
-//		out.close();
 		return retError;
 	}
 	chmod(pathVersionFile, S_IRUSR | S_IRGRP | S_IROTH);

@@ -13,6 +13,16 @@ public:
 
 	void devSearchCMDHandle(sockaddr_in recvAddr,
 			SetNetworkTerminal *setNetworkTerminal, INT32 sockfd);
+	void devParamSetCMDHandle(sockaddr_in recvAddr, INT8 *recvBuff,
+			SetNetworkTerminal *setNetworkTerminal, INT32 sockfd);
+	void devUpgradePCRequestCMDHandle(sockaddr_in recvAddr, INT8 *recvBuff,
+			SetNetworkTerminal *setNetworkTerminal, INT32 sockfd,
+			UpFileAttrs &upFileAttr, FileTrans &fileTrans,
+			DEV_Request_FileProtocal *request);
+	void devFileTransCMDHandle(sockaddr_in recvAddr, INT8 *recvBuff,
+			SetNetworkTerminal *setNetworkTerminal, INT32 sockfd,
+			UpFileAttrs &upFileAttr, FileTrans &fileTrans,
+			DEV_Request_FileProtocal *request);
 
 	static INT32 devSearchHandle(DEV_Reply_GetDevMsg &, DevSearchTerminal *);
 

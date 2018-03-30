@@ -1,7 +1,6 @@
 #include <string.h>
 #include <iostream>
 #include <stdio.h>
-#include <stdlib.h> //system()
 #include <errno.h>
 #include "CrcCheck.h"
 #include "UpgradeServiceConfig.h"
@@ -12,7 +11,6 @@ CrcCheck::CrcCheck() {
 INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 		INT8 *itemName) {
 	if (filename == NULL) {
-		// printf("ERROR : No input file !\n");
 		return retError;
 	}
 	PACK_HEAD pack_head;
@@ -26,7 +24,6 @@ INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 
 	UINT8 buff[BUFFER_SIZE];
 	bzero(buff, BUFFER_SIZE);
-	system("ls /nand/Update_File/");
 	FILE *src_fd = fopen(filename, "rb");
 	if (src_fd == NULL) {
 		printf("errr: %s\n", strerror(errno));
@@ -35,7 +32,6 @@ INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 	}
 
 	n_read = fread(buff, 1, packhead_len, src_fd);
-	// printf("nread::%d\n", n_read);
 	memcpy(&pack_head, buff, packhead_len);
 
 	if ((strncmp(pack_head.head, HEAD, 8)) != 0) {
@@ -72,7 +68,6 @@ INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 			break;
 	}
 
-	cout << "cal:: " << crc << " packcrc:: " << pack_head.crcCode << endl;
 	if (crc != pack_head.crcCode) {
 		printf("ERROR : Crc32 check failed !\n");
 		fclose(src_fd);

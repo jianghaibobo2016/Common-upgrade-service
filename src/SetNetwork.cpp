@@ -410,27 +410,7 @@ bool SetNetworkTerminal::setNet(const INT8 *ipaddr, const INT8 *subnet,
 		close(sockfd);
 		return false;
 	}
-	// close(sockfd);
 
-	/* subnet */
-	// struct ifreq ifr;
-	// struct sockaddr_in *sin;
-	// sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-	// if (sockfd < 0)
-	// {
-	//     Logger::GetInstance().Error("Socket : %s !", strerror(errno));
-	//     return false;
-	// }
-	// memset(&ifr, 0, sizeof(ifr));
-	// if (IFNAME == NULL)
-	// {
-	//     Logger::GetInstance().Error("Please set IFNAME !");
-	//     close(sockfd);
-	//     return false;
-	// }
-	// strcpy(ifr.ifr_name, IFNAME);
-	// sin = (struct sockaddr_in *)&ifr.ifr_addr;
-	// sin->sin_family = AF_INET;
 	if (inet_aton((const INT8 *) &subnet, &(sin->sin_addr)) < 0) {
 		Logger::GetInstance().Error("Func inet_aton !");
 		close(sockfd);
@@ -449,24 +429,6 @@ bool SetNetworkTerminal::setNet(const INT8 *ipaddr, const INT8 *subnet,
 	/* gateway */
 	struct rtentry rt;
 
-	/* Delete existing defalt gateway */
-	/*     memset(&rt, 0, sizeof(rt));
-	 rt.rt_dst.sa_family = AF_INET;
-	 ((struct sockaddr_in *)&rt.rt_dst)->sin_addr.s_addr = 0;
-
-	 rt.rt_genmask.sa_family = AF_INET;
-	 ((struct sockaddr_in *)&rt.rt_genmask)->sin_addr.s_addr = 0;
-
-	 rt.rt_flags = RTF_UP;
-	 retIOCTL = ioctl(sockfd, SIOCDELRT, &ifr);
-	 cout << "retioctl:: "<<retIOCTL<<endl;
-	 if (retIOCTL < 0)
-	 {
-	 Logger::GetInstance().Error("Func ioctl !");
-	 close(sockfd);
-	 return false;
-	 }
-	 */
 
 	/* Set default gateway */
 	memset(&rt, 0, sizeof(rt));
@@ -528,9 +490,7 @@ bool SetNetworkTerminal::setNet(INT32 mac, const INT8 *macaddr) {
 
 	addr->sa_family = ARPHRD_ETHER;
 	memcpy(addr->sa_data, tmpMac, 6);
-// cout <<"macfd:: "<<fd<<endl;
 	ret = ioctl(fd, SIOCSIFHWADDR, &temp);
-	// cout << "macret:: "<<strerror(errno)<<endl;
 	if (ret != 0) {
 		Logger::GetInstance().Error("%s() : ioctl error !", __FUNCTION__);
 		close(fd);
@@ -616,11 +576,8 @@ bool CheckNetConfig::checkIP(const INT8* ipaddr, const INT32 subnetFlag) {
 	for (INT32 i = 0; i < 4; i++)
 		section[i] = new INT8[3];
 
-	// delete [] section;
 	// INT8*
 	INT32 dotIndex = 0, chIndex = 0, ipLen = strlen(ptrIP);
-	// cout << "iplen: "<<ipLen<<endl;
-	// return true;
 	if (NULL == ipaddr) {
 		Logger::GetInstance().Error("None input!");
 		delete[] section;
@@ -639,7 +596,6 @@ bool CheckNetConfig::checkIP(const INT8* ipaddr, const INT32 subnetFlag) {
 		if (strncmp(ptrIP, dot, 1) != 0) {
 
 			if (isdigit(ptrIP[0])) {
-				// cout<< "ip[0] " << ptrIP[0] << " dotindex : "<< dotIndex<< " chindex: "<< chIndex<<endl;
 				if (dotIndex > 3 || chIndex > 2) {
 					Logger::GetInstance().Error("Error input!");
 					delete[] section;
@@ -669,11 +625,9 @@ bool CheckNetConfig::checkIP(const INT8* ipaddr, const INT32 subnetFlag) {
 		delete[] section;
 		return false;
 	}
-	// cout << "whiledotindex: "  << endl;
 
 	/* check number */
 	while (dotIndex >= 0) {
-		// cout << "whiledotindex: "<<dotIndex<< " section: "<< section[dotIndex]<<endl;
 		if (subnetFlag == SUBNETFLAG) {
 			if (atoi(section[dotIndex]) > 255 || atoi(section[dotIndex]) < 0
 					|| strlen(section[dotIndex]) == 0) {
@@ -715,17 +669,14 @@ bool CheckNetConfig::checkSubnet(const INT8 *ipaddr, const INT8 *subnet) {
 		Logger::GetInstance().Error("None input!");
 		return false;
 	}
-
 	if (!checkIP(ipaddr, 0) || !checkIP(subnet, SUBNETFLAG))
 		return false;
 
 	UINT32 i = 0, hostsP1 = 0, n[4] = { 0 };
 	sscanf(subnet, "%u.%u.%u.%u", &n[3], &n[2], &n[1], &n[0]);
-	// cout <<"n1n2n3n4: "<< n[0]<< n[1]<<n[2]<<n[3]<<endl;
 	for (i = 0; i < 4; ++i)
 		hostsP1 += n[i] << (i * 8);
 	hostsP1 = ~hostsP1 + 1;
-	// printf("hostsP1:%u\n", hostsP1);
 	if ((hostsP1 & (hostsP1 - 1)) != 0)
 		return false;
 
@@ -742,7 +693,6 @@ bool CheckNetConfig::checkGateway(const INT8 *ipaddr, const INT8 *subnet,
 			|| !checkIP(gateway, 0))
 		return false;
 	UINT32 uIP = 0, uSub = 0, uGate = 0, i = 0, n[4] = { 0 };
-	// cout << "Ip: "<< ipaddr <<"sub: " << subnet<<"gateway: "<<gateway << endl;
 	sscanf(ipaddr, "%u.%u.%u.%u", &n[3], &n[2], &n[1], &n[0]);
 	for (i = 0; i < 4; ++i)
 		uIP += n[i] << (i * 8);

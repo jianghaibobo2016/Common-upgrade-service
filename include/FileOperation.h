@@ -26,8 +26,6 @@ public:
 	bool alterFileName(string fileName, string newname);
 
 	/* extrat */
-	/*T*/
-//	template <typename T>
 	static bool extractTarFile(string fileName, map<INT32, string> &subItems);
 
 protected:
@@ -36,5 +34,4 @@ protected:
 private:
 	// 工作目录
 };
-//#include "FileOperation.hpp"
 #endif /* FILEOPERATION_H_ */

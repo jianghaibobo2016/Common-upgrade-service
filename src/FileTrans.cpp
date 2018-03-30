@@ -27,7 +27,6 @@ FileTrans& FileTrans::operator=(const FileTrans& fileTrans) {
 UINT32 FileTrans::iniPosition(UINT32 newSoftFileSize) {
 	startPosition = 0;
 	fileRemained = newSoftFileSize;
-	cout << "total  size :: " << fileRemained << endl;
 	fileTotalSize = fileRemained;
 	if (fileRemained >= FileTransLen)
 		sendLen = FileTransLen;
@@ -38,46 +37,29 @@ UINT32 FileTrans::iniPosition(UINT32 newSoftFileSize) {
 	return fileRemained;
 }
 FileTrans& FileTrans::changeRemainedPos() {
-	// if (!startPosition)
-	// {
-	//     return 0;
-	// }
 	if (fileRemained >= FileTransLen) {
 		startPosition += FileTransLen;
 		fileRemained -= FileTransLen;
-		cout << "fileRemainedmmmmmmmmm: " << fileRemained << endl;
 		if (fileRemained < FileTransLen)
 			sendLen = fileRemained;
 		else
 			sendLen = FileTransLen;
-		cout << "request len : " << sendLen << __FUNCTION__ << endl;
 	} else if ((fileRemained != 0) && (fileRemained < FileTransLen)) {
 		startPosition = 0xFFFFFFFF;
 		sendLen = 0;
-		cout << "sendlenffffffffffffffffff: " << sendLen << " " << __FUNCTION__
-				<< endl;
 		fileRemained -= fileRemained;
-	}/* else if (fileRemained == 0)
-	 {
-	 startPosition = 0xFFFFFFFF;
-	 cout << "endllllllllllllllllll"<<endl;
-	 fileRemained = 0;
-	 sendLen = 0;
-	 } */
+	}
 
 	return *this;
 }
 
 INT32 FileTrans::setPersentage() {
-	cout << "fileremain: " << fileRemained << " " << "toal :: " << fileTotalSize
-			<< __FUNCTION__ << endl;
 	if (fileTotalSize == 0)
 		return retError;
 	if (fileRemained == 0)
 		UpPercentage = 50;
 	else {
 		float quotient = ((float) fileRemained / fileTotalSize) * 100;
-		cout << "quotioent: " << quotient << endl;
 		if (quotient < 100 && quotient >= 80)
 			UpPercentage = 10;
 		else if (quotient < 80 && quotient >= 60)
@@ -89,7 +71,6 @@ INT32 FileTrans::setPersentage() {
 		else if (quotient < 20 && quotient >= 0)
 			UpPercentage = 50;
 	}
-	cout << "UpPercentage : " << UpPercentage << endl;
 	return retOk;
 }
 

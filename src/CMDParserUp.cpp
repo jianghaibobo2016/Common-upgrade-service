@@ -29,39 +29,23 @@ CMDParserUp::CMDParserUp() {
 CMDParserUp::~CMDParserUp() {
 }
 UINT16 CMDParserUp::parserPCRequestHead(void *buffer, INT32 recvLen) {
-	// PC_DEV_Header *pcHead = new PC_DEV_Header();
-	// PC_DEV_Header *pcHead = NULL;
-	// pcHead = (PC_DEV_Header *)buffer;
 	PC_DEV_Header *pcHead = (PC_DEV_Header *) buffer;
-	cout << "HeadTag:: " << pcHead->HeadTag << endl;
+	cout << "pcHead->HeadTag : " << pcHead->HeadTag << endl;
 
 	if (pcHead->HeadTag != 0x0101FBFC) {
 		return (UINT16) retError;
 	}
-	cout << "headcmd00:: " << pcHead->HeadCmd << endl;
-	cout << "pcHead->DataLen:: " << pcHead->DataLen << endl;
-	cout << "recvLen:: " << recvLen << endl;
 	/* modify */
-	// if ((pcHead->DataLen != recvLen) && (pcHead->DataLen != 0))
 	if ((pcHead->DataLen != recvLen - sizeof(PC_DEV_Header))
 			&& (pcHead->DataLen != 0)) {
-//		delete pcHead;
 		return (UINT16) retError;
 	}
 	UINT16 headCMD = pcHead->HeadCmd;
-	cout << "delete" << endl;
-	// delete pcHead;
-	// pcHead = 0;
-	cout << "headcmd:: " << headCMD << endl;
 	return headCMD;
 }
 
 INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 		SetNetworkTerminal *setNetworkTerminal, INT8 &failReason) {
-	cout << "check s1 " << endl;
-
-	// PC_Request_ParameterSetting *pcSettingNet = NULL;
-	// pcSettingNet = (PC_Request_ParameterSetting*)(buffer + sizeof(PC_DEV_Header));
 	INT8 *pcSettingNet = (INT8 *) buffer;
 	pcSettingNet += sizeof(PC_DEV_Header);
 	UINT8 parameterNum = pcSettingNet[0];
