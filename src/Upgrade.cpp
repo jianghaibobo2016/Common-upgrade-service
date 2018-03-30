@@ -12,123 +12,29 @@
 #include "RCSP.h"
 using namespace std;
 using namespace FrameWork;
-#if 1
-//UpgradeDSP::UpgradeDSP() :
-//		upgradeFile(NULL), fileWithoutPath(NULL), newVersion(NULL), localVersion(
-//		NULL), upStatus(errorVersionStatus), productItem(false), itemName(
-//		NULL), upgraderecord(
-//		NULL) {
-//
-//}
 UpgradeDSP::UpgradeDSP(INT8 *upgradeFile) :
 		upgradeFile(upgradeFile), fileWithoutPath(
 				upgradeFile + strlen(upFilePath)), upStatus(errorVersionStatus), productItem(
 				false), upResult(false)
 
-// : versionNumber(versionNumber),
-//   newSoftFileSize(0),
-//    : devInfo(devInfo),
-//      fileAttrs(fileAttrs),
-//      itemsUpgrade(0),
-//      fileAbsolutePath(UPFILEABSOLUTEPATH),
-//      m_upgradeFileStatus(errorVersionStatus),
-//      singleItem(true)
 {
 	cout << "construct " << endl;
-//	fileWithoutPath = new INT8[32];
 	newVersion = new INT8[8];
 	localVersion = new INT8[8];
 	itemName = new INT8[16];
 	versionFileItemName = new INT8[32];
 	upgraderecord = new INT8[msgLen];
-//	subUpgrade = new int*[subNum];
-//	for (int i = 0; i < subNum; ++i) {
-//		subUpgrade[i] = new int[subNum];
 }
-//UpgradeDSP::UpgradeDSP(const UpgradeDSP &) {
-//
-//}
-//UpgradeDSP& UpgradeDSP::operator=(const UpgradeDSP &rhs) {
-//	cout << "========================" << endl;
-////	memcpy(upgradeFile, rhs.upgradeFile, strlen(rhs.upgradeFile));
-//	upgradeFile = rhs.upgradeFile;
-////	memcpy(fileWithoutPath, rhs.fileWithoutPath, strlen(rhs.fileWithoutPath));
-//	fileWithoutPath = rhs.fileWithoutPath;
-//	memcpy(newVersion, rhs.newVersion, strlen(rhs.newVersion));
-//	memcpy(localVersion, rhs.localVersion, strlen(rhs.localVersion));
-//	memcpy(itemName, rhs.itemName, strlen(rhs.itemName));
-//	memcpy(upgraderecord, rhs.upgraderecord, strlen(rhs.upgraderecord));
-//	cout << "========================222" << endl;
-//	return *this;
-//}
-// newSoftVersion = new INT8[20];
-// upFileMD5code = new INT8[16];
-// downloadFile = new INT8[16];
-//	devReplyDevUpgrade = new DEV_Reply_DevUpgrade();
-//}
 
 UpgradeDSP::~UpgradeDSP() {
-//	if (fileWithoutPath != NULL || newVersion != NULL || itemName != NULL
-//			|| upgraderecord != NULL) {
-	cout << "destruct1" << endl;
-//	delete[] fileWithoutPath;
 	delete[] newVersion;
 	delete[] localVersion;
 	delete[] itemName;
 	delete[] versionFileItemName;
 	delete[] upgraderecord;
-//	}
-	cout << "destruct2" << endl;
-// delete[] newSoftVersion;
-// delete[] upFileMD5code;
-// delete[] downloadFile;
-//	delete devReplyDevUpgrade;
+	cout << "destruct" << endl;
 }
 
-#if 0
-DEV_Reply_DevUpgrade *UpgradeDSP::devReplyUpgradeCheck(PC_Request_DevUpgrade *pcRequestDevUpgrade, INT8 *versionNumber)
-{
-	if (pcRequestDevUpgrade == NULL)
-	{
-		Logger::GetInstance().Error("%s() : PC request error !", __FUNCTION__);
-		return NULL;
-	}
-// memcpy(this->newSoftVersion, pcRequestDevUpgrade->NewSoftVersion, strlen(pcRequestDevUpgrade->NewSoftVersion));
-// this->newSoftFileSize = pcRequestDevUpgrade->NewSoftDocumentSize;
-// memcpy(this->upFileMD5code, pcRequestDevUpgrade->UpgradeFileMd5, strlen(pcRequestDevUpgrade->UpgradeFileMd5));
-// INT8
-	UINT8 FailReasonLen = 0;
-// devReplyDevUpgrade->DevID
-// FailReason
-	memcpy(&devReplyDevUpgrade->header, &devReplyDevUpgrade->header, sizeof(devReplyDevUpgrade->header));
-	INT32 retCompare = compareUpgradeItem(pcRequestDevUpgrade->NewSoftVersion, versionNumber);
-	if (retCompare < 0)
-	{
-		devReplyDevUpgrade->Result = 0;
-		FailReasonLen = strlen(LOWERVERSION);
-		devReplyDevUpgrade->header.DataLen = sizeof(devReplyDevUpgrade->DevID) +
-		sizeof(devReplyDevUpgrade->Result) + strlen(LOWERVERSION);
-	} else if (retCompare = 0)
-	{
-		devReplyDevUpgrade->Result = 0;
-		FailReasonLen = strlen(NONEEDTOUPGRADE);
-		devReplyDevUpgrade->header.DataLen = sizeof(devReplyDevUpgrade->DevID) +
-		sizeof(devReplyDevUpgrade->Result) + strlen(NONEEDTOUPGRADE);
-	} else
-	{
-		devReplyDevUpgrade->Result = 1;
-		devReplyDevUpgrade->header.DataLen = sizeof(devReplyDevUpgrade->DevID) +
-		sizeof(devReplyDevUpgrade->Result);
-	}
-	return devReplyDevUpgrade;
-}
-#endif
-// bool UpgradeDSP::upgradeInit()
-// {
-//     return true ;
-// }
-
-//DSP9903_NAND_V00.01
 /*12 */
 const INT8 UpgradeDSP::itemsSet[][16] = { "_V", "UBOOT", "KERNEL", "MROOTFS",
 		"BROOTFS", "MediaApp", "ServerApp", "UPGRADE", "WEB", "NAND", "PRODUCT",
@@ -189,10 +95,7 @@ upgradeFileStatus UpgradeDSP::getVersion() {
 					localVersion, pathVersionFile);
 		}
 	}
-//	cout << "new version : " << newVersion << "local version : " << localVersion
-//			<< endl;
 	INT32 retUpStatus = compareUpgradeItem(newVersion, localVersion);
-//	cout << "111retstatuc : " << retUpStatus << endl;
 	if (retUpStatus > 0)
 		return higherVerison;
 	else if (retUpStatus == 0)
@@ -284,90 +187,6 @@ void UpgradeDSP::clearObj() {
 	upResult = false;
 }
 
-#if 0
-INT32 UpgradeDSP::checkDownloadFile(INT8 *upgradeItem, INT8 *itemVersion) {
-	INT8 upFileName[32] = {0};
-	getItemName(upFileName, upgradeItem);
-// const INT8* m_downloadFile = downloadFile;
-	if ((parserFileName(upFileName, itemVersion)) != higherVerison)
-	return retError;
-
-	if (parserUpgradeFile(upgradeItem) != retOk) {
-
-		return retError;
-	} else {
-		deleteFile(upgradeItem);
-		// remove(upgradeItem);
-	}
-// this->runUpgradeShell();
-
-	return retOk;
-
-}
-
-INT32 UpgradeDSP::parserUpgradeFile(INT8 *upgradeItem) {
-	if (CrcCheck::parser_Package(upgradeItem) != 0) {
-		return retError;
-	}
-	return retOk;
-}
-
-INT32 UpgradeDSP::extractTar(const string fileName) {
-
-	return retOk;
-}
-
-INT32 UpgradeDSP::checkUpgradeStatus() {
-	return 0;
-}
-
-bool UpgradeDSP::modifyVersionFile() {
-	return true;
-}
-
-//void UpgradeDSP::getItemName(INT8 *upFileName, INT8 *upFilePath) {
-//	INT32 iPos = 0;
-//	INT32 itemLen = strlen(upFilePath);
-//	while (&upFilePath[itemLen - 1] != pathSymbol) {
-//		upFileName[iPos] = upFilePath[itemLen - 1];
-//		itemLen--;
-//		iPos++;
-//	}
-//	INT8 tmp = 0;
-//	INT32 length = strlen(upFileName);
-//	// INT32 iPos_2 = 0;
-//	iPos = 0;
-//	for (iPos; iPos < length / 2; iPos++) {
-//		tmp = upFileName[length - iPos - 1];
-//		upFileName[length - iPos - 1] = upFileName[iPos];
-//		upFileName[iPos] = tmp;
-//	}
-//}
-#endif
-void UpgradeDSP::runUpgradeShell() {
-	cout << "run" << endl;
-	INT8 cmd[1024] = { 0 };
-	strncat(cmd, "cat ", strlen("cat "));
-// strncat(cmd + 4, downloadFile, strlen(downloadFile));
-
-	/* Product package */
-// if ((strncmp(downloadFile + strlen(PRODUCT_TYPE) + 1, itemsSet[10], strlen(itemsSet[10]))) != 0)
-// {
-//     system(cmd);
-// }else
-// {
-//     itemsUpgrade=2;
-//     cout <<"items"<<itemsUpgrade<<endl;
-//     for (int i = 0; i < itemsUpgrade; i++)
-//     {
-//         system("echo product");
-//         system(cmd);
-//     }
-// }
-// system(strUpgrade);
-	return;
-}
-#endif
 
 UpgradeDSPSubItem::UpgradeDSPSubItem() :
 		productTarFile(newTarPackage), eachItemUpStatus(true), mSubItems(), mUpSubItem() {

@@ -42,18 +42,10 @@ enum upgradeFileStatus {
 /*, private Uncopyable 加了继承类的vector之后不可用了*/
 class UpgradeDSP {
 public:
-//	UpgradeDSP();
 	UpgradeDSP(INT8 *upgradeFile);
 //	UpgradeDSP(const UpgradeDSP &);
 //	UpgradeDSP& operator=(const UpgradeDSP &rhs);
 	~UpgradeDSP();
-
-//  DEV_Reply_DevUpgrade *devReplyUpgradeCheck(PC_Request_DevUpgrade *pcRequestDevUpgrade, INT8 *versionNumber);
-//	bool upgradeInit();
-//	INT32 checkDownloadFile();
-//	INT32 parserUpgradeFile();
-//	INT32 checkUpgradeStatus();
-//	bool modifyVersionFile();
 
 	bool upgradeStart();
 	bool upgradeStepStart();
@@ -163,7 +155,6 @@ private:
 	map<INT32, string> mSubItems;
 	map<INT32, string> mUpSubItem;
 	UpgradeDSP *aUpSubItem;
-
 };
 #endif
 

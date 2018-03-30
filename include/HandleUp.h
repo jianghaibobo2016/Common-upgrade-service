@@ -24,6 +24,11 @@ public:
 			UpFileAttrs &upFileAttr, FileTrans &fileTrans,
 			DEV_Request_FileProtocal *request);
 
+	void TerminalUpgradeHandle(sockaddr_in recvAddr, INT8 *recvBuff,
+			SetNetworkTerminal *setNetworkTerminal, INT32 sockfd,
+			UpFileAttrs &upFileAttr, FileTrans &fileTrans,
+			DEV_Request_FileProtocal *request);
+
 	static INT32 devSearchHandle(DEV_Reply_GetDevMsg &, DevSearchTerminal *);
 
 	static INT32 setNetworkHandle(INT8 *recvBuff, INT8 *sendtoBuff,

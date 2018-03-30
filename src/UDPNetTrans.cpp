@@ -86,43 +86,24 @@ INT32 UDPNetTrans::socketSelect() {
 			case CMD_DEV_PARAMETER_SETTING: {
 				HandleUp::getInstance().devParamSetCMDHandle(recvAddr, buffer,
 						&netSet, sockfd);
-			}
+			}/*end case 2*/
 				break;
 			case CMD_DEV_UPGRADE: {
 				HandleUp::getInstance().devUpgradePCRequestCMDHandle(recvAddr,
 						buffer, &netSet, sockfd, *upFileAttrs.get(), fileTrans,
 						request.get());
-			}
+			}/*end case 3*/
 				break;
 			case CMD_DEV_FILE_TRANSPORT: {
 				HandleUp::getInstance().devFileTransCMDHandle(recvAddr, buffer,
 						&netSet, sockfd, *upFileAttrs.get(), fileTrans,
 						request.get());
-			}
+			}/*end case 4*/
 				break;
 			case CMD_DEV_UPGRADE_REPLY: {
 
 			}
 				break;
-//			case CMD_WEB_REQUEST_UPGRADE: {
-//				cout << "webUpg" << endl;
-//				SmartPtr<DEV_Request_UpgradeReply> upgradeReply(
-//						new DEV_Request_UpgradeReply);
-//				INT8 replyText[msgLen] = { 0 };
-//				INT8 sendtoBuffer[SendBufferSizeMax] = { 0 };
-//				INT32 retUpStatus = retOk;
-//				memset(sendtoBuffer, 0, SendBufferSizeMax);
-//				sprintf(replyText, "Upgrade successed !");
-//				upgradeReply->header.HeadCmd = 0x0005;
-//				if (HandleUp::devReplyHandle<DEV_Request_UpgradeReply>(
-//						sendtoBuffer, *upgradeReply.get(), replyText,
-//						retUpStatus, setNetworkTerminal) == retOk) {
-//				}
-//				sendto(sockfd, (INT8*) sendtoBuffer,
-//						sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
-//						(struct sockaddr *) &recvAddr, tmp_server_addr_len);
-//			}
-//				break;
 			default:
 				break;
 			}

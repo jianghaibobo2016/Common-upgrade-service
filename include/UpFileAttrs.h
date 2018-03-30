@@ -25,10 +25,16 @@ public:
 	INT8 *getFileMD5Code() {
 		return upFileMD5code;
 	}
+	bool getWebUpMethod() {
+		return webUpMethod;
+	}
 	bool getInUpgradeStatus() {
 		return inUpgrading;
 	}
 
+	void setWebUpMethod(bool method) {
+		webUpMethod = method;
+	}
 	void setInUpgradeStatus(bool status) {
 		inUpgrading = status;
 	}
@@ -42,6 +48,8 @@ private:
 	INT8 *newSoftVersion; /* 20B */
 	UINT32 newSoftFileSize;
 	INT8 *upFileMD5code; /* 16B */
+
+	bool webUpMethod;
 
 	bool inUpgrading;
 	FileTrans fileTransRecord;

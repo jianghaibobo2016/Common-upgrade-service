@@ -43,12 +43,12 @@ static const INT8 *NONEEDTOUPGRADE = "No need to upgrade !";
 static const INT8 *LOWERVERSION =
 		"Request soft version lower than local soft version !";
 static const INT8 *GETVERSIONFAILED = "Get local version failed!";
+static const INT8 *UPFILENOTEXIST = "Upgrade file is not existed !";
 //static const INT8 *PRODUCT_TYPE = "DSP9903";
 static const INT8 *UpgradeShell = "upgrade.sh";
 static const INT8 *UpgradeShellWithPath = "/nand/Update_File/upgrade.sh";
 static const INT8 *SuccessUpShellRespond = "Upgrade successfully this time !";
 static const INT8 *FailUpShellRespond = "Fail to upgrade this time !";
-//static const INT8 *multiUpgradeShell = "upgrade_general.sh";
 static const INT8 *ProductVersionName = "product_version";
 static const INT8 *UbootVersionName = "uboot_version";
 static const INT8 *KernelVersionName = "kernel_version";
@@ -60,5 +60,8 @@ static const INT8 *UpgradeVersionName = "upgrade_version";
 static const INT8 *WebVersionName = "web_version";
 static const INT8 *NandVersionName = "nand_version";
 static const INT32 subNum = 9;
+/*WEB request */
+static const INT8 *WEBREQUEST = "WEBTERMINAL";
+static const INT8 *WEBBeginToUpgrade = "Begin to upgrade !";
 /* upgrade */
 #endif /* UPGRADESERVICECONFIG_H */

@@ -1,6 +1,7 @@
 #include "CMDParserUp.h"
 #include "UpgradeServiceConfig.h"
 #include "GlobalProfile.h"
+#include "FileOperation.h"
 
 #define OFFSETPTR                                                                   \
     pcSettingNet += (1 + (INT32)pcSettingNet[0]);
@@ -98,11 +99,6 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 				sscanf(netConfigTrans.serverPortT, "%hu", &port);
 				setServerConf.SetTCPCommServerIP(netConfigTrans.serverIPT,
 						port);
-//				if (setNetworkTerminal->setServerNetConfig(
-//						netConfigTrans.serverIPT, port) != true) {
-//					strcpy(&failReason, "Set server IP and port failed !");
-//					return retError;
-//				}
 			}
 			break;
 		case 0x03:
@@ -155,12 +151,6 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 					sscanf(netConfigTrans.serverPortT, "%hu", &port);
 					setServerConf.SetTCPCommServerIP(netConfigTrans.serverIPT,
 							port);
-					///////////////////////
-//					if (setNetworkTerminal->setServerNetConfig(
-//							netConfigTrans.serverIPT, port) != true) {
-//						strcpy(&failReason, "Set server IP and port failed !");
-//						return retError;
-//					}
 				} else {
 					strcpy(&failReason, "Match setting failed !");
 					return retError;
@@ -227,11 +217,6 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 			}
 			sscanf(netConfigTrans.serverPortT, "%hu", &port);
 			setServerConf.SetTCPCommServerIP(netConfigTrans.serverIPT, port);
-//			if (setNetworkTerminal->setServerNetConfig(netConfigTrans.serverIPT,
-//					port) != true) {
-//				strcpy(&failReason, "Set server IP and port failed !");
-//				return retError;
-//			}
 			break;
 		default:
 			strcpy(&failReason, "Number of settings error !");
@@ -260,14 +245,27 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 	strcat(fileDownloadName, upFileAttr.getNewSoftVersion());
 	upFileAttr.setFileDownloadPath(fileDownloadName, strlen(fileDownloadName));
 
-	pcUpgradeCMD += newSoftVersionSize;
-	INT32 fileSize = 0;
-	memcpy(&fileSize, pcUpgradeCMD, sizeof(UINT32));
-	upFileAttr.setNewSoftFileSize(fileSize);
+	/*WEB request to upgrade CMD judgement*/
+	if (compareUpgradeItem(pcUpgradeCMD + strlen(upFileAttr.getNewSoftVersion()),
+			WEBREQUEST, strlen(WEBREQUEST)) != 0) {
 
-	pcUpgradeCMD += sizeof(UINT32);
-	upFileAttr.setFileMD5Code(pcUpgradeCMD, upgradeFileMd5Size);
-//	printf("recv md5 : %u\n", upFileAttr.getFileMD5Code());
+		pcUpgradeCMD += newSoftVersionSize;
+		INT32 fileSize = 0;
+		memcpy(&fileSize, pcUpgradeCMD, sizeof(UINT32));
+		upFileAttr.setNewSoftFileSize(fileSize);
+
+		pcUpgradeCMD += sizeof(UINT32);
+		upFileAttr.setFileMD5Code(pcUpgradeCMD, upgradeFileMd5Size);
+		//printf("recv md5 : %u\n", upFileAttr.getFileMD5Code());
+	} else {
+		if (!FileOperation::isExistFile(upFileAttr.getFileDownloadPath())) {
+			strcpy(failReason, UPFILENOTEXIST);
+			return errorVersionStatus;
+		}
+		strcpy(failReason, WEBBeginToUpgrade);
+		upFileAttr.setWebUpMethod(true);
+		return higherVerison;
+	}
 	INT8 version[7] = { 0 };
 	DevSearchTerminal::getSoftwareVersion(ProductVersionName, version,
 			pathVersionFile);

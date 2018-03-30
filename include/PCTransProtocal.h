@@ -20,25 +20,9 @@
 #include <sys/ioctl.h>
 #include <arpa/inet.h>
 #include "GlobDefine.h"
-//#include "Public.h"
-// #define CONFPATH "/etc/network/interfaces"
-// #define CHARSIZE 1024
-// #define NETCARDNAME "ens33"//"bond0"
-// #define VERSIONPATH "/home/dsppa/DSPPA/ServiceVersion.xml"
 #define PROTOCAL_PC_DEV_HEAD 0x0101FBFC
 #define PROTOCAL_PC_DEV_MAXSIZE 1400
 using namespace std;
-// Defines unsigned types
-// typedef unsigned char           UINT8;
-// typedef unsigned short          UINT16;
-// typedef unsigned int            UINT32;
-// typedef unsigned long long      UINT64;
-
-// Defines signed types
-// typedef signed char             INT8;
-// typedef signed short            INT16;
-// typedef signed int              INT32;
-// typedef signed long long        INT64;
 #pragma pack(push)
 #pragma pack(1)
 enum PC_DEV_COMMAND{
@@ -115,6 +99,7 @@ typedef struct PC_Request_DevUpgrade_tag{
 	PC_DEV_Header header;
 	char HardVersion[20];       //硬件版本
 	char NewSoftVersion[20];    //新软件版本 V01.01
+	/*在字符串"V01.01"后加上"WEBTERMINAL"表示由web端发送的升级指令*/
 	UINT32 NewSoftDocumentSize; //新软件版本文件大小
 	char UpgradeFileMd5[16];	//MD5校验值//add
 }PC_Request_DevUpgrade;
@@ -156,6 +141,8 @@ typedef struct DEV_Request_UpgradeReply_tag{
 	UINT8 Result; //升级结果反馈 成功:1, 失败:0
 	//char* text
 }DEV_Request_UpgradeReply;
+/*"Upgrade failed !" 表示升级失败
+"Upgrade successed !" 表示升级成功*/
 //PC端无返回
 
 //-------------------------------------------------------------------//

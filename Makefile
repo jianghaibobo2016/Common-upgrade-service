@@ -23,7 +23,7 @@ ${BIN_TAEGET} : ${OBJ}
 
 ${DIR_OBJ}/%.o : ${SRC} 
 	@echo 编译文件开始..
-	$(CC) ${CFLAGS} -c $?
+	$(CC) ${CFLAGS} -c $? 
 	-mv *.o $(DIR_OBJ)/
 	@echo 编译文件完成
 

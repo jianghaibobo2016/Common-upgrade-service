@@ -3,8 +3,8 @@
 #include "UpgradeServiceConfig.h"
 
 UpFileAttrs::UpFileAttrs() :
-		fileDownloadPath(), newSoftVersion(), newSoftFileSize(0), upFileMD5code(), inUpgrading(
-				false),fileTransRecord() {
+		fileDownloadPath(), newSoftVersion(), newSoftFileSize(0), upFileMD5code(), webUpMethod(
+				false), inUpgrading(false), fileTransRecord() {
 }
 
 UpFileAttrs::~UpFileAttrs() {
@@ -38,6 +38,7 @@ bool UpFileAttrs::clearMemberData(UpFileAttrs &) {
 	memset(this->newSoftVersion, 0, newSoftVersionSize);
 	this->newSoftFileSize = 0;
 	memset(this->upFileMD5code, 0, upgradeFileMd5Size);
+	webUpMethod = false;
 	inUpgrading = false;
 	return true;
 }

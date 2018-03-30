@@ -42,28 +42,14 @@ INT32 HandleUp::devReplyHandle(INT8 *sendtoBuff, T &s_devReply,
 template<typename T>
 INT32 HandleUp::writeFileFromPC(INT8 *recvBuff, const INT8 *fileName) {
 	T *PCReply = (T*) recvBuff;
-//	cout << "filename " << fileName << endl;
-#if 1
-	/////////////app
 	ofstream fout(fileName, ios::app | ios::binary); //加入文件名
-//	cout << "write pos : " << PCReply->StartPosition << endl;
 	fout.seekp(PCReply->StartPosition, ios::beg);
-//	cout << "file pos:: " << fout.tellp();
 	fout.write(recvBuff + sizeof(T), PCReply->FileDataLen);
-//	cout << "file pos:: " << fout.tellp();
-//	cout << "write len : " << PCReply->FileDataLen << endl;
 	if (fout.good() == false) {
 		fout.close();
-//		cout << "write 5 !" << endl;
 		return retError;
 	}
-//	cout << "write 6 !" << endl;
 	fout.close();
-#endif
-//	FILE *fd = fopen(fileName, "wb+");
-//	fseek(fd, PCReply->StartPosition, SEEK_SET);
-//	fwrite(recvBuff + sizeof(T), 1, PCReply->FileDataLen, fd);
-//	fclose(fd);
 	return retOk;
 }
 

@@ -88,6 +88,11 @@ void HandleUp::devUpgradePCRequestCMDHandle(sockaddr_in recvAddr,
 	if (retHandle != retOk) {
 		return;
 	}
+	if (upFileAttr.getWebUpMethod() == true) {
+		TerminalUpgradeHandle(recvAddr, recvBuff, setNetworkTerminal, sockfd,
+				upFileAttr, fileTrans, request);
+		return;
+	}
 #if 0
 	if (!upFileAttrs->getInUpgradeStatus()) {
 		cout << "upstatus 1 !"<<endl;
@@ -100,8 +105,7 @@ void HandleUp::devUpgradePCRequestCMDHandle(sockaddr_in recvAddr,
 		cout << "upstatus 2 !"<<endl;
 		upFileAttrs->setFileTransRecord(fileTrans);
 	}
-#endif
-#if 1
+#else
 	fileTrans.clearFileTrans();
 	fileTrans.iniPosition(upFileAttr.getNewSoftFileSize());
 #endif
@@ -137,9 +141,10 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in recvAddr, INT8 *recvBuff,
 	}
 	if (fileTrans.getNewPercent() > fileTrans.getOldPercent()) {
 		upgradeReply->header.HeadCmd = 0x0005;
-
 		memset(replyText, 0, msgLen);
-
+		sprintf(replyText, "Upgrading %u%%", fileTrans.getNewPercent());
+		replyText[strlen(replyText)] = '\0';
+		cout << "text : " << replyText << endl;
 		if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
 				*upgradeReply.get(), replyText, retUpStatus, setNetworkTerminal)
 				== retOk) {
@@ -165,6 +170,7 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in recvAddr, INT8 *recvBuff,
 		} else {
 			retUpStatus = retOk;
 			sprintf(replyText, "Upgrading 55%%.");
+			replyText[strlen(replyText)] = '\0';
 			cout << "ok md5!" << endl;
 		}
 		cout << "replytext : " << replyText << endl;
@@ -178,151 +184,88 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in recvAddr, INT8 *recvBuff,
 		if (retUpStatus == retError)
 			return;
 		/*next step*/
-		SmartPtr<UpgradeDSP> upDSPProduct(
-				new UpgradeDSP(upFileAttr.getFileDownloadPath()));
-		if (upDSPProduct->parserFileName() == retOk) {
-			//
-			cout << "up 1 !" << endl;
-		} else {
-			memset(sendtoBuffer, 0, SendBufferSizeMax);
-			retUpStatus = retError;
-			if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
-					*upgradeReply.get(), upDSPProduct->getUpgraderecord(),
-					retUpStatus, setNetworkTerminal) == retOk) {
-			}
-			sendto(sockfd, (INT8*) sendtoBuffer,
-					sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
-					(struct sockaddr *) &recvAddr, tmp_server_addr_len);
-			if (retUpStatus == retError)
-				return;
-		}
-
-		cout << "up 3 !" << endl;
+		TerminalUpgradeHandle(recvAddr, recvBuff, setNetworkTerminal, sockfd,
+				upFileAttr, fileTrans, request);
+	}
+	return;
+	SmartPtr<UpgradeDSP> upDSPProduct(
+			new UpgradeDSP(upFileAttr.getFileDownloadPath()));
+	if (upDSPProduct->parserFileName() == retOk) {
+		//
+		cout << "up 1 !" << endl;
+	} else {
 		memset(sendtoBuffer, 0, SendBufferSizeMax);
-		if (upDSPProduct->parserItemPackage(upFileAttr.getNewSoftVersion())
-				== 0) {
-			retUpStatus = retOk;
-			upDSPProduct->setUpgraderecord("Upgrading 65%%.");
-			cout << "up 2 !" << endl;
+		retUpStatus = retError;
+		if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
+				*upgradeReply.get(), upDSPProduct->getUpgraderecord(),
+				retUpStatus, setNetworkTerminal) == retOk) {
+		}
+		sendto(sockfd, (INT8*) sendtoBuffer,
+				sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
+				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+		if (retUpStatus == retError)
+			return;
+	}
+
+	cout << "up 3 !" << endl;
+	memset(sendtoBuffer, 0, SendBufferSizeMax);
+	if (upDSPProduct->parserItemPackage(upFileAttr.getNewSoftVersion()) == 0) {
+		retUpStatus = retOk;
+		upDSPProduct->setUpgraderecord("Upgrading 65%%.");
+		cout << "up 2 !" << endl;
+	} else {
+		retUpStatus = retError;
+		upDSPProduct->setUpgraderecord("Upgrade file error !");
+		if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
+				*upgradeReply.get(), upDSPProduct->getUpgraderecord(),
+				retUpStatus, setNetworkTerminal) == retOk) {
+		}
+		sendto(sockfd, (INT8*) sendtoBuffer,
+				sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
+				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+		if (retUpStatus == retError)
+			return;
+	}
+	SmartPtr<UpgradeDSPSubItem> subItems(new UpgradeDSPSubItem);
+	if (subItems->getSubItems() != true) {
+		cout << "up 4 !" << endl;
+		memset(replyText, 0, msgLen);
+		memset(sendtoBuffer, 0, SendBufferSizeMax);
+		retUpStatus = retError;
+		sprintf(replyText, "Extract file error !");
+		if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
+				*upgradeReply.get(), replyText, retUpStatus, setNetworkTerminal)
+				== retOk) {
+		}
+		sendto(sockfd, (INT8*) sendtoBuffer,
+				sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
+				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+		if (retUpStatus == retError)
+			return;
+		cout << "up 6 !" << endl;
+	}
+	UINT32 itemsNum = subItems->getItemsNum();
+	cout << "item num : " << itemsNum << endl;
+	UINT32 percentUp = 65;
+	for (UINT32 i = 1; i <= itemsNum; i++) {
+		cout << "up 7 !" << endl;
+		/////////////////////
+		const_cast<UpgradeDSP*>(&subItems->getUpObj())->clearObj();
+		cout << "up 7.5 clear" << endl;
+		if (subItems->parserSubItemsFileName(i) == 0) {
+			cout << "up 5 !" << endl;
 		} else {
-			retUpStatus = retError;
-			upDSPProduct->setUpgraderecord("Upgrade file error !");
-			if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
-					*upgradeReply.get(), upDSPProduct->getUpgraderecord(),
-					retUpStatus, setNetworkTerminal) == retOk) {
-			}
-			sendto(sockfd, (INT8*) sendtoBuffer,
-					sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
-					(struct sockaddr *) &recvAddr, tmp_server_addr_len);
-			if (retUpStatus == retError)
-				return;
-		}
-		SmartPtr<UpgradeDSPSubItem> subItems(new UpgradeDSPSubItem);
-		if (subItems->getSubItems() != true) {
-			cout << "up 4 !" << endl;
-			memset(replyText, 0, msgLen);
-			memset(sendtoBuffer, 0, SendBufferSizeMax);
-			retUpStatus = retError;
-			sprintf(replyText, "Extract file error !");
-			if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
-					*upgradeReply.get(), replyText, retUpStatus,
-					setNetworkTerminal) == retOk) {
-			}
-			sendto(sockfd, (INT8*) sendtoBuffer,
-					sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
-					(struct sockaddr *) &recvAddr, tmp_server_addr_len);
-			if (retUpStatus == retError)
-				return;
-			cout << "up 6 !" << endl;
-		}
-		UINT32 itemsNum = subItems->getItemsNum();
-		cout << "item num : " << itemsNum << endl;
-		UINT32 percentUp = 65;
-		for (UINT32 i = 1; i <= itemsNum; i++) {
-			cout << "up 7 !" << endl;
-			/////////////////////
-			const_cast<UpgradeDSP*>(&subItems->getUpObj())->clearObj();
-			cout << "up 7.5 clear" << endl;
-			if (subItems->parserSubItemsFileName(i) == 0) {
-				cout << "up 5 !" << endl;
+			if (const_cast<UpgradeDSP*>(&subItems->getUpObj())->getUpStatus()
+					== equalVersion) {
+				FileOperation::deleteFile(
+						const_cast<UpgradeDSP*>(&subItems->getUpObj())->getUpgradeFile());
+				continue;
 			} else {
-				if (const_cast<UpgradeDSP*>(&subItems->getUpObj())->getUpStatus()
-						== equalVersion) {
-					continue;
-				} else {
-					subItems->setEachItemUpResult(false);
-					retUpStatus = retError;
-					memset(sendtoBuffer, 0, SendBufferSizeMax);
-					if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
-							*upgradeReply.get(),
-							const_cast<UpgradeDSP*>(&subItems->getUpObj())->getUpgraderecord(),
-							retUpStatus, setNetworkTerminal) == retOk) {
-					}
-					sendto(sockfd, (INT8*) sendtoBuffer,
-							sizeof(PC_DEV_Header)
-									+ upgradeReply->header.DataLen, 0,
-							(struct sockaddr *) &recvAddr, tmp_server_addr_len);
-					break;
-				}
-			}
-			/////////////////////
-			memset(replyText, 0, msgLen);
-			memset(sendtoBuffer, 0, SendBufferSizeMax);
-			if (subItems->upgradeItem(i) == 0) {
-				cout << "up 7.1 !" << endl;
-				if (FileOperation::extractTarFile(newTarPackage,
-						subItems->getExtractItem()) != true) {
-					cout << "up 7.2" << endl;
-
-				} else {
-					if (!FileOperation::isExistFile(UpgradeShellWithPath)) {
-						retUpStatus = retError;
-						sprintf(replyText, "Upgrade file error !");
-					}
-				}
-
-				if (subItems->excuteUpgradeShell(i) == 0) {
-					if (subItems->modifyVersionFile() == retOk) {
-
-						percentUp += 30 * (i / itemsNum);
-						sprintf(replyText, "Upgrading %u%%.", percentUp);
-						cout << "modify ok" << endl;
-						retUpStatus = retOk;
-
-					} else {
-						retUpStatus = retError;
-						sprintf(replyText, "Modify version file failed !");
-					}
-					if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
-							*upgradeReply.get(), replyText, retUpStatus,
-							setNetworkTerminal) == retOk) {
-					}
-					sendto(sockfd, (INT8*) sendtoBuffer,
-							sizeof(PC_DEV_Header)
-									+ upgradeReply->header.DataLen, 0,
-							(struct sockaddr *) &recvAddr, tmp_server_addr_len);
-					if (retUpStatus == retError)
-						break;
-					cout << "ok" << endl;
-				} else {
-					retUpStatus = retError;
-					sprintf(replyText, "Modify version file failed !");
-					if (HandleUp::devReplyHandle<DEV_Request_UpgradeReply>(
-							sendtoBuffer, *upgradeReply.get(), replyText,
-							retUpStatus, setNetworkTerminal) == retOk) {
-					}
-					sendto(sockfd, (INT8*) sendtoBuffer,
-							sizeof(PC_DEV_Header)
-									+ upgradeReply->header.DataLen, 0,
-							(struct sockaddr *) &recvAddr, tmp_server_addr_len);
-					cout << "up 8 !" << endl;
-				}
-				cout << "up 9 !" << endl;
-			} else {
+				subItems->setEachItemUpResult(false);
 				retUpStatus = retError;
 				memset(sendtoBuffer, 0, SendBufferSizeMax);
-				if (HandleUp::devReplyHandle<DEV_Request_UpgradeReply>(
-						sendtoBuffer, *upgradeReply.get(),
+				if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
+						*upgradeReply.get(),
 						const_cast<UpgradeDSP*>(&subItems->getUpObj())->getUpgraderecord(),
 						retUpStatus, setNetworkTerminal) == retOk) {
 				}
@@ -332,34 +275,289 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in recvAddr, INT8 *recvBuff,
 				break;
 			}
 		}
-		if (subItems->getEachItemUpResult()) {
-			upDSPProduct->setUpResult(true);
-			cout << "all true" << endl;
-			memset(replyText, 0, msgLen);
-			memset(sendtoBuffer, 0, SendBufferSizeMax);
-			if (upDSPProduct->modifyVersionFile() != retOk) {
-				retUpStatus = retError;
-				sprintf(replyText, "Upgrade failed !");
+		/////////////////////
+		memset(replyText, 0, msgLen);
+		memset(sendtoBuffer, 0, SendBufferSizeMax);
+		if (subItems->upgradeItem(i) == 0) {
+			cout << "up 7.1 !" << endl;
+			if (FileOperation::extractTarFile(newTarPackage,
+					subItems->getExtractItem()) != true) {
+				cout << "up 7.2" << endl;
+
 			} else {
-				retUpStatus = retOk;
-				sprintf(replyText, "Upgrade successed !");
+				if (!FileOperation::isExistFile(UpgradeShellWithPath)) {
+					retUpStatus = retError;
+					sprintf(replyText, "Upgrade file error !");
+				}
 			}
+
+			if (subItems->excuteUpgradeShell(i) == 0) {
+				if (subItems->modifyVersionFile() == retOk) {
+
+					percentUp += 30 * (i / itemsNum);
+					sprintf(replyText, "Upgrading %u%%.", percentUp);
+					cout << "modify ok" << endl;
+					retUpStatus = retOk;
+
+				} else {
+					retUpStatus = retError;
+					sprintf(replyText, "Modify version file failed !");
+				}
+				if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
+						*upgradeReply.get(), replyText, retUpStatus,
+						setNetworkTerminal) == retOk) {
+				}
+				sendto(sockfd, (INT8*) sendtoBuffer,
+						sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
+						(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+				if (retUpStatus == retError)
+					break;
+				cout << "ok" << endl;
+			} else {
+				retUpStatus = retError;
+				sprintf(replyText, "Modify version file failed !");
+				if (HandleUp::devReplyHandle<DEV_Request_UpgradeReply>(
+						sendtoBuffer, *upgradeReply.get(), replyText,
+						retUpStatus, setNetworkTerminal) == retOk) {
+				}
+				sendto(sockfd, (INT8*) sendtoBuffer,
+						sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
+						(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+				cout << "up 8 !" << endl;
+			}
+			cout << "up 9 !" << endl;
+		} else {
+			retUpStatus = retError;
+			memset(sendtoBuffer, 0, SendBufferSizeMax);
 			if (HandleUp::devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
-					*upgradeReply.get(), replyText, retUpStatus,
-					setNetworkTerminal) == retOk) {
+					*upgradeReply.get(),
+					const_cast<UpgradeDSP*>(&subItems->getUpObj())->getUpgraderecord(),
+					retUpStatus, setNetworkTerminal) == retOk) {
 			}
 			sendto(sockfd, (INT8*) sendtoBuffer,
 					sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
 					(struct sockaddr *) &recvAddr, tmp_server_addr_len);
-#if 0
-			upFileAttrs->setInUpgradeStatus(false);
-#endif
-			fileTrans.clearFileTrans();
-			return;
+			break;
 		}
+	}
+	if (subItems->getEachItemUpResult()) {
+		upDSPProduct->setUpResult(true);
+		cout << "all true" << endl;
+		memset(replyText, 0, msgLen);
+		memset(sendtoBuffer, 0, SendBufferSizeMax);
+		if (upDSPProduct->modifyVersionFile() != retOk) {
+			retUpStatus = retError;
+			sprintf(replyText, "Upgrade failed !");
+		} else {
+			retUpStatus = retOk;
+			sprintf(replyText, "Upgrade successed !");
+		}
+		if (HandleUp::devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
+				*upgradeReply.get(), replyText, retUpStatus, setNetworkTerminal)
+				== retOk) {
+		}
+		sendto(sockfd, (INT8*) sendtoBuffer,
+				sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
+				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+#if 0
+		upFileAttrs->setInUpgradeStatus(false);
+#endif
+		fileTrans.clearFileTrans();
+		return;
+	}
 
+//	}
+}
+
+void HandleUp::TerminalUpgradeHandle(sockaddr_in recvAddr, INT8 *recvBuff,
+		SetNetworkTerminal *setNetworkTerminal, INT32 sockfd,
+		UpFileAttrs &upFileAttr, FileTrans &fileTrans,
+		DEV_Request_FileProtocal *request) {
+	INT8 replyText[msgLen] = { 0 };
+	INT8 sendtoBuffer[SendBufferSizeMax] = { 0 };
+	INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
+	INT32 retUpStatus = retOk;
+	SmartPtr<DEV_Request_UpgradeReply> upgradeReply(
+			new DEV_Request_UpgradeReply);
+	SmartPtr<UpgradeDSP> upDSPProduct(
+			new UpgradeDSP(upFileAttr.getFileDownloadPath()));
+	if (upDSPProduct->parserFileName() == retOk) {
+		//
+		cout << "up 1 !" << endl;
+	} else {
+		memset(sendtoBuffer, 0, SendBufferSizeMax);
+		retUpStatus = retError;
+		if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
+				*upgradeReply.get(), upDSPProduct->getUpgraderecord(),
+				retUpStatus, setNetworkTerminal) == retOk) {
+		}
+		sendto(sockfd, (INT8*) sendtoBuffer,
+				sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
+				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+		if (retUpStatus == retError)
+			return;
+	}
+
+	cout << "up 3 !" << endl;
+	memset(sendtoBuffer, 0, SendBufferSizeMax);
+	if (upDSPProduct->parserItemPackage(upFileAttr.getNewSoftVersion()) == 0) {
+		retUpStatus = retOk;
+		upDSPProduct->setUpgraderecord("Upgrading 65%%.");
+		cout << "up 2 !" << endl;
+	} else {
+		retUpStatus = retError;
+		upDSPProduct->setUpgraderecord("Upgrade file error !");
+		if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
+				*upgradeReply.get(), upDSPProduct->getUpgraderecord(),
+				retUpStatus, setNetworkTerminal) == retOk) {
+		}
+		sendto(sockfd, (INT8*) sendtoBuffer,
+				sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
+				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+		if (retUpStatus == retError)
+			return;
+	}
+	SmartPtr<UpgradeDSPSubItem> subItems(new UpgradeDSPSubItem);
+	if (subItems->getSubItems() != true) {
+		cout << "up 4 !" << endl;
+		memset(replyText, 0, msgLen);
+		memset(sendtoBuffer, 0, SendBufferSizeMax);
+		retUpStatus = retError;
+		sprintf(replyText, "Extract file error !");
+		if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
+				*upgradeReply.get(), replyText, retUpStatus, setNetworkTerminal)
+				== retOk) {
+		}
+		sendto(sockfd, (INT8*) sendtoBuffer,
+				sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
+				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+		if (retUpStatus == retError)
+			return;
+		cout << "up 6 !" << endl;
+	}
+	UINT32 itemsNum = subItems->getItemsNum();
+	cout << "item num : " << itemsNum << endl;
+	UINT32 percentUp = 65;
+	for (UINT32 i = 1; i <= itemsNum; i++) {
+		cout << "up 7 !" << endl;
+		/////////////////////
+		const_cast<UpgradeDSP*>(&subItems->getUpObj())->clearObj();
+		cout << "up 7.5 clear" << endl;
+		if (subItems->parserSubItemsFileName(i) == 0) {
+			cout << "up 5 !" << endl;
+		} else {
+			if (const_cast<UpgradeDSP*>(&subItems->getUpObj())->getUpStatus()
+					== equalVersion) {
+				FileOperation::deleteFile(
+						const_cast<UpgradeDSP*>(&subItems->getUpObj())->getUpgradeFile());
+				continue;
+			} else {
+				subItems->setEachItemUpResult(false);
+				retUpStatus = retError;
+				memset(sendtoBuffer, 0, SendBufferSizeMax);
+				if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
+						*upgradeReply.get(),
+						const_cast<UpgradeDSP*>(&subItems->getUpObj())->getUpgraderecord(),
+						retUpStatus, setNetworkTerminal) == retOk) {
+				}
+				sendto(sockfd, (INT8*) sendtoBuffer,
+						sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
+						(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+				break;
+			}
+		}
+		/////////////////////
+		memset(replyText, 0, msgLen);
+		memset(sendtoBuffer, 0, SendBufferSizeMax);
+		if (subItems->upgradeItem(i) == 0) {
+			cout << "up 7.1 !" << endl;
+			if (FileOperation::extractTarFile(newTarPackage,
+					subItems->getExtractItem()) != true) {
+				cout << "up 7.2" << endl;
+
+			} else {
+				if (!FileOperation::isExistFile(UpgradeShellWithPath)) {
+					retUpStatus = retError;
+					sprintf(replyText, "Upgrade file error !");
+				}
+			}
+
+			if (subItems->excuteUpgradeShell(i) == 0) {
+				if (subItems->modifyVersionFile() == retOk) {
+
+					percentUp += 30 * (i / itemsNum);
+					sprintf(replyText, "Upgrading %u%%.", percentUp);
+					cout << "modify ok" << endl;
+					retUpStatus = retOk;
+
+				} else {
+					retUpStatus = retError;
+					sprintf(replyText, "Modify version file failed !");
+				}
+				if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
+						*upgradeReply.get(), replyText, retUpStatus,
+						setNetworkTerminal) == retOk) {
+				}
+				sendto(sockfd, (INT8*) sendtoBuffer,
+						sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
+						(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+				if (retUpStatus == retError)
+					break;
+				cout << "ok" << endl;
+			} else {
+				retUpStatus = retError;
+				sprintf(replyText, "Modify version file failed !");
+				if (HandleUp::devReplyHandle<DEV_Request_UpgradeReply>(
+						sendtoBuffer, *upgradeReply.get(), replyText,
+						retUpStatus, setNetworkTerminal) == retOk) {
+				}
+				sendto(sockfd, (INT8*) sendtoBuffer,
+						sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
+						(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+				cout << "up 8 !" << endl;
+			}
+			cout << "up 9 !" << endl;
+		} else {
+			retUpStatus = retError;
+			memset(sendtoBuffer, 0, SendBufferSizeMax);
+			if (HandleUp::devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
+					*upgradeReply.get(),
+					const_cast<UpgradeDSP*>(&subItems->getUpObj())->getUpgraderecord(),
+					retUpStatus, setNetworkTerminal) == retOk) {
+			}
+			sendto(sockfd, (INT8*) sendtoBuffer,
+					sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
+					(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+			break;
+		}
+	}
+	if (subItems->getEachItemUpResult()) {
+		upDSPProduct->setUpResult(true);
+		cout << "all true" << endl;
+		memset(replyText, 0, msgLen);
+		memset(sendtoBuffer, 0, SendBufferSizeMax);
+		if (upDSPProduct->modifyVersionFile() != retOk) {
+			retUpStatus = retError;
+			sprintf(replyText, "Upgrade failed !");
+		} else {
+			retUpStatus = retOk;
+			sprintf(replyText, "Upgrade successed !");
+		}
+		if (HandleUp::devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
+				*upgradeReply.get(), replyText, retUpStatus, setNetworkTerminal)
+				== retOk) {
+		}
+		sendto(sockfd, (INT8*) sendtoBuffer,
+				sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
+				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+#if 0
+		upFileAttrs->setInUpgradeStatus(false);
+#endif
+		fileTrans.clearFileTrans();
+		return;
 	}
 }
+
 INT32 HandleUp::devSearchHandle(DEV_Reply_GetDevMsg & devMsg,
 		DevSearchTerminal * devSearch) {
 
@@ -380,16 +578,12 @@ INT32 HandleUp::upgradePCrequestHandle(INT8 * recvBuff, INT8 * sendtoBuff,
 	devReply.header.HeadCmd = 0x0003;
 	if (retUpStatus == higherVerison) {
 		status = retOk;
-		strcpy(failReason, "Upgrading 0%");
 	} else if (retUpStatus == lowerVersion) {
 		status = retError;
-		strcpy(failReason, "Upgrade version Error !");
 	} else if (retUpStatus == equalVersion) {
 		status = retError;
-		strcpy(failReason, "No need to upgrade !");
 	} else if (retUpStatus == errorVersionStatus) {
 		status = retError;
-		strcpy(failReason, "Upgrade operation Error !");
 	}
 	if (devReplyHandle<DEV_Reply_DevUpgrade>(sendtoBuff, devReply, failReason,
 			status, setNetworkTerminal) == retOk) {

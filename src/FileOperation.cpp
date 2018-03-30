@@ -86,16 +86,6 @@ bool FileOperation::deleteFile(string fileName) {
 	} else
 		return false;
 }
-//bool FileOperation::deleteFile(string fileName) {
-//	// string path = m_strPath + '\\' + filename;
-//	// int remove(char *filename);
-//	// 删除文件，成功返回0，否则返回-1
-//	if (-1 == remove(fileName.c_str())) {
-//		return false;
-//	}
-//
-//	return true;
-//}
 
 bool FileOperation::alterFileName(string filename, string newname) {
 	// string path = m_strPath + '\\' + filename;
@@ -109,7 +99,6 @@ bool FileOperation::alterFileName(string filename, string newname) {
 
 	return true;
 }
-#if 1
 bool FileOperation::extractTarFile(string fileName,
 		map<INT32, string> &subItems) {
 	if (isExistFile(fileName) != true) {
@@ -139,9 +128,10 @@ bool FileOperation::extractTarFile(string fileName,
 	for (iter = subItems.begin(); iter != subItems.end(); iter++)
 		cout << iter->first << ' ' << iter->second << endl;
 	pclose(fstream);
+	FileOperation::deleteFile(fileName);
 	return true;
 }
-#endif
+
 bool FileOperation::isExisteDirectory(string path) {
 	if (-1 != access(path.c_str(), 0)) {
 		return true;
