@@ -7,8 +7,8 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <netinet/in.h>
+#include <SetNetworkWithServer.h>
 // #include "LocalResource.h"
-#include "SetNetwork.h"
 #include "DevSearch.h"
 #include "CrcCheck.h"
 #include "TerminalDevInfo.h"

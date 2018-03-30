@@ -6,7 +6,6 @@ DIR_SRC = ./src
 DIR_OBJ = ./obj
 DIR_BIN = ./bin
 
-# SRC = $(wildcard ${DIR_SRC}/testnetwork.cpp ${DIR_SRC}/SetNetwork.cpp ${DIR_SRC}/DevSearch.cpp ${DIR_SRC}/xmlParser.cpp)
 SRC = $(wildcard ${DIR_SRC}/*.cpp)
 
 OBJ = $(patsubst %.cpp,${DIR_OBJ}/%.o,$(notdir ${SRC} ))

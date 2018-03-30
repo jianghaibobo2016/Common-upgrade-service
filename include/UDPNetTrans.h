@@ -1,9 +1,9 @@
 #ifndef UDPNETTRANS_H
 #define UDPNETTRANS_H
 #include "NetTrans.h"
-#include "SetNetwork.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <SetNetworkWithServer.h>
 
 class UDPNetTrans: public NetTrans {
 public:

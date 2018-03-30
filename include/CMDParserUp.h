@@ -1,8 +1,8 @@
 #ifndef CMDPARSERUP_H
 #define CMDPARSERUP_H
+#include <SetNetworkWithServer.h>
 #include "GlobDefine.h"
 #include "PCTransProtocal.h"
-#include "SetNetwork.h"
 #include "Upgrade.h"
 #include "UpFileAttrs.h"
 #include "TerminalDevInfo.h"

@@ -52,7 +52,7 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 	UINT8 parameterNum = pcSettingNet[0];
 	pcSettingNet += 1;
 	{
-		NetConfigTrans netConfigTrans;
+		NetConfigTransWithServer netConfigTrans;
 		UINT16 port = 0;
 		GlobalProfile setServerConf;
 		switch (parameterNum) {

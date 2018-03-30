@@ -1,7 +1,7 @@
 #ifndef DEVSEARCH_H
 #define DEVSEARCH_H
 
-#include "SetNetwork.h"
+#include <SetNetworkWithServer.h>
 #include "PCTransProtocal.h"
 #include "xmlParser.h"
 #include "UpgradeServiceConfig.h"

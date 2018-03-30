@@ -1,8 +1,8 @@
 #ifndef TERMINALDEVINFO_H
 #define TERMINALDEVINFO_H
 
+#include <SetNetworkWithServer.h>
 #include "GlobDefine.h"
-#include "SetNetwork.h"
 #include "DevSearch.h"
 
 class TerminalDevInfo

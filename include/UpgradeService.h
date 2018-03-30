@@ -1,7 +1,7 @@
 #ifndef UPGRADESERVICE_H
 #define UPGRADESERVICE_H
+#include <SetNetworkWithServer.h>
 #include "VersionFileManage.h"
-#include "SetNetwork.h"
 #include "DevSearch.h"
 #include "GlobDefine.h"
 #include "PCTransProtocal.h"

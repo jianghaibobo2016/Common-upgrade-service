@@ -7,7 +7,6 @@
 #include <iostream>
 using namespace std;
 using namespace FrameWork;
-
 SocketException::SocketException(const std::string &message, bool inclSysMsg /* = true */) throw()
     : m_message(message), m_errorcode(0)
 {
