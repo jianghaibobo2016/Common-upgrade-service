@@ -19,13 +19,13 @@ public:
 			SetNetworkTerminal *setNetworkTerminal, INT32 sockfd,
 			UpFileAttrs &upFileAttr, FileTrans &fileTrans,
 			DEV_Request_FileProtocal *request);
-	void devFileTransCMDHandle(sockaddr_in recvAddr, INT8 *recvBuff,
-			SetNetworkTerminal *setNetworkTerminal, INT32 sockfd,
+	void devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
+			SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd,
 			UpFileAttrs &upFileAttr, FileTrans &fileTrans,
 			DEV_Request_FileProtocal *request);
 
-	void TerminalUpgradeHandle(sockaddr_in recvAddr, INT8 *recvBuff,
-			SetNetworkTerminal *setNetworkTerminal, INT32 sockfd,
+	void TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
+			SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd,
 			UpFileAttrs &upFileAttr, FileTrans &fileTrans,
 			DEV_Request_FileProtocal *request);
 

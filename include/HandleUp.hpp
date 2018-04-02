@@ -27,15 +27,16 @@ INT32 HandleUp::devReplyHandle(INT8 *sendtoBuff, T &s_devReply,
 	} else
 		return retError;
 	UINT8 FailReasonLen = strlen(failReason);
+	cout << "text to send : " << failReason << endl;
 	s_devReply.header.DataLen = sizeof(s_devReply.DevID)
 			+ sizeof(s_devReply.Result) + sizeof(FailReasonLen)
 			+ strlen(failReason);
-	memcpy(sendtoBuff, &s_devReply, sizeof(DEV_Reply_ParameterSetting));
-	memcpy(sendtoBuff + sizeof(DEV_Reply_ParameterSetting), &FailReasonLen,
+	memcpy(sendtoBuff, &s_devReply, sizeof(T));
+	memcpy(sendtoBuff + sizeof(T), &FailReasonLen,
 			sizeof(FailReasonLen));
 	memcpy(
-			sendtoBuff + sizeof(DEV_Reply_ParameterSetting)
-					+ sizeof(FailReasonLen), failReason, strlen(failReason));
+			sendtoBuff + sizeof(T)
+					+ sizeof(FailReasonLen), failReason, FailReasonLen);
 	return retOk;
 }
 

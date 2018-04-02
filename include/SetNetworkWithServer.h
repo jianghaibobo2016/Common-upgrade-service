@@ -1,6 +1,5 @@
 #ifndef SETNETWORK_H
 #define SETNETWORK_H
-#include "GlobDefine.h"
 #include "SetNetwork.h"
 
 class NetConfigTransWithServer : public NetConfigTrans{
@@ -11,6 +10,7 @@ public:
 	INT8 *serverIPT;
 	INT8 *serverPortT;
 };
+
 class SetNetworkTerminal: public SetNetwork {
 public:
 

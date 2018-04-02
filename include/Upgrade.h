@@ -87,6 +87,7 @@ public:
 	void setUpgraderecord(const INT8 *record) {
 		memset(upgraderecord, 0, msgLen);
 		memcpy(upgraderecord, record, strlen(record));
+//		upgraderecord[strlen(upgraderecord)] = '\0';
 	}
 	void setItemName(INT8 *name) {
 		itemName = name;

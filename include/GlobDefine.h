@@ -18,6 +18,13 @@ const INT32 retOk = 0;
 const INT32 retError = -1;
 
 
+#ifdef FILE_LINE
+#undef FILE_LINE
+#endif
+#ifndef FILE_LINE
+#define FILE_LINE (LOG(DEBUG) << "check")
+#endif
+
 #ifdef VALID
 #undef VALID
 #endif
