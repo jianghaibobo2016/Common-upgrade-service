@@ -14,9 +14,9 @@ public:
     virtual ~DevSearch(){}
     virtual DEV_Reply_GetDevMsg *getDevMsg(const string &pathXML, const INT8 *pathVersionFile) = 0;
 };
+
 class DevSearchTerminal : public DevSearch
 {
-public:
 public:
     DevSearchTerminal(SetNetworkTerminal *setNetworkTerminal);
     virtual ~DevSearchTerminal();

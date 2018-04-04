@@ -17,7 +17,8 @@ DEFS     :=
 EXTRA_CFLAGS := 
 
 INC_DIR   = ./include
-SRC_DIR   = ./src
+SRC_DIR   := ./src
+SRC_D   = ./src
 OBJ_DIR   = ./obj
 EXTRA_SRC =
 EXCLUDE_FILES =
@@ -110,7 +111,8 @@ endif
 	@if [ ! -d $(OBJ_DIR) ]; then mkdir -p $(OBJ_DIR); fi
 
 clean:
-	rm -f $(prefix_objdir)*.o $(TARGET)
+	rm -f $(prefix_objdir)*.o $(TARGET) 
+	#$(SRC_D)/*.d
 
 -include $(patsubst %.o,%.o.d,$(all_objs))
 

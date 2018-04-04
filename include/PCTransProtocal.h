@@ -103,6 +103,9 @@ typedef struct PC_Request_DevUpgrade_tag{
 	UINT32 NewSoftDocumentSize; //新软件版本文件大小
 	char UpgradeFileMd5[16];	//MD5校验值//add
 }PC_Request_DevUpgrade;
+//设备升级功放
+//string:
+//INT8 *upgrade = "Upgrade";
 //设备端返回
 typedef struct DEV_Reply_DevUpgrade_tag{
 	PC_DEV_Header header;
@@ -141,8 +144,10 @@ typedef struct DEV_Request_UpgradeReply_tag{
 	UINT8 Result; //升级结果反馈 成功:1, 失败:0
 	//char* text
 }DEV_Request_UpgradeReply;
-/*"Upgrade failed !" 表示升级失败
-"Upgrade successed !" 表示升级成功*/
+/* text :
+ * "Upgrade failed!" 表示升级失败
+ * "Up to date!" 表示无需升级
+ * "Upgrade successed!" 表示升级成功*/
 //PC端无返回
 
 //-------------------------------------------------------------------//

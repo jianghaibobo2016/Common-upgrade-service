@@ -58,7 +58,7 @@ DEV_Reply_GetDevMsg *DevSearchTerminal::getDevMsg(const string &pathXML,
 	INT8 mac[13] = { 0 };
 	strcpy(mac,
 			SetNetworkTerminal::castMacToChar13(mac,
-					setNetworkTerminal->m_netWorkConfig.macAddr));
+					setNetworkTerminal->getNetConfStruct().macAddr));
 	mac[12] = '\0';
 
 	XMLParser xmlParser(pathXML);
@@ -76,11 +76,11 @@ DEV_Reply_GetDevMsg *DevSearchTerminal::getDevMsg(const string &pathXML,
 	devReplyMsg->header.HeadCmd = 0x0001;
 	devReplyMsg->header.DataLen = 0x00BF;
 	devReplyMsg->DevIP = inet_addr(
-			setNetworkTerminal->m_netWorkConfig.ipAddr.c_str());
+			setNetworkTerminal->getNetConfStruct().ipAddr.c_str());
 	devReplyMsg->DevMask = inet_addr(
-			setNetworkTerminal->m_netWorkConfig.netmaskAddr.c_str());
+			setNetworkTerminal->getNetConfStruct().netmaskAddr.c_str());
 	devReplyMsg->DevGateway = inet_addr(
-			setNetworkTerminal->m_netWorkConfig.gatewayAddr.c_str());
+			setNetworkTerminal->getNetConfStruct().gatewayAddr.c_str());
 	devReplyMsg->DevServerIP = inet_addr(serverIP.c_str());
 	devReplyMsg->DevServerPort = serverPort;
 	strcpy(devReplyMsg->DevMACAddress, mac);

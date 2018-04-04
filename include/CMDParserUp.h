@@ -5,7 +5,6 @@
 #include "PCTransProtocal.h"
 #include "Upgrade.h"
 #include "UpFileAttrs.h"
-#include "TerminalDevInfo.h"
 class CMDParserUp
 {
 public:

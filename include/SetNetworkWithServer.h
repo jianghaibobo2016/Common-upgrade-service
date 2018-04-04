@@ -17,6 +17,7 @@ public:
 	SetNetworkTerminal();
 	SetNetworkTerminal(const SetNetworkTerminal&);
 	~SetNetworkTerminal();
+
 	bool setServerNetConfig(const string &ip, const UINT16 &port);
 private:
 };

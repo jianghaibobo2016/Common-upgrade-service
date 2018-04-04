@@ -10,34 +10,9 @@
 #include <map>
 #include <vector>
 
-#ifdef FILE_LINE
-#undef FILE_LINE
-#endif
-#ifndef FILE_LINE
-#define FILE_LINE (LOG(DEBUG) << "check")
-#endif
-
 enum upgradeFileStatus {
 	lowerVersion = -1, equalVersion = 0, higherVerison, errorVersionStatus
 };
-
-//class Upgrade {
-//public:
-////	virtual bool upgradeInit() = 0;
-////	virtual INT32 checkDownloadFile() = 0;
-////	virtual INT32 parserUpgradeFile() = 0;
-////	virtual INT32 checkUpgradeStatus() = 0;
-////	virtual bool modifyVersionFile() = 0;
-//
-//	Upgrade() {
-//	}
-//	virtual ~Upgrade() {
-//	}
-//
-//	// protected:
-//
-//	// private:
-//};
 
 /*, private Uncopyable 加了继承类的vector之后不可用了*/
 class UpgradeDSP {
@@ -87,7 +62,6 @@ public:
 	void setUpgraderecord(const INT8 *record) {
 		memset(upgraderecord, 0, msgLen);
 		memcpy(upgraderecord, record, strlen(record));
-//		upgraderecord[strlen(upgraderecord)] = '\0';
 	}
 	void setItemName(INT8 *name) {
 		itemName = name;
@@ -103,6 +77,7 @@ private:
 	INT8 *fileWithoutPath;
 	INT8 *newVersion;
 	INT8 *localVersion;
+	INT8 *dependVersion;
 	upgradeFileStatus upStatus;
 	bool productItem;
 	INT8 *itemName;

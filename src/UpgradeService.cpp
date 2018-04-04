@@ -14,7 +14,7 @@ INT32 UpgradeService::start()
 {
     /* this */
     UDPNetTrans *udpNetTrans = new UDPNetTrans(setNetworkTerminal);
-    udpNetTrans->socketBind(45535);
+    udpNetTrans->socketBind(UpUDPTransPort);
     udpNetTrans->socketRunThread();
     while(1){}
     return retOk;

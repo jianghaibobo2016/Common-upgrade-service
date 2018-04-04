@@ -2,6 +2,7 @@
 #include "UpgradeServiceConfig.h"
 #include "GlobalProfile.h"
 #include "FileOperation.h"
+#include "DevSearch.h"
 
 #define OFFSETPTR                                                                   \
     pcSettingNet += (1 + (INT32)pcSettingNet[0]);

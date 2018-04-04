@@ -1,7 +1,13 @@
 #ifndef UPGRADESERVICECONFIG_H
 #define UPGRADESERVICECONFIG_H
-#include "GlobDefine.h"
 #include <iostream>
+#include "GlobDefine.h"
+
+/*net port*/
+static const INT32 UpUDPTransPort = 45535;
+static const INT32 UpAmplifierPort = 8001;
+/*net port*/
+
 /* struct of protocal member size */
 static const INT32 devMACAddressSize = 13;
 static const INT32 devIDSize = 40;
@@ -26,10 +32,19 @@ static const INT8 *TerminalDevType = "DSP9903";
 static const INT8 *TerminalHardVersion = "V01.00";
 static const std::string pathXml = "/nand/ServerAPP/video_conf.xml";
 static const INT8 *pathVersionFile = "/dsppa/HSversion";
+static const INT8 *DependItemVersionName = "upgrade_version";
+static const INT8 *ProductItemName = "PRODUCT";
 static const INT8 *INIFILE = "/dsppa/SET_NET/DSP9903_NET_CONF.ini";
 static const INT8 *upFilePath = "/nand/Update_File/";
 static const INT8 *upFileDownload = "/nand/Update_File/DSP9903_PRODUCT_";
 static const INT8* newTarPackage = "/nand/Update_File/upgradefiletar.tar";
+static const INT8 *upgradeAmplifier = "Upgrade";
+static const INT8 *AmplifierUpgrade = "DSP9903_AMPLIFIER_";
+/* text :
+ * "Upgrade failed!" 表示升级失败
+ * "Upgrade successed!" 表示升级成功*/
+static const INT8 *AmplifierUpFail = "Upgrade failed!";
+static const INT8 *AmplifierUpsuccess = "Upgrade successed!";
 static const INT8 *IFNAMETERMINAL = "eth0";
 //static const INT8 *IFNAMETERMINAL = "ens33";
 static const INT8 *PCREQUESTIP = "IP";

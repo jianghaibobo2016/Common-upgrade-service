@@ -2,14 +2,17 @@
 #include <iostream>
 #include <stdio.h>
 #include <errno.h>
+#include <Logger.h>
 #include "CrcCheck.h"
+#include "DevSearch.h"
 #include "UpgradeServiceConfig.h"
 using namespace std;
+using namespace FrameWork;
 CrcCheck::CrcCheck() {
 }
 
 INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
-		INT8 *itemName) {
+		INT8 *itemName, INT8 *dependVersion) {
 	if (filename == NULL) {
 		return retError;
 	}
@@ -27,7 +30,7 @@ INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 	FILE *src_fd = fopen(filename, "rb");
 	if (src_fd == NULL) {
 		printf("errr: %s\n", strerror(errno));
-		printf("ERROR : Can not open file : 11%s1111 !\n", filename);
+		printf("ERROR : Can not open file : %s !\n", filename);
 		return retError;
 	}
 
@@ -40,9 +43,33 @@ INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 		return retError;
 	} else
 		;
+	/*Judge the depend version*/
+	if (pack_head.dependVersion != NULL) {
+		INT8 depLocalVer[7] = { 0 };
+		DevSearchTerminal::getSoftwareVersion(DependItemVersionName,
+				depLocalVer, pathVersionFile);
+		if (strncmp(pack_head.dependVersion, depLocalVer, strlen(depLocalVer))
+				> 0) {
+			fclose(src_fd);
+			Logger::GetInstance().Fatal(
+					"%s(): Request %s must not be lower than %s !",
+					__FUNCTION__, DependItemVersionName,
+					pack_head.dependVersion);
+			return retError;
+		}
+	} else if (strncmp(pack_head.m_version + strlen(TerminalDevType) + 1,
+			ProductItemName, strlen(ProductItemName)) == 0) {
+		fclose(src_fd);
+		Logger::GetInstance().Fatal(
+				"%s(): Upgrade item %s need a depend version !", __FUNCTION__,
+				itemName);
+		return retError;
+	}
+	/*Judge the depend version*/
 	INT8 tmpVersion[32] = { 0 };
 	memcpy(tmpVersion, pack_head.m_version, strlen(pack_head.m_version));
-	memcpy(newVersion, tmpVersion + strlen(TerminalDevType) + 2 + strlen(itemName), 6);
+	memcpy(newVersion,
+			tmpVersion + strlen(TerminalDevType) + 2 + strlen(itemName), 6);
 	FILE *dst_fd = fopen(newTarPackage, "wb+");
 
 	while (1) {

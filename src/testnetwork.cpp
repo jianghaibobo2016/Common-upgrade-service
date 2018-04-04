@@ -11,7 +11,6 @@
 // #include "LocalResource.h"
 #include "DevSearch.h"
 #include "CrcCheck.h"
-#include "TerminalDevInfo.h"
 #include "UDPNetTrans.h"
 #include "UpgradeService.h"
 #include "UpgradeServiceConfig.h"
@@ -192,12 +191,12 @@ else
     // static string pathXml = "/nand/ServerAPP/video_conf.xml";
     // static const INT8 *pathVersionFile = "/dsppa/HSversion";
     SetNetworkTerminal getnetwork;
-    getnetwork.IFNAME = new INT8[10];
+//    getnetwork.IFNAME = new INT8[10];
     const INT8 *ifname = IFNAMETERMINAL;
-    strncpy(getnetwork.IFNAME, ifname, strlen(ifname));
+    getnetwork.setIfname(ifname);
     getnetwork.getNetworkConfig();
     SetNetworkTerminal terminalNet(getnetwork);
-    cout << "start ifname : "<<terminalNet.IFNAME<<endl;
+    cout << "start ifname : "<<terminalNet.getIfname()<<endl;
     UpgradeService upgradeService(&terminalNet);
     upgradeService.start();
 
@@ -211,7 +210,6 @@ else
     cout << "sleeping " << endl;
     // }
     sleep(300);
-    delete getnetwork.IFNAME;
     // delete udpNetTrans;
 
 #endif 

@@ -405,6 +405,7 @@ void HandleUp::TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 
 	cout << "up 3 !" << endl;
 	memset(sendtoBuffer, 0, SendBufferSizeMax);
+
 	if (upDSPProduct->parserItemPackage(upFileAttr.getNewSoftVersion()) == 0) {
 		retUpStatus = retOk;
 		upDSPProduct->setUpgraderecord("Upgrading 65%.");
@@ -456,9 +457,12 @@ void HandleUp::TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 		/////////////////////
 		const_cast<UpgradeDSP*>(&subItems->getUpObj())->clearObj();
 		cout << "up 7.5 clear" << endl;
-		if (subItems->parserSubItemsFileName(i) == 0) {
+		INT32 retParser = subItems->parserSubItemsFileName(i);
+		if (retParser == retOk) {
 			cout << "up 5 !" << endl;
-		} else {
+		} else if (retParser == 1)
+			continue;
+		else {
 			if (const_cast<UpgradeDSP*>(&subItems->getUpObj())->getUpStatus()
 					== equalVersion) {
 				FileOperation::deleteFile(
@@ -515,7 +519,7 @@ void HandleUp::TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 				INT32 retsendto = sendto(sockfd, (INT8*) sendtoBuffer,
 						sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
 						(struct sockaddr *) &recvAddr, tmp_server_addr_len);
-				cout<< "retsendot ::::"<<retsendto<<endl;
+				cout << "retsendot ::::" << retsendto << endl;
 				printf("found clint IP is:%s\n", inet_ntoa(recvAddr.sin_addr));
 				if (retUpStatus == retError)
 					break;
@@ -632,3 +636,42 @@ INT32 HandleUp::devRequestFile(DEV_Request_FileProtocal & request,
 	request.FileDataLen = fileTrans.getSendLen();
 	return retOk;
 }
+INT32 HandleUp::upAmplifier() {
+	INT32 sockfd;
+	INT8 recvBuff[32] = { 0 };
+	socklen_t addrlen;
+	struct sockaddr_in addr;
+	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (sockfd < 0) {
+		printf("I cannot socket success\n");
+		return retError;
+	}
+	addrlen = sizeof(struct sockaddr_in);
+	bzero(&addr, addrlen);
+	addr.sin_family = AF_INET;
+	addr.sin_addr.s_addr = htonl(INADDR_ANY); //任何主机地址
+	addr.sin_port = htons(UpAmplifierPort);
+
+	INT32 retSend = sendto(sockfd, upgradeAmplifier, strlen(upgradeAmplifier),
+			0, (struct sockaddr*) &addr, addrlen);
+	if (retSend <= 0) {
+		cout << "errorsend" << endl;
+		return retError;
+	}
+	INT32 retRecv = recvfrom(sockfd, recvBuff, sizeof(recvBuff), 0,
+			(struct sockaddr*) &addr, &addrlen);
+	if (retRecv == -1) {
+		cout << "recv error" << endl;
+		return retError;
+	} else if (retRecv > 0) {
+		if (strncmp(recvBuff, AmplifierUpsuccess, strlen(AmplifierUpsuccess))
+				== 0) {
+			return retError;
+		} else if (strncmp(recvBuff, AmplifierUpFail, strlen(AmplifierUpFail))
+				== 0) {
+			return retOk;
+		}
+	}
+	return retOk;
+}
+

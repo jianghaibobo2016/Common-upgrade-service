@@ -16,7 +16,7 @@ INT32 HandleUp::devReplyHandle(INT8 *sendtoBuff, T &s_devReply,
 	INT8 mac[13] = { 0 };
 	strcpy(mac,
 			SetNetworkTerminal::castMacToChar13(mac,
-					setNetworkTerminal->m_netWorkConfig.macAddr));
+					setNetworkTerminal->getNetConfStruct().macAddr));
 	mac[12] = '\0';
 	strncpy(s_devReply.DevID, TerminalDevTypeID, strlen(TerminalDevTypeID));
 	strcpy(s_devReply.DevID + strlen(TerminalDevTypeID), mac);

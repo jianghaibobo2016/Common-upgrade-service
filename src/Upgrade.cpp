@@ -10,6 +10,7 @@
 #include "DevSearch.h"
 #include "FileOperation.h"
 #include "RCSP.h"
+#include "HandleUp.h"
 using namespace std;
 using namespace FrameWork;
 UpgradeDSP::UpgradeDSP(INT8 *upgradeFile) :
@@ -21,6 +22,7 @@ UpgradeDSP::UpgradeDSP(INT8 *upgradeFile) :
 	cout << "construct " << endl;
 	newVersion = new INT8[8];
 	localVersion = new INT8[8];
+	dependVersion = new INT8[8];
 	itemName = new INT8[16];
 	versionFileItemName = new INT8[32];
 	upgraderecord = new INT8[msgLen];
@@ -29,6 +31,7 @@ UpgradeDSP::UpgradeDSP(INT8 *upgradeFile) :
 UpgradeDSP::~UpgradeDSP() {
 	delete[] newVersion;
 	delete[] localVersion;
+	delete[] dependVersion;
 	delete[] itemName;
 	delete[] versionFileItemName;
 	delete[] upgraderecord;
@@ -126,7 +129,7 @@ INT32 UpgradeDSP::parserFileName() {
 }
 
 INT32 UpgradeDSP::parserItemPackage(INT8 *PCRequestVersion) {
-	if (CrcCheck::parser_Package(upgradeFile, newVersion, itemName) != 0) {
+	if (CrcCheck::parser_Package(upgradeFile, newVersion, itemName, dependVersion) != 0) {
 		return retError;
 	}
 	if (FileOperation::isExistFile(newTarPackage) != true) {
@@ -187,7 +190,6 @@ void UpgradeDSP::clearObj() {
 	upResult = false;
 }
 
-
 UpgradeDSPSubItem::UpgradeDSPSubItem() :
 		productTarFile(newTarPackage), eachItemUpStatus(true), mSubItems(), mUpSubItem() {
 	aUpSubItem = new UpgradeDSP(NULL);
@@ -210,6 +212,16 @@ bool UpgradeDSPSubItem::getSubItems() {
 	return true;
 }
 INT32 UpgradeDSPSubItem::parserSubItemsFileName(UINT32 num) {
+
+	if (strncmp(mSubItems[num].c_str() + strlen(upFilePath), AmplifierUpgrade,
+			strlen(AmplifierUpgrade)) == 0) {
+		INT32 retUpAmp = HandleUp::upAmplifier();
+		if (retUpAmp == retOk){
+			return 1;
+		}else if (retUpAmp == retError){
+			return retError;
+		}
+	}
 	aUpSubItem->setUpgradeFile(const_cast<INT8 *>(mSubItems[num].c_str()));
 	INT8 record[msgLen] = { 0 };
 	if (aUpSubItem->parserFileName() != retOk) { //segmentation fault

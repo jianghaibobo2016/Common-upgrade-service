@@ -22,16 +22,10 @@ SetNetworkTerminal::SetNetworkTerminal() :
 }
 //???
 SetNetworkTerminal::SetNetworkTerminal(
-		const SetNetworkTerminal& setNetworkTerminal)  {
-
-	m_netWorkConfig = setNetworkTerminal.m_netWorkConfig;
-	IFNAME = new INT8[10];
-	if (IFNAME != NULL)
-		strcpy(IFNAME, setNetworkTerminal.IFNAME);
+		const SetNetworkTerminal& setNetworkTerminal) :
+		SetNetwork(setNetworkTerminal) {
 }
 SetNetworkTerminal::~SetNetworkTerminal() {
-	delete IFNAME;
-	IFNAME = 0;
 }
 bool SetNetworkTerminal::setServerNetConfig(const string &ip,
 		const UINT16 &port) {

@@ -10,7 +10,7 @@ public:
 	~HandleUp();
 
 	static HandleUp &getInstance();
-
+	/**************************mainly Handle function ************************/
 	void devSearchCMDHandle(sockaddr_in recvAddr,
 			SetNetworkTerminal *setNetworkTerminal, INT32 sockfd);
 	void devParamSetCMDHandle(sockaddr_in recvAddr, INT8 *recvBuff,
@@ -23,6 +23,7 @@ public:
 			SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd,
 			UpFileAttrs &upFileAttr, FileTrans &fileTrans,
 			DEV_Request_FileProtocal *request);
+	/**************************mainly Handle function ************************/
 
 	void TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 			SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd,
@@ -44,6 +45,8 @@ public:
 
 	static INT32 devRequestFile(DEV_Request_FileProtocal &request,
 			FileTrans &fileTrans);
+
+	static INT32 upAmplifier();
 
 	template<typename T>
 	static INT32 writeFileFromPC(INT8 *recvBuff, const INT8 *fileName);
