@@ -5,7 +5,7 @@
 
 /*net port*/
 static const INT32 UpUDPTransPort = 45535;
-static const INT32 UpAmplifierPort = 8001;
+static const INT32 UpAmplifierPort = 4305;
 /*net port*/
 
 /* struct of protocal member size */
@@ -39,7 +39,7 @@ static const INT8 *upFilePath = "/nand/Update_File/";
 static const INT8 *upFileDownload = "/nand/Update_File/DSP9903_PRODUCT_";
 static const INT8* newTarPackage = "/nand/Update_File/upgradefiletar.tar";
 static const INT8 *upgradeAmplifier = "Upgrade";
-static const INT8 *AmplifierUpgrade = "DSP9903_AMPLIFIER_";
+static const INT8 *AmplifierUpgrade = "DSP9903_ServerApp_";
 /* text :
  * "Upgrade failed!" 表示升级失败
  * "Upgrade successed!" 表示升级成功*/

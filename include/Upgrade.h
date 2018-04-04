@@ -69,6 +69,7 @@ public:
 	void setUpResult(bool result) {
 		upResult = result;
 	}
+	static void getVersionByItemName(INT8 *itemName, INT8 *version);
 	INT32 modifyVersionFile();
 	void clearObj();
 private:

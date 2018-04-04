@@ -5,6 +5,7 @@
 #include <Logger.h>
 #include "CrcCheck.h"
 #include "DevSearch.h"
+#include "Upgrade.h"
 #include "UpgradeServiceConfig.h"
 using namespace std;
 using namespace FrameWork;
@@ -46,8 +47,7 @@ INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 	/*Judge the depend version*/
 	if (pack_head.dependVersion != NULL) {
 		INT8 depLocalVer[7] = { 0 };
-		DevSearchTerminal::getSoftwareVersion(DependItemVersionName,
-				depLocalVer, pathVersionFile);
+		UpgradeDSP::getVersionByItemName(itemName, depLocalVer);
 		if (strncmp(pack_head.dependVersion, depLocalVer, strlen(depLocalVer))
 				> 0) {
 			fclose(src_fd);

@@ -129,7 +129,8 @@ INT32 UpgradeDSP::parserFileName() {
 }
 
 INT32 UpgradeDSP::parserItemPackage(INT8 *PCRequestVersion) {
-	if (CrcCheck::parser_Package(upgradeFile, newVersion, itemName, dependVersion) != 0) {
+	if (CrcCheck::parser_Package(upgradeFile, newVersion, itemName,
+			dependVersion) != 0) {
 		return retError;
 	}
 	if (FileOperation::isExistFile(newTarPackage) != true) {
@@ -139,6 +140,16 @@ INT32 UpgradeDSP::parserItemPackage(INT8 *PCRequestVersion) {
 	}
 	return retOk;
 }
+
+void UpgradeDSP::getVersionByItemName(INT8 *itemName, INT8 *version) {
+	for (INT32 i = 1; i < 11; i++) {
+		if (strncmp(itemName, itemsSet[i], strlen(itemsSet[i])) == 0) {
+			DevSearchTerminal::getSoftwareVersion(itemsVersionNameSet[i],
+					version, pathVersionFile);
+		}
+	}
+}
+
 INT32 UpgradeDSP::modifyVersionFile() {
 	if (!upResult)
 		return retError;
@@ -215,10 +226,11 @@ INT32 UpgradeDSPSubItem::parserSubItemsFileName(UINT32 num) {
 
 	if (strncmp(mSubItems[num].c_str() + strlen(upFilePath), AmplifierUpgrade,
 			strlen(AmplifierUpgrade)) == 0) {
+		cout << "up amplifier !!!!!!!!!!!!!!!!!!!!!!1"<<endl;
 		INT32 retUpAmp = HandleUp::upAmplifier();
-		if (retUpAmp == retOk){
+		if (retUpAmp == retOk) {
 			return 1;
-		}else if (retUpAmp == retError){
+		} else if (retUpAmp == retError) {
 			return retError;
 		}
 	}

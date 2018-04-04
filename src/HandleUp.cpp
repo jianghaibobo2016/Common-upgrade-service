@@ -520,7 +520,6 @@ void HandleUp::TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 						sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
 						(struct sockaddr *) &recvAddr, tmp_server_addr_len);
 				cout << "retsendot ::::" << retsendto << endl;
-				printf("found clint IP is:%s\n", inet_ntoa(recvAddr.sin_addr));
 				if (retUpStatus == retError)
 					break;
 				cout << "ok" << endl;
@@ -658,18 +657,22 @@ INT32 HandleUp::upAmplifier() {
 		cout << "errorsend" << endl;
 		return retError;
 	}
+	cout << "retsend : "<<retSend<<endl;
 	INT32 retRecv = recvfrom(sockfd, recvBuff, sizeof(recvBuff), 0,
 			(struct sockaddr*) &addr, &addrlen);
 	if (retRecv == -1) {
 		cout << "recv error" << endl;
 		return retError;
 	} else if (retRecv > 0) {
+		cout << "recv ret : "<<retRecv<<" recv buff : "<<recvBuff<<endl;
 		if (strncmp(recvBuff, AmplifierUpsuccess, strlen(AmplifierUpsuccess))
 				== 0) {
-			return retError;
+			cout << "sudccccccccc"<<endl;
+			return retOk;
 		} else if (strncmp(recvBuff, AmplifierUpFail, strlen(AmplifierUpFail))
 				== 0) {
-			return retOk;
+			cout << "faulllllllllll"<<endl;
+			return retError;
 		}
 	}
 	return retOk;
