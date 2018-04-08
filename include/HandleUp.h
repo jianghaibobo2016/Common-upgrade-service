@@ -48,6 +48,8 @@ public:
 
 	static INT32 upAmplifier();
 
+	static void sysReboot();
+
 	template<typename T>
 	static INT32 writeFileFromPC(INT8 *recvBuff, const INT8 *fileName);
 

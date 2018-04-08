@@ -52,8 +52,8 @@ INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 				> 0) {
 			fclose(src_fd);
 			Logger::GetInstance().Fatal(
-					"%s(): Request %s must not be lower than %s !",
-					__FUNCTION__, DependItemVersionName,
+					"%s(): Request %s version must not be lower than %s !",
+					__FUNCTION__, itemName,
 					pack_head.dependVersion);
 			return retError;
 		}

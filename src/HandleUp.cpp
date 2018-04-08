@@ -3,6 +3,8 @@
 #include "CMDParserUp.h"
 #include "Upgrade.h"
 #include "FileOperation.h"
+#include <unistd.h>
+#include <sys/reboot.h>
 
 HandleUp::HandleUp() {
 }
@@ -573,6 +575,8 @@ void HandleUp::TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 		upFileAttrs->setInUpgradeStatus(false);
 #endif
 		fileTrans.clearFileTrans();
+		sync();
+		HandleUp::sysReboot();
 		return;
 	}
 }
@@ -657,24 +661,30 @@ INT32 HandleUp::upAmplifier() {
 		cout << "errorsend" << endl;
 		return retError;
 	}
-	cout << "retsend : "<<retSend<<endl;
+	cout << "retsend : " << retSend << endl;
 	INT32 retRecv = recvfrom(sockfd, recvBuff, sizeof(recvBuff), 0,
 			(struct sockaddr*) &addr, &addrlen);
 	if (retRecv == -1) {
 		cout << "recv error" << endl;
 		return retError;
 	} else if (retRecv > 0) {
-		cout << "recv ret : "<<retRecv<<" recv buff : "<<recvBuff<<endl;
+		cout << "recv ret : " << retRecv << " recv buff : " << recvBuff << endl;
 		if (strncmp(recvBuff, AmplifierUpsuccess, strlen(AmplifierUpsuccess))
 				== 0) {
-			cout << "sudccccccccc"<<endl;
+			cout << "sudccccccccc" << endl;
 			return retOk;
 		} else if (strncmp(recvBuff, AmplifierUpFail, strlen(AmplifierUpFail))
 				== 0) {
-			cout << "faulllllllllll"<<endl;
+			cout << "faulllllllllll" << endl;
+			return retError;
+		} else {
+			cout << "faulllllll22222222222" << endl;
 			return retError;
 		}
 	}
 	return retOk;
 }
 
+void HandleUp::sysReboot() {
+	reboot(RB_AUTOBOOT);
+}

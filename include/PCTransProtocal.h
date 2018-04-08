@@ -147,6 +147,7 @@ typedef struct DEV_Request_UpgradeReply_tag{
 /* text :
  * "Upgrade failed!" 表示升级失败
  * "Up to date!" 表示无需升级
+ * "Upgrade filesystem!" 表示升级主文件系统 其余升级成功,进入重启
  * "Upgrade successed!" 表示升级成功*/
 //PC端无返回
 

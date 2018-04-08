@@ -39,7 +39,8 @@ static const INT8 *upFilePath = "/nand/Update_File/";
 static const INT8 *upFileDownload = "/nand/Update_File/DSP9903_PRODUCT_";
 static const INT8* newTarPackage = "/nand/Update_File/upgradefiletar.tar";
 static const INT8 *upgradeAmplifier = "Upgrade";
-static const INT8 *AmplifierUpgrade = "DSP9903_ServerApp_";
+//static const INT8 *AmplifierUpgrade = "DSP9903_ServerApp_";
+static const INT8 *AmplifierUpgrade = "DSP9903_Amplifier_";
 /* text :
  * "Upgrade failed!" 表示升级失败
  * "Upgrade successed!" 表示升级成功*/
