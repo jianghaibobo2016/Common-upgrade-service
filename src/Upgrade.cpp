@@ -202,7 +202,8 @@ void UpgradeDSP::clearObj() {
 }
 
 UpgradeDSPSubItem::UpgradeDSPSubItem() :
-		productTarFile(newTarPackage), eachItemUpStatus(true), mSubItems(), mUpSubItem() {
+		productTarFile(newTarPackage), eachItemUpStatus(true), mSubItems(), mUpSubItem(), upSystem(
+				false) {
 	aUpSubItem = new UpgradeDSP(NULL);
 }
 UpgradeDSPSubItem::~UpgradeDSPSubItem() {
@@ -226,13 +227,18 @@ INT32 UpgradeDSPSubItem::parserSubItemsFileName(UINT32 num) {
 
 	if (strncmp(mSubItems[num].c_str() + strlen(upFilePath), AmplifierUpgrade,
 			strlen(AmplifierUpgrade)) == 0) {
-		cout << "up amplifier !!!!!!!!!!!!!!!!!!!!!!1"<<endl;
+		cout << "up amplifier !!!!!!!!!!!!!!!!!!!!!!1" << endl;
 		INT32 retUpAmp = HandleUp::upAmplifier();
 		if (retUpAmp == retOk) {
 			return 1;
 		} else if (retUpAmp == retError) {
 			return retError;
 		}
+	}
+	if (strncmp(mSubItems[num].c_str() + strlen(upFilePath), MainRootfsUpgrade,
+			strlen(MainRootfsUpgrade)) == 0) {
+		cout << "up mainrootfs !!!!!!!!!!!!!!!!!!!!!!1" << endl;
+		this->setUpSystem(true);
 	}
 	aUpSubItem->setUpgradeFile(const_cast<INT8 *>(mSubItems[num].c_str()));
 	INT8 record[msgLen] = { 0 };
@@ -265,13 +271,18 @@ INT32 UpgradeDSPSubItem::upgradeItem(UINT32 num) {
 
 	return retOk;
 }
-INT32 UpgradeDSPSubItem::excuteUpgradeShell(UINT32 num) {
+INT32 UpgradeDSPSubItem::excuteUpgradeShell(UINT32 num, INT8 *PCIP) {
 	FILE *fstream = NULL;
 	char buff[256] = { 0 };
 	string exeCMD = "cd ";
 	exeCMD += upFilePath;
 	exeCMD += " && ./";
 	exeCMD += UpgradeShell;
+	if (this->getUpSystem()) {
+		exeCMD += " ";
+		cout << "PCIP::: "<<PCIP<<endl;
+		exeCMD += PCIP;
+	}
 	if (NULL == (fstream = popen(exeCMD.c_str(), "r"))) {
 		fprintf(stderr, "execute command failed: %s", strerror(errno));
 		INT8 record[msgLen] = { 0 };

@@ -38,11 +38,13 @@ UINT16 CMDParserUp::parserPCRequestHead(void *buffer, INT32 recvLen) {
 		return (UINT16) retError;
 	}
 	/* modify */
+	cout << "dalen: " << pcHead->DataLen << " recvlen: " << recvLen << endl;
 	if ((pcHead->DataLen != recvLen - sizeof(PC_DEV_Header))
 			&& (pcHead->DataLen != 0)) {
 		return (UINT16) retError;
 	}
 	UINT16 headCMD = pcHead->HeadCmd;
+	cout << "cmd: " << pcHead->HeadCmd << endl;
 	return headCMD;
 }
 
@@ -232,24 +234,29 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 		UpFileAttrs &upFileAttr, INT8 *failReason) {
 	INT8 *pcUpgradeCMD = (INT8 *) buffer;
 	pcUpgradeCMD += sizeof(PC_DEV_Header);
-
+	cout << "test 1!" << endl;
 	if (compareUpgradeItem(pcUpgradeCMD, TerminalHardVersion,
 			strlen(TerminalHardVersion)) != true) {
 
 	}
+	cout << "test 2!" << endl;
 	pcUpgradeCMD += hardVersionSize;
 	/* new software version */
-	upFileAttr.setNewSoftVersion(pcUpgradeCMD, newSoftVersionSize);
-
+	upFileAttr.setNewSoftVersion(pcUpgradeCMD, 6);
+	cout << "test 3!" << endl;
 	INT8 fileDownloadName[fileDownloadPathSize] = { 0 };
 	memcpy(fileDownloadName, upFileDownload, strlen(upFileDownload));
 	strcat(fileDownloadName, upFileAttr.getNewSoftVersion());
 	upFileAttr.setFileDownloadPath(fileDownloadName, strlen(fileDownloadName));
-
+	cout << "test 4!" << endl;
+	INT8 version[7] = { 0 };
+	DevSearchTerminal::getSoftwareVersion(ProductVersionName, version,
+			pathVersionFile);
 	/*WEB request to upgrade CMD judgement*/
-	if (compareUpgradeItem(pcUpgradeCMD + strlen(upFileAttr.getNewSoftVersion()),
-			WEBREQUEST, strlen(WEBREQUEST)) != 0) {
-
+	if (compareUpgradeItem(
+			pcUpgradeCMD + strlen(upFileAttr.getNewSoftVersion()), WEBREQUEST,
+			strlen(WEBREQUEST)) != 0) {
+		cout << "test 5!" << endl;
 		pcUpgradeCMD += newSoftVersionSize;
 		INT32 fileSize = 0;
 		memcpy(&fileSize, pcUpgradeCMD, sizeof(UINT32));
@@ -259,17 +266,17 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 		upFileAttr.setFileMD5Code(pcUpgradeCMD, upgradeFileMd5Size);
 		//printf("recv md5 : %u\n", upFileAttr.getFileMD5Code());
 	} else {
+		cout << "test 6!" << endl;
 		if (!FileOperation::isExistFile(upFileAttr.getFileDownloadPath())) {
 			strcpy(failReason, UPFILENOTEXIST);
 			return errorVersionStatus;
 		}
-		strcpy(failReason, WEBBeginToUpgrade);
+		cout << "test 7!" << endl;
+//		strcpy(failReason, WEBBeginToUpgrade);
 		upFileAttr.setWebUpMethod(true);
-		return higherVerison;
+//		return higherVerison;
 	}
-	INT8 version[7] = { 0 };
-	DevSearchTerminal::getSoftwareVersion(ProductVersionName, version,
-			pathVersionFile);
+
 	if (strlen(version) != 0) {
 		INT32 retCompare = compareUpgradeItem(upFileAttr.getNewSoftVersion(),
 				version, strlen(version));
@@ -280,6 +287,7 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 			strcpy(failReason, LOWERVERSION);
 			return lowerVersion;
 		} else if (retCompare > retOk) {
+			strcpy(failReason, WEBBeginToUpgrade);
 			return higherVerison;
 		}
 	} else {

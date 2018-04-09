@@ -7,6 +7,7 @@
 #include "DevSearch.h"
 #include "Upgrade.h"
 #include "UpgradeServiceConfig.h"
+#include "RCSP.h"
 using namespace std;
 using namespace FrameWork;
 CrcCheck::CrcCheck() {
@@ -17,8 +18,7 @@ INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 	if (filename == NULL) {
 		return retError;
 	}
-	PACK_HEAD pack_head;
-
+	SmartPtr<PACK_HEAD> pack_head (new PACK_HEAD);
 	INT32 n_read = 0;
 	INT32 n_write = 0;
 	INT32 count_write = 0;
@@ -36,28 +36,27 @@ INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 	}
 
 	n_read = fread(buff, 1, packhead_len, src_fd);
-	memcpy(&pack_head, buff, packhead_len);
-
-	if ((strncmp(pack_head.head, HEAD, 8)) != 0) {
+	memcpy(pack_head.get(), buff, packhead_len);
+	if ((strncmp(pack_head->head, HEAD, 8)) != 0) {
 		printf("ERROR : File's head is not right !\n");
 		fclose(src_fd);
 		return retError;
 	} else
 		;
 	/*Judge the depend version*/
-	if (pack_head.dependVersion != NULL) {
+	if (pack_head->dependVersion != NULL) {
 		INT8 depLocalVer[7] = { 0 };
 		UpgradeDSP::getVersionByItemName(itemName, depLocalVer);
-		if (strncmp(pack_head.dependVersion, depLocalVer, strlen(depLocalVer))
+		if (strncmp(pack_head->dependVersion, depLocalVer, strlen(depLocalVer))
 				> 0) {
 			fclose(src_fd);
 			Logger::GetInstance().Fatal(
 					"%s(): Request %s version must not be lower than %s !",
 					__FUNCTION__, itemName,
-					pack_head.dependVersion);
+					pack_head->dependVersion);
 			return retError;
 		}
-	} else if (strncmp(pack_head.m_version + strlen(TerminalDevType) + 1,
+	} else if (strncmp(pack_head->m_version + strlen(TerminalDevType) + 1,
 			ProductItemName, strlen(ProductItemName)) == 0) {
 		fclose(src_fd);
 		Logger::GetInstance().Fatal(
@@ -67,7 +66,7 @@ INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 	}
 	/*Judge the depend version*/
 	INT8 tmpVersion[32] = { 0 };
-	memcpy(tmpVersion, pack_head.m_version, strlen(pack_head.m_version));
+	memcpy(tmpVersion, pack_head->m_version, strlen(pack_head->m_version));
 	memcpy(newVersion,
 			tmpVersion + strlen(TerminalDevType) + 2 + strlen(itemName), 6);
 	FILE *dst_fd = fopen(newTarPackage, "wb+");
@@ -95,7 +94,7 @@ INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 			break;
 	}
 
-	if (crc != pack_head.crcCode) {
+	if (crc != pack_head->crcCode) {
 		printf("ERROR : Crc32 check failed !\n");
 		fclose(src_fd);
 		fclose(dst_fd);

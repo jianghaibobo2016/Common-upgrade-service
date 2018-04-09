@@ -110,7 +110,7 @@ typedef struct PC_Request_DevUpgrade_tag{
 typedef struct DEV_Reply_DevUpgrade_tag{
 	PC_DEV_Header header;
 	char DevID[40]; //设备ID(前四个字符为设备类型)//add
-	UINT8 Result; //1:可以升级,0:不可以升级
+	UINT8 Result; //1:可以升级,0:不可以升级  web无需升级 定协议 "No need to upgrade !"
 	//UINT8 FailReasonLen;
 	//char* FailReason;
 //......

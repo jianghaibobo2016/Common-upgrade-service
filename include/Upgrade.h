@@ -53,6 +53,7 @@ public:
 	bool getUpResult() {
 		return upResult;
 	}
+
 	void setUpgradeFile(INT8 *file) {
 		upgradeFile = file;
 	}
@@ -69,6 +70,7 @@ public:
 	void setUpResult(bool result) {
 		upResult = result;
 	}
+
 	static void getVersionByItemName(INT8 *itemName, INT8 *version);
 	INT32 modifyVersionFile();
 	void clearObj();
@@ -112,8 +114,14 @@ public:
 	bool getEachItemUpResult() {
 		return eachItemUpStatus;
 	}
+	bool getUpSystem() {
+		return upSystem;
+	}
 	void setEachItemUpResult(bool result) {
 		eachItemUpStatus = result;
+	}
+	void setUpSystem(bool upSys) {
+		upSystem = upSys;
 	}
 	map<INT32, string>& getExtractItem() {
 		return mUpSubItem;
@@ -124,7 +132,7 @@ public:
 	bool getSubItems();
 	INT32 parserSubItemsFileName(UINT32 num);
 	INT32 upgradeItem(UINT32 num);
-	INT32 excuteUpgradeShell(UINT32 num);
+	INT32 excuteUpgradeShell(UINT32 num, INT8 *PCIP);
 	INT32 modifyVersionFile();
 private:
 	const INT8 *productTarFile;
@@ -132,6 +140,7 @@ private:
 	map<INT32, string> mSubItems;
 	map<INT32, string> mUpSubItem;
 	UpgradeDSP *aUpSubItem;
+	bool upSystem;
 };
 #endif
 

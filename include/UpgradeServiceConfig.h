@@ -41,6 +41,7 @@ static const INT8* newTarPackage = "/nand/Update_File/upgradefiletar.tar";
 static const INT8 *upgradeAmplifier = "Upgrade";
 //static const INT8 *AmplifierUpgrade = "DSP9903_ServerApp_";
 static const INT8 *AmplifierUpgrade = "DSP9903_Amplifier_";
+static const INT8 *MainRootfsUpgrade = "DSP9903_MROOTFS_";
 /* text :
  * "Upgrade failed!" 表示升级失败
  * "Upgrade successed!" 表示升级成功*/

@@ -79,17 +79,20 @@ void HandleUp::devUpgradePCRequestCMDHandle(sockaddr_in recvAddr,
 		INT8 *recvBuff, SetNetworkTerminal *setNetworkTerminal, INT32 sockfd,
 		UpFileAttrs &upFileAttr, FileTrans &fileTrans,
 		DEV_Request_FileProtocal *request) {
+	cout << "web upgrade test 1"<<endl;
 	INT8 sendtoBuffer[SendBufferSizeMax] = { 0 };
 	INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
 	SmartPtr<DEV_Reply_DevUpgrade> devReply(new DEV_Reply_DevUpgrade);
 	INT32 retHandle = upgradePCrequestHandle(recvBuff, sendtoBuffer,
 			*devReply.get(), upFileAttr, setNetworkTerminal);
+	cout << "web upgrade test 2"<<endl;
 	sendto(sockfd, sendtoBuffer,
 			sizeof(PC_DEV_Header) + devReply->header.DataLen, 0,
 			(struct sockaddr *) &recvAddr, tmp_server_addr_len);
 	if (retHandle != retOk) {
 		return;
 	}
+	cout << "web upgrade test 3"<<endl;
 	if (upFileAttr.getWebUpMethod() == true) {
 		TerminalUpgradeHandle(recvAddr, recvBuff, setNetworkTerminal, sockfd,
 				upFileAttr, fileTrans, request);
@@ -192,7 +195,7 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 				upFileAttr, fileTrans, request);
 	}
 	return;
-
+#if 0
 	SmartPtr<UpgradeDSP> upDSPProduct(
 			new UpgradeDSP(upFileAttr.getFileDownloadPath()));
 	if (upDSPProduct->parserFileName() == retOk) {
@@ -364,13 +367,13 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 		sendto(sockfd, (INT8*) sendtoBuffer,
 				sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
 				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
-#if 0
+/*
 		upFileAttrs->setInUpgradeStatus(false);
-#endif
+*/
 		fileTrans.clearFileTrans();
 		return;
 	}
-
+#endif
 //	}
 }
 
@@ -500,8 +503,8 @@ void HandleUp::TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 					sprintf(replyText, "Upgrade file error !");
 				}
 			}
-
-			if (subItems->excuteUpgradeShell(i) == 0) {
+			INT8 *PCIP = inet_ntoa(recvAddr.sin_addr);
+			if (subItems->excuteUpgradeShell(i,PCIP) == 0) {
 				if (subItems->modifyVersionFile() == retOk) {
 
 					percentUp += 30 * (i / itemsNum);
@@ -540,6 +543,7 @@ void HandleUp::TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 			cout << "up 9 !" << endl;
 		} else {
 			retUpStatus = retError;
+			subItems->setEachItemUpResult(false);
 			memset(sendtoBuffer, 0, SendBufferSizeMax);
 			if (HandleUp::devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
 					*upgradeReply.get(),
@@ -562,7 +566,11 @@ void HandleUp::TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 			sprintf(replyText, "Upgrade failed !");
 		} else {
 			retUpStatus = retOk;
-			sprintf(replyText, "Upgrade successed !");
+			if (!subItems->getUpSystem())
+				sprintf(replyText, "Upgrade successed !");
+			else{
+				sprintf(replyText, "Upgrade system....");
+			}
 		}
 		if (HandleUp::devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
 				*upgradeReply.get(), replyText, retUpStatus, setNetworkTerminal)
@@ -576,7 +584,7 @@ void HandleUp::TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 #endif
 		fileTrans.clearFileTrans();
 		sync();
-		HandleUp::sysReboot();
+//		HandleUp::sysReboot();
 		return;
 	}
 }

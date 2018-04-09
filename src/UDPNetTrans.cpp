@@ -32,7 +32,7 @@ UDPNetTrans::~UDPNetTrans() {
 INT32 UDPNetTrans::socketRunThread() {
 	pthread_t tid;
 	if (pthread_create(&tid, NULL, pthreadStart, (void *) this) == 0) {
-		printf("Create thread unsuccessfully!........\n");
+		printf("Create thread successfully!........\n");
 	} else
 		;
 	return retOk;
