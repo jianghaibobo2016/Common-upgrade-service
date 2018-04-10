@@ -5,6 +5,7 @@
 
 /*net port*/
 static const INT32 UpUDPTransPort = 45535;
+static const INT32 UpRespondPort = 65530;
 static const INT32 UpAmplifierPort = 4305;
 /*net port*/
 
@@ -61,6 +62,7 @@ static const INT8 *LOWERVERSION =
 		"Request soft version lower than local soft version !";
 static const INT8 *GETVERSIONFAILED = "Get local version failed!";
 static const INT8 *UPFILENOTEXIST = "Upgrade file is not existed !";
+static const INT8 *upSysRespond = "Upgrade system successed !";
 //static const INT8 *PRODUCT_TYPE = "DSP9903";
 static const INT8 *UpgradeShell = "upgrade.sh";
 static const INT8 *UpgradeShellWithPath = "/nand/Update_File/upgrade.sh";

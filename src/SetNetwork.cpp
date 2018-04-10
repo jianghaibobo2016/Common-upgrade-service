@@ -159,8 +159,8 @@ bool SetNetwork::getNetworkConfig() {
 	INT32 countOut = 20;
 	while (fgets(buf, sizeof(buf), fp)) {
 		countOut--;
-		if (sscanf(buf, "%s\t%lX\t%lX", iface, &dest_addr, &gate_addr) != 3
-				|| dest_addr != 0) {
+		if (sscanf(buf, "%s\t%lX\t%lX", iface, (long unsigned int *) &dest_addr,
+				(long unsigned int *) &gate_addr) != 3 || dest_addr != 0) {
 			if (countOut >= 0)
 				continue;
 			else {

@@ -127,7 +127,7 @@ public:
 	~IniConfigFile() {
 	}
 	const INT8 *iniFile;
-	bool readIniConfFile(const INT8 *section, const INT8 *key, INT8 *value);
+	static bool readIniConfFile(const INT8 *section, const INT8 *key, INT8 *value);
 	INT32 setIniConfFile(const INT8 *section, const INT8 *key,
 			const INT8 *value);
 private:

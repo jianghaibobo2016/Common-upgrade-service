@@ -19,13 +19,19 @@ using namespace FrameWork;
 
 SetNetworkTerminal::SetNetworkTerminal() :
 		SetNetwork() {
+	PCIP = new INT8[32];
+	memset(PCIP, 0, 32);
 }
 //???
 SetNetworkTerminal::SetNetworkTerminal(
 		const SetNetworkTerminal& setNetworkTerminal) :
 		SetNetwork(setNetworkTerminal) {
+	PCIP = new INT8[32];
+	memset(PCIP, 0, 32);
+	setPCIP(setNetworkTerminal.getPCIP());
 }
 SetNetworkTerminal::~SetNetworkTerminal() {
+	delete[] PCIP;
 }
 bool SetNetworkTerminal::setServerNetConfig(const string &ip,
 		const UINT16 &port) {

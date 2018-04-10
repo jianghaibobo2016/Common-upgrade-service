@@ -48,6 +48,8 @@ public:
 
 	static INT32 upAmplifier();
 
+	static INT32 upMainRootfsRespond(INT32 m_socket, SetNetworkTerminal &net);
+
 	static void sysReboot();
 
 	template<typename T>

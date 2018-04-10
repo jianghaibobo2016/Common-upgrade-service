@@ -12,7 +12,7 @@
 
 CROSS_COMPILE = arm-hisiv400-linux-
 OPTIMIZE := -O2
-WARNINGS := -Wall -Wno-unused -Wno-format  #-Wno-format  
+WARNINGS := -Wall -Wno-unused   #-Wno-format  
 DEFS     :=
 EXTRA_CFLAGS := 
 
@@ -24,7 +24,7 @@ EXTRA_SRC =
 EXCLUDE_FILES =
 
 SUFFIX       = c cpp cc cxx
-TARGET       := ./bin/testnetwork
+TARGET       := ./bin/UpgradeService
 #TARGET_TYPE  :=
 TARGET_TYPE  := app
 #TARGET_TYPE  :=

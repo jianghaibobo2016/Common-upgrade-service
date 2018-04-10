@@ -8,17 +8,19 @@
 #include "Uncopyable.h"
 #include "UDPNetTrans.h"
 
-class UpgradeService : private Uncopyable
-{
+class UpgradeService: private Uncopyable {
 public:
-    SetNetworkTerminal *setNetworkTerminal;
-public:
-    UpgradeService(SetNetworkTerminal *setNetworkTerminal);
-    ~UpgradeService();
+	UpgradeService(SetNetworkTerminal *setNetworkTerminal);
+	~UpgradeService();
 
-    INT32 start();
+	const SetNetworkTerminal &getNetC() const {
+		return *setNetworkTerminal;
+	}
+
+	INT32 start();
 
 private:
+	SetNetworkTerminal *setNetworkTerminal;
 
 };
 
