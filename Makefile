@@ -16,7 +16,7 @@ WARNINGS := -Wall -Wno-unused   #-Wno-format
 DEFS     :=
 EXTRA_CFLAGS := 
 
-INC_DIR   = ./include
+INC_DIR   = ./include ./include/configHeader
 SRC_DIR   := ./src
 SRC_D   = ./src
 OBJ_DIR   = ./obj
@@ -24,7 +24,7 @@ EXTRA_SRC =
 EXCLUDE_FILES =
 
 SUFFIX       = c cpp cc cxx
-TARGET       := ./bin/UpgradeService
+TARGET       := ./bin/UpgradeService_9906
 #TARGET_TYPE  :=
 TARGET_TYPE  := app
 #TARGET_TYPE  :=

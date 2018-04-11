@@ -506,8 +506,11 @@ void HandleUp::TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 			INT8 *PCIP = inet_ntoa(recvAddr.sin_addr);
 			if (subItems->excuteUpgradeShell(i, PCIP) == 0) {
 				if (subItems->modifyVersionFile() == retOk) {
-
-					percentUp += 30 * (i / itemsNum);
+					cout << "i : itemnum: perup: " << i << endl << itemsNum
+							<< endl << percentUp << endl;
+					percentUp += (30 / itemsNum);
+					cout << "i : itemnum: perup: " << i << endl << itemsNum
+							<< endl << percentUp << endl;
 					sprintf(replyText, "Upgrading %u%%.", percentUp);
 					cout << "modify ok" << endl;
 					retUpStatus = retOk;
@@ -632,8 +635,10 @@ INT32 HandleUp::devRequestFileInit(DEV_Request_FileProtocal & request,
 			+ sizeof(mDevRequest.StartPosition)
 			+ sizeof(mDevRequest.FileDataLen);
 	memcpy(request.DevType, TerminalDevType, strlen(TerminalDevType));
-	memcpy(request.HardVersion, TerminalHardVersion,
-			strlen(TerminalHardVersion));
+	INT8 hardVersion[8] = { 0 };
+	DevSearchTerminal::getSoftwareVersion("hardware_version", hardVersion,
+			pathVersionFile);
+	memcpy(request.HardVersion, hardVersion, strlen(hardVersion));
 	memcpy(request.NewSoftVersion, upFileAttr.getNewSoftVersion(),
 			strlen(upFileAttr.getNewSoftVersion()));
 	request.StartPosition = fileTrans.getStartPos();
@@ -693,8 +698,7 @@ INT32 HandleUp::upAmplifier() {
 	return retOk;
 }
 
-INT32 HandleUp::upMainRootfsRespond(INT32 m_socket,
-		SetNetworkTerminal &net) {
+INT32 HandleUp::upMainRootfsRespond(INT32 m_socket, SetNetworkTerminal &net) {
 	SmartPtr<DEV_Request_UpgradeReply> devReply(new DEV_Request_UpgradeReply);
 	devReply->header.HeadCmd = 0x0005;
 	struct sockaddr_in addr;

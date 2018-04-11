@@ -17,7 +17,7 @@
 #include <arpa/inet.h>
 #include <net/if_arp.h> /* ARPHRD_ETHER */
 #include "SetNetwork.h"
-//#include <SetNetworkWithServer.h>
+#include "UpgradeServiceConfig.h"
 
 using namespace std;
 using namespace FrameWork;
@@ -72,18 +72,17 @@ if (iniConfFile.setIniConfFile("NETWORK", "macaddr", macaddr) != retOk)         
 }
 
 SetNetwork::SetNetwork() :
-		m_netWorkConfig(), networkStatus(errorStatus) {
-	IFNAME = new char[8];
-	memset(IFNAME, 0, 8);
+		m_netWorkConfig(), IFNAME(NULL), networkStatus(errorStatus),initSet(false) {
+	IFNAME = new INT8[8];
 }
 //???
 SetNetwork::SetNetwork(const SetNetwork& setNet) :
 		networkStatus(errorStatus) {
 	m_netWorkConfig = setNet.m_netWorkConfig;
 	IFNAME = new INT8[10];
-	memset(IFNAME, 0, 8);
 	if (IFNAME != NULL)
 		strcpy(IFNAME, setNet.IFNAME);
+	initSet=setNet.initSet;
 }
 SetNetwork::~SetNetwork() {
 	delete IFNAME;
@@ -96,36 +95,37 @@ bool SetNetwork::getNetworkConfig() {
 	FILE *fp;
 	INT8 buf[256]; // 128 is enough for linux
 	INT8 iface[16];
-	UINT32 dest_addr, gate_addr;
-
+	unsigned int dest_addr, gate_addr;
 	if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
-		Logger::GetInstance().Error("%s() : Create sock fail : %s ! LINE : %d",
-				__FUNCTION__, strerror(errno), __LINE__);
+		FILE_LINE;
+		Logger::GetInstance().Error("Create sock fail : %s !", strerror(errno));
 		return false;
 	}
 	memset(&ifr, 0, sizeof(ifr));
 	if (IFNAME == NULL) {
-		Logger::GetInstance().Error("%s() : Please set IFNAME ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		Logger::GetInstance().Error("Please set IFNAME !");
 		close(sock);
 		return false;
 	}
 	strncpy(ifr.ifr_name, IFNAME, IFNAMSIZ - 1);
 
+	//No such file or directory ! ioctl()
 	//mac addr
-	if (ioctl(sock, SIOCGIFHWADDR, &ifr) < 0) {
-		Logger::GetInstance().Error("%s() : Get MAC fail : %s ! LINE : %d",
-				__FUNCTION__, strerror(errno), __LINE__);
+	INT32 retIO = ioctl(sock, SIOCGIFHWADDR, &ifr);
+	if (retIO < 0) {
+		FILE_LINE;
+		Logger::GetInstance().Error("Get MAC fail : %s !", strerror(errno));
 		close(sock);
 		return false;
 	} else {
-		// printf("%02x\n", ifr.ifr_hwaddr.sa_data[3]);
+//		 printf("%02x\n", ifr.ifr_hwaddr.sa_data[3]);
 		m_netWorkConfig.macAddr = ByteToHexString(ifr.ifr_hwaddr.sa_data, 6);
 	}
 	//ip addr
 	if (ioctl(sock, SIOCGIFADDR, &ifr) != 0) {
-		Logger::GetInstance().Error("%s() : Get IP fail : %s ! LINE : %d",
-				__FUNCTION__, strerror(errno), __LINE__);
+
+		FILE_LINE;
+		Logger::GetInstance().Error("Get IP fail : %s !", strerror(errno));
 		close(sock);
 		return false;
 	} else {
@@ -133,10 +133,11 @@ bool SetNetwork::getNetworkConfig() {
 		memcpy(&sin, &ifr.ifr_addr, sizeof(sin));
 		m_netWorkConfig.ipAddr = inet_ntoa(sin.sin_addr);
 	}
+
 	//net mask
 	if (ioctl(sock, SIOCGIFNETMASK, &ifr) < 0) {
-		Logger::GetInstance().Error("%s() : Get NETMASK fail : %s ! LINE : %d",
-				__FUNCTION__, strerror(errno), __LINE__);
+		FILE_LINE;
+		Logger::GetInstance().Error("Get NETMASK fail : %s !", strerror(errno));
 		close(sock);
 		return false;
 	} else {
@@ -144,12 +145,13 @@ bool SetNetwork::getNetworkConfig() {
 		m_netWorkConfig.netmaskAddr = inet_ntoa(sin.sin_addr);
 	}
 	close(sock);
+
 	//gateway
+
 	fp = fopen("/proc/net/route", "r");
 	if (fp == NULL) {
 		FILE_LINE;
-		Logger::GetInstance().Error("%s() : Get NETMASK fail : %s ! LINE : %d",
-				__FUNCTION__, strerror(errno), __LINE__);
+		Logger::GetInstance().Error("Get NETMASK fail : %s !", strerror(errno));
 		return false;
 	}
 	/* Skip title line */
@@ -202,65 +204,56 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 	CheckNetConfig checkNetConfig;
 	/* args check */
 	if (ipaddr == NULL && macaddr == NULL) {
-		Logger::GetInstance().Error("%s() : None input! LINE : %d",
-				__FUNCTION__, __LINE__);
+		Logger::GetInstance().Error("None input!");
 		return false;
 	}
 	if (iniFile == NULL) {
-		Logger::GetInstance().Error("%s() : None ini file input! LINE : %d",
-				__FUNCTION__, __LINE__);
+		Logger::GetInstance().Error("%s() :None ini file input!", __FUNCTION__);
 		return false;
 	}
-	// SetNetworkTerminal setNet;
-	if (this->getNetworkConfig() != true) {
-		Logger::GetInstance().Error(
-				"%s() : Get network config failed ! LINE : %d", __FUNCTION__,
-				__LINE__);
-		return false;
+	if (!initSet){
+		// SetNetworkTerminal setNet;
+		if (this->getNetworkConfig() != true) {
+			Logger::GetInstance().Error("%s() :Get network config failed !",
+					__FUNCTION__);
+			return false;
+		}
 	}
 	IniConfigFile iniConfFile;
 	/*  */
 	if (macaddr == NULL) {
 		if (subnet == NULL) {
 			if (checkNetConfig.checkIP(ipaddr, 0) != true) {
-				Logger::GetInstance().Error(
-						"%s() : Ip input is incorrect ! LINE : %d",
-						__FUNCTION__,
-						__LINE__);
+				Logger::GetInstance().Error("%s() : Ip input is incorrect !",
+						__FUNCTION__);
 				return false;
 			}
 			if (setNet(ipaddr, this->m_netWorkConfig.netmaskAddr.c_str(),
 					this->m_netWorkConfig.gatewayAddr.c_str()) != true) {
 				RESTORENET;
 				Logger::GetInstance().Error(
-						"%s() : Set ip netmask gateway ! LINE : %d",
-						__FUNCTION__,
-						__LINE__);
+						"%s %s() : Set ip netmask gateway !",
+						__FILE__, __FUNCTION__);
 				return false;
 			}
 			if (iniConfFile.setIniConfFile("NETWORK", "ipaddr", ipaddr)
 					!= retOk) {
-				Logger::GetInstance().Error(
-						"%s() : Set ip into ini file ! LINE : %d", __FUNCTION__,
-						__LINE__);
+				Logger::GetInstance().Error("%s() : Set ip into ini file !",
+						__FUNCTION__);
 				RESTORENET;
 				return false;
 			}
 		} else if (subnet != NULL && gateway != NULL) {
 			if (checkNetConfig.checkGateway(ipaddr, subnet, gateway) != true) {
 				Logger::GetInstance().Error(
-						"%s() : Ip netmask gateywa input is incorrect ! LINE : %d",
-						__FUNCTION__,
-						__LINE__);
+						"%s() : Ip netmask gateywa input is incorrect !",
+						__FUNCTION__);
 				return false;
 			}
-
 			if (setNet(ipaddr, subnet, gateway) != true) {
 				RESTORENET;
-				Logger::GetInstance().Error(
-						"%s() : Set ip netmask gateway ! LINE : %d",
-						__FUNCTION__,
-						__LINE__);
+				Logger::GetInstance().Error("%s() : Set ip netmask gateway !",
+						__FUNCTION__);
 				return false;
 			}
 			if ((iniConfFile.setIniConfFile("NETWORK", "ipaddr", ipaddr)
@@ -270,9 +263,8 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 					|| (iniConfFile.setIniConfFile("NETWORK", "gateway",
 							gateway) != retOk)) {
 				Logger::GetInstance().Error(
-						"%s() : Set network config into ini file ! LINE : %d",
-						__FUNCTION__,
-						__LINE__);
+						"%s() : Set network config into ini file !",
+						__FUNCTION__);
 				RESTORENET;
 				return false;
 			}
@@ -283,17 +275,15 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 		memcpy(macCheck, macaddr, strlen(macaddr));
 		macCheck[17] = '\0';
 		if (checkNetConfig.checkMAC(macCheck) != true) {
-			Logger::GetInstance().Error(
-					"%s() : Mac input is incorrect ! LINE : %d", __FUNCTION__,
-					__LINE__);
+			Logger::GetInstance().Error("%s() : Mac input is incorrect !",
+					__FUNCTION__);
 			return false;
 		}
 		if (ipaddr != NULL) {
 			if (subnet == NULL) {
 				if (checkNetConfig.checkIP(ipaddr, 0) != true) {
 					Logger::GetInstance().Error(
-							"%s() : Ip input is incorrect ! LINE : %d",
-							__FUNCTION__, __LINE__);
+							"%s() : Ip input is incorrect !", __FUNCTION__);
 					return false;
 				}
 				DOWNNET
@@ -308,21 +298,19 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 					if (iniConfFile.setIniConfFile("NETWORK", "macaddr",
 							this->m_netWorkConfig.macAddr.c_str()) != retOk) {
 						Logger::GetInstance().Error(
-								"%s() : Set MAC into ini file ! LINE : %d",
-								__FUNCTION__, __LINE__);
+								"%s() : Set MAC into ini file !", __FUNCTION__);
+
 						return false;
 					}
-
 					RESTORENET;
-					Logger::GetInstance().Error("%s() : Set ip ! LINE : %d",
-							__FUNCTION__, __LINE__);
+					Logger::GetInstance().Error("%s() : Set ip !",
+							__FUNCTION__);
 					return false;
 				}
 				if (iniConfFile.setIniConfFile("NETWORK", "ipaddr", ipaddr)
 						!= retOk) {
-					Logger::GetInstance().Error(
-							"%s() : Set ip into ini file ! LINE : %d",
-							__FUNCTION__, __LINE__);
+					Logger::GetInstance().Error("%s() : Set ip into ini file !",
+							__FUNCTION__);
 					DOWNNET
 					RESTOREMAC;
 					UPNET;
@@ -333,11 +321,10 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 				if (checkNetConfig.checkGateway(ipaddr, subnet, gateway)
 						!= true) {
 					Logger::GetInstance().Error(
-							"%s() : Ip netmask gateway input is incorrect ! LINE : %d",
-							__FUNCTION__, __LINE__);
+							"%s() : Ip netmask gateway input is incorrect !",
+							__FUNCTION__);
 					return false;
 				}
-
 				DOWNNET
 				SETMACADDR;
 				UPNET;
@@ -348,8 +335,7 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 					UPNET;
 					RESTORENET;
 					Logger::GetInstance().Error(
-							"%s() : Set ip netmask gateway ! LINE : %d",
-							__FUNCTION__, __LINE__);
+							"%s() : Set ip netmask gateway !", __FUNCTION__);
 					return false;
 				}
 
@@ -360,8 +346,8 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 						|| (iniConfFile.setIniConfFile("NETWORK", "gateway",
 								gateway) != retOk)) {
 					Logger::GetInstance().Error(
-							"%s() : Set network config into ini file ! LINE : %d",
-							__FUNCTION__, __LINE__);
+							"%s() : Set network config into ini file !",
+							__FUNCTION__);
 					DOWNNET
 					RESTOREMAC;
 					UPNET;
@@ -370,9 +356,8 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 				}
 			} else {
 				Logger::GetInstance().Error(
-						"%s() : Need netmask and gateway input ! LINE : %d",
-						__FUNCTION__,
-						__LINE__);
+						"%s() : Need netmask and gateway input !",
+						__FUNCTION__);
 				return false;
 			}
 		} else {
@@ -397,8 +382,7 @@ bool SetNetwork::setNet(const INT8 *ipaddr, const INT8 *subnet,
 	struct sockaddr_in *sin;
 	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (sockfd < 0) {
-		Logger::GetInstance().Error("%s() : Socket : %s ! LINE : %d",
-				__FUNCTION__, strerror(errno), __LINE__);
+		Logger::GetInstance().Error("Socket : %s !", strerror(errno));
 		return false;
 	}
 	int nOptval = 1;
@@ -407,8 +391,7 @@ bool SetNetwork::setNet(const INT8 *ipaddr, const INT8 *subnet,
 	}
 	memset(&ifr, 0, sizeof(ifr));
 	if (IFNAME == NULL) {
-		Logger::GetInstance().Error("%s() : Please set IFNAME ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		Logger::GetInstance().Error("Please set IFNAME !");
 		close(sockfd);
 		return false;
 	}
@@ -417,8 +400,7 @@ bool SetNetwork::setNet(const INT8 *ipaddr, const INT8 *subnet,
 	sin->sin_family = AF_INET;
 
 	if (inet_aton((const INT8 *) &ipaddr, &(sin->sin_addr)) < 0) {
-		Logger::GetInstance().Error("%s() : Func inet_aton ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		Logger::GetInstance().Error("Func inet_aton !");
 		close(sockfd);
 		return false;
 	}
@@ -426,15 +408,14 @@ bool SetNetwork::setNet(const INT8 *ipaddr, const INT8 *subnet,
 	sin->sin_addr.s_addr = inet_addr(ipaddr);
 	retIOCTL = ioctl(sockfd, SIOCSIFADDR, &ifr);
 	if (retIOCTL < 0) {
-		Logger::GetInstance().Error("%s() : Func ioctl ! LINE : %d",
-				__FUNCTION__, __LINE__);
+
+		Logger::GetInstance().Error("%s() : Func ioctl !", __FUNCTION__);
 		close(sockfd);
 		return false;
 	}
 
 	if (inet_aton((const INT8 *) &subnet, &(sin->sin_addr)) < 0) {
-		Logger::GetInstance().Error("%s() : Func inet_aton ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		Logger::GetInstance().Error("Func inet_aton !");
 		close(sockfd);
 		return false;
 	}
@@ -442,16 +423,18 @@ bool SetNetwork::setNet(const INT8 *ipaddr, const INT8 *subnet,
 
 	retIOCTL = ioctl(sockfd, SIOCSIFNETMASK, &ifr);
 	if (retIOCTL < 0) {
-		Logger::GetInstance().Error("%s() : Func ioctl ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		Logger::GetInstance().Error("Func ioctl !");
 		close(sockfd);
 		return false;
 	}
 	/* subnet */
+
 	/* gateway */
 	struct rtentry rt;
+
 	/* Set default gateway */
 	memset(&rt, 0, sizeof(rt));
+
 	rt.rt_dst.sa_family = AF_INET;
 	((struct sockaddr_in *) &rt.rt_dst)->sin_addr.s_addr = 0;
 
@@ -465,11 +448,11 @@ bool SetNetwork::setNet(const INT8 *ipaddr, const INT8 *subnet,
 	rt.rt_flags = RTF_UP | RTF_GATEWAY;
 	retIOCTL = ioctl(sockfd, SIOCADDRT, &rt);
 	if (retIOCTL < 0) {
-		Logger::GetInstance().Error("%s() : Func ioctl ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		Logger::GetInstance().Error("Func ioctl !");
 		close(sockfd);
 		return false;
 	}
+
 	close(sockfd);
 	return true;
 	/* gateway */
@@ -486,28 +469,23 @@ bool SetNetwork::setNet(INT32 mac, const INT8 *macaddr) {
 	string strMac = macaddr;
 	vector<string> vMac;
 	if (!cSplitString(strMac, sChar, vMac)) {
-		Logger::GetInstance().Error("%s() : Get mac error ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		cout << "Get mac error --FormGetDevValues" << endl;
 		return false;
 	}
 	for (INT32 i = 0; i < 6; i++) {
 		tmpMac[i] = stringToHex(vMac.operator[](i));
-		printf("%02x\n", tmpMac[i]);
+//		printf("%02x\n", tmpMac[i]);
 	}
 
 	if ((0 != getuid()) && (0 != geteuid()))
 		return false;
 
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-		Logger::GetInstance().Error("%s() : Socket get failed ! LINE : %d",
-				__FUNCTION__, __LINE__);
 		return false;
 	}
 	int nOptval = 1;
 	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const void*) &nOptval,
 			sizeof(int)) < 0) {
-		Logger::GetInstance().Error("%s() : Set socket failed ! LINE : %d",
-				__FUNCTION__, __LINE__);
 	}
 	strcpy(temp.ifr_name, IFNAME);
 	addr = (struct sockaddr *) &temp.ifr_hwaddr;
@@ -516,8 +494,7 @@ bool SetNetwork::setNet(INT32 mac, const INT8 *macaddr) {
 	memcpy(addr->sa_data, tmpMac, 6);
 	ret = ioctl(fd, SIOCSIFHWADDR, &temp);
 	if (ret != 0) {
-		Logger::GetInstance().Error("%s() : Ioctl failed ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		Logger::GetInstance().Error("%s() : ioctl error !", __FUNCTION__);
 		close(fd);
 		return false;
 	}
@@ -546,15 +523,13 @@ bool SetNetwork::upDownNetwork(NetworkStatus networkStatus) {
 	struct ifreq ifr;
 
 	if (!this->IFNAME) {
-		Logger::GetInstance().Error("%s() : Please set IFNAME ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		Logger::GetInstance().Error("%s() : Please set IFNAME !", __FUNCTION__);
 		return false;
 	}
 
 	fd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (fd < 0) {
-		Logger::GetInstance().Error("%s() : Socket : %s ! LINE : %d",
-				__FUNCTION__, strerror(errno), __LINE__);
+		Logger::GetInstance().Error("Socket : %s !", strerror(errno));
 		return false;
 	}
 
@@ -567,16 +542,14 @@ bool SetNetwork::upDownNetwork(NetworkStatus networkStatus) {
 		else if (networkStatus == upStatus)
 			ifr.ifr_flags |= IFF_UP;
 		else {
-			Logger::GetInstance().Error(
-					"%s() : Wrong up ro down status ! LINE : %d", __FUNCTION__,
-					__LINE__);
+			Logger::GetInstance().Error("%s() : Wrong up ro down status !",
+					__FUNCTION__);
 			return false;
 		}
 	}
 
 	if ((rtn = ioctl(fd, SIOCSIFFLAGS, &ifr)) != 0) {
-		Logger::GetInstance().Error("%s() : Ioctl error ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		Logger::GetInstance().Error("%s() : ioctl error !", __FUNCTION__);
 		return false;
 	}
 
@@ -600,8 +573,7 @@ bool CheckNetConfig::checkIP(const INT8* ipaddr, const INT32 subnetFlag) {
 	// INT8*
 	INT32 dotIndex = 0, chIndex = 0, ipLen = strlen(ptrIP);
 	if (NULL == ipaddr) {
-		Logger::GetInstance().Error("%s() : None input ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		Logger::GetInstance().Error("None input!");
 		delete[] section;
 		return false;
 	}
@@ -610,8 +582,7 @@ bool CheckNetConfig::checkIP(const INT8* ipaddr, const INT32 subnetFlag) {
 	do {
 
 		if (ptrIP[0] == ' ') {
-			Logger::GetInstance().Error("%s() : Error input ! LINE : %d",
-					__FUNCTION__, __LINE__);
+			Logger::GetInstance().Error("Error input!");
 			delete[] section;
 			return false;
 		}
@@ -620,9 +591,7 @@ bool CheckNetConfig::checkIP(const INT8* ipaddr, const INT32 subnetFlag) {
 
 			if (isdigit(ptrIP[0])) {
 				if (dotIndex > 3 || chIndex > 2) {
-					Logger::GetInstance().Error(
-							"%s() : Error input ! LINE : %d", __FUNCTION__,
-							__LINE__);
+					Logger::GetInstance().Error("Error input!");
 					delete[] section;
 					return false;
 				}
@@ -634,9 +603,7 @@ bool CheckNetConfig::checkIP(const INT8* ipaddr, const INT32 subnetFlag) {
 			} else if (ptrIP[0] == '\0')
 				break;
 			else {
-				Logger::GetInstance().Error("%s() : Error input ! LINE : %d",
-						__FUNCTION__,
-						__LINE__);
+				Logger::GetInstance().Error("Error input!");
 				delete[] section;
 				return false;
 			}
@@ -648,8 +615,7 @@ bool CheckNetConfig::checkIP(const INT8* ipaddr, const INT32 subnetFlag) {
 	} while (ipLen > 0);
 
 	if (dotIndex != 3) {
-		Logger::GetInstance().Error("%s() : Error input ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		Logger::GetInstance().Error("Error input!");
 		delete[] section;
 		return false;
 	}
@@ -659,18 +625,14 @@ bool CheckNetConfig::checkIP(const INT8* ipaddr, const INT32 subnetFlag) {
 		if (subnetFlag == SUBNETFLAG) {
 			if (atoi(section[dotIndex]) > 255 || atoi(section[dotIndex]) < 0
 					|| strlen(section[dotIndex]) == 0) {
-				Logger::GetInstance().Error("%s() : Error input ! LINE : %d",
-						__FUNCTION__,
-						__LINE__);
+				Logger::GetInstance().Error("Error input!");
 				delete[] section;
 				return false;
 			}
 		} else {
 			if (atoi(section[dotIndex]) >= 255 || atoi(section[dotIndex]) < 0
 					|| strlen(section[dotIndex]) == 0) {
-				Logger::GetInstance().Error("%s() : Error input ! LINE : %d",
-						__FUNCTION__,
-						__LINE__);
+				Logger::GetInstance().Error("Error input!");
 				delete[] section;
 				return false;
 			}
@@ -679,18 +641,15 @@ bool CheckNetConfig::checkIP(const INT8* ipaddr, const INT32 subnetFlag) {
 	}
 	if (atoi(section[0]) == 0 && atoi(section[1]) == 0 && atoi(section[2]) == 0
 			&& atoi(section[3]) == 0) {
-		Logger::GetInstance().Error("%s() : Net address is invalid ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		Logger::GetInstance().Error("Net address is invalid!");
 		delete[] section;
 		return false;
 	}
 
-	//用inet_addr() 冝判断
+	//?inet_addr() ???
 	if (subnetFlag != SUBNETFLAG) {
 		if (INADDR_NONE == inet_addr(ipaddr)) {
-			Logger::GetInstance().Error(
-					"%s() : Net address is invalid ! LINE : %d", __FUNCTION__,
-					__LINE__);
+			Logger::GetInstance().Error("Net address is invalid!");
 			delete[] section;
 			return false;
 		}
@@ -701,8 +660,7 @@ bool CheckNetConfig::checkIP(const INT8* ipaddr, const INT32 subnetFlag) {
 
 bool CheckNetConfig::checkSubnet(const INT8 *ipaddr, const INT8 *subnet) {
 	if (subnet == NULL) {
-		Logger::GetInstance().Error("%s() : None input ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		Logger::GetInstance().Error("None input!");
 		return false;
 	}
 	if (!checkIP(ipaddr, 0) || !checkIP(subnet, SUBNETFLAG))
@@ -721,8 +679,7 @@ bool CheckNetConfig::checkSubnet(const INT8 *ipaddr, const INT8 *subnet) {
 bool CheckNetConfig::checkGateway(const INT8 *ipaddr, const INT8 *subnet,
 		const INT8 *gateway) {
 	if (ipaddr == NULL || subnet == NULL || gateway == NULL) {
-		Logger::GetInstance().Error("%s() : None input ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		Logger::GetInstance().Error("Error input!");
 		return false;
 	}
 
@@ -743,9 +700,7 @@ bool CheckNetConfig::checkGateway(const INT8 *ipaddr, const INT8 *subnet,
 		uGate += n[i] << (i * 8);
 
 	if ((uIP & uSub) != (uGate & uSub)) {
-		Logger::GetInstance().Error(
-				"%s() : Subnet is not matched with gateway ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		Logger::GetInstance().Error("Subnet is not matched with gateway!");
 		return false;
 	}
 	return true;
@@ -781,39 +736,37 @@ IniConfigFile::IniConfigFile() :
 		iniFile(INIFILE) {
 }
 bool IniConfigFile::readIniConfFile(const INT8 *section, const INT8 *key,
-		INT8 *value) {
+		INT8 *value, INT32 valueLen) {
 	// Logger::GetInstance().Error("Input error ! %s()", __FUNCTION__);
-
 	if (section == NULL || key == NULL || value == NULL || iniFile == NULL) {
-		Logger::GetInstance().Error("%s() : Input error ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		Logger::GetInstance().Error("Input error !");
 		return false;
 	}
 	const INT8 *default_value = " ";
 	const INT32 MAX_FILE_SIZE = 1024;
-	INT32 size = 256;
+	//size is value length
 	INT32 file_size = 0;
 	INT8 buf[MAX_FILE_SIZE] = { 0 };
 	INT32 sec_s = 0, sec_e = 0, key_s = 0, key_e = 0, value_s = 0, value_e = 0;
 	//check parameters
 	if (!load_ini_file(iniFile, buf, &file_size)) {
 		if (default_value != NULL) {
-			strncpy(value, default_value, size);
+			strncpy(value, default_value, valueLen);
 		}
 		return false;
 	}
 	if (!parse_file(section, key, buf, &sec_s, &sec_e, &key_s, &key_e, &value_s,
 			&value_e)) {
 		if (default_value != NULL) {
-			strncpy(value, default_value, size);
+			strncpy(value, default_value, valueLen);
 		}
 		return false; //not find the key
 	} else {
 		INT32 cpcount = value_e - value_s;
-		if (size - 1 < cpcount) {
-			cpcount = size - 1;
+		if (valueLen - 1 < cpcount) {
+			cpcount = valueLen - 1;
 		}
-		memset(value, 0, size);
+		memset(value, 0, valueLen);
 		memcpy(value, buf + value_s, cpcount);
 		value[cpcount] = '\0';
 		return true;
@@ -822,8 +775,7 @@ bool IniConfigFile::readIniConfFile(const INT8 *section, const INT8 *key,
 INT32 IniConfigFile::load_ini_file(const INT8 *file, INT8 *buf,
 		INT32 *file_size) {
 	if (file == NULL || buf == NULL) {
-		Logger::GetInstance().Error("%s() : Input error ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		Logger::GetInstance().Error("%s() : Input error !", __FUNCTION__);
 		return retError;
 	}
 	const INT32 MAX_FILE_SIZE = 1024;
@@ -839,8 +791,8 @@ INT32 IniConfigFile::load_ini_file(const INT8 *file, INT8 *buf,
 		i++;
 		if (i >= MAX_FILE_SIZE) {
 			//file too big, you can redefine MAX_FILE_SIZE to fit the big file
-			Logger::GetInstance().Error("%s() : Over file size ! LINE : %d",
-					__FUNCTION__, __LINE__);
+			Logger::GetInstance().Error("%s() : Over file size !",
+					__FUNCTION__);
 			fclose(fd);
 			return retError;
 		}
@@ -855,8 +807,7 @@ INT32 IniConfigFile::parse_file(const INT8 *section, const INT8 *key,
 		const INT8 *buf, INT32 *sec_s, INT32 *sec_e, INT32 *key_s, INT32 *key_e,
 		INT32 *value_s, INT32 *value_e) {
 	if (section == NULL || buf == NULL || key == NULL) {
-		Logger::GetInstance().Error("%s() : Input error ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		Logger::GetInstance().Error("%s() : Input error !", __FUNCTION__);
 		return retError;
 	}
 
@@ -921,8 +872,7 @@ INT32 IniConfigFile::parse_file(const INT8 *section, const INT8 *key,
 INT32 IniConfigFile::setIniConfFile(const INT8 *section, const INT8 *key,
 		const INT8 *value) {
 	if (section == NULL || value == NULL || key == NULL || iniFile == NULL) {
-		Logger::GetInstance().Error("%s() : Input error ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		Logger::GetInstance().Error("%s() : Input error !", __FUNCTION__);
 		return retError;
 	}
 
@@ -973,8 +923,7 @@ INT32 IniConfigFile::setIniConfFile(const INT8 *section, const INT8 *key,
 }
 INT32 SetNetwork::stringToHex(const string &strNum) {
 	if (strNum.length() != 2) {
-		Logger::GetInstance().Error("%s() : String to Hex false ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		cout << "String to Hex false" << endl;
 		return 0;
 	}
 	INT32 h, l;
@@ -991,8 +940,7 @@ INT32 SetNetwork::charToHex(const char cNum) {
 	} else if (cNum >= 'A' && cNum <= 'F') {
 		return cNum - 'A' + 10;
 	} else {
-		Logger::GetInstance().Error("%s() : Num range error ! LINE : %d",
-				__FUNCTION__, __LINE__);
+		cout << "chartohex num range error" << endl;
 		return 0;
 	}
 }

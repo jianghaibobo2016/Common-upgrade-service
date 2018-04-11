@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include "UpgradeService.h"
 #include "HandleUp.h"
 
@@ -21,6 +22,7 @@ INT32 UpgradeService::start() {
 				*const_cast<SetNetworkTerminal*>(&getNetC()));
 	}
 	while (1) {
+		sleep(1);
 	}
 	return retOk;
 }

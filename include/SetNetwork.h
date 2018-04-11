@@ -81,6 +81,9 @@ public:
 		memset(IFNAME, 0, 8);
 		memcpy(IFNAME, ifname, strlen(ifname));
 	}
+	void setInitSet(bool set) {
+		initSet = set;
+	}
 
 	bool getNetworkConfig();
 	bool setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
@@ -92,6 +95,7 @@ private:
 	NETWORKCONFIG m_netWorkConfig;
 	INT8* IFNAME;
 	NetworkStatus networkStatus;
+	bool initSet;
 
 	static string ByteToHexString(const void *pData,
 			int len/* , const string &split = "" */);
@@ -126,11 +130,12 @@ public:
 	IniConfigFile();
 	~IniConfigFile() {
 	}
-	const INT8 *iniFile;
-	static bool readIniConfFile(const INT8 *section, const INT8 *key, INT8 *value);
+	bool readIniConfFile(const INT8 *section, const INT8 *key, INT8 *value,
+			INT32 valueLen);
 	INT32 setIniConfFile(const INT8 *section, const INT8 *key,
 			const INT8 *value);
 private:
+	const INT8 *iniFile;
 	INT32 load_ini_file(const INT8 *file, INT8 *buf, INT32 *file_size);
 	INT32 parse_file(const INT8 *section, const INT8 *key, const INT8 *buf,
 			INT32 *sec_s, INT32 *sec_e, INT32 *key_s, INT32 *key_e,

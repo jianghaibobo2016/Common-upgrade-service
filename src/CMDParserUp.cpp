@@ -235,8 +235,10 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 	INT8 *pcUpgradeCMD = (INT8 *) buffer;
 	pcUpgradeCMD += sizeof(PC_DEV_Header);
 	cout << "test 1!" << endl;
-	if (compareUpgradeItem(pcUpgradeCMD, TerminalHardVersion,
-			strlen(TerminalHardVersion)) != true) {
+	INT8 hardVersion[8] = {0};
+	DevSearchTerminal::getSoftwareVersion("hardware_version", hardVersion, pathVersionFile);
+	if (compareUpgradeItem(pcUpgradeCMD, hardVersion,
+			strlen(hardVersion)) != true) {
 
 	}
 	cout << "test 2!" << endl;

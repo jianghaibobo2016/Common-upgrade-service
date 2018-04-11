@@ -87,8 +87,10 @@ DEV_Reply_GetDevMsg *DevSearchTerminal::getDevMsg(const string &pathXML,
 	strncpy(devReplyMsg->DevType, TerminalDevType, strlen(TerminalDevType));
 	strncpy(devReplyMsg->DevID, TerminalDevTypeID, strlen(TerminalDevTypeID));
 	strcpy(devReplyMsg->DevID + strlen(TerminalDevTypeID), mac);
-
-	strcpy(devReplyMsg->HardVersion, TerminalHardVersion);
+	INT8 hardVersion[8] = { 0 };
+	DevSearchTerminal::getSoftwareVersion("hardware_version", hardVersion,
+			pathVersionFile);
+	strcpy(devReplyMsg->HardVersion, hardVersion);
 	strcpy(devReplyMsg->SoftVersion, version);
 	strcpy(devReplyMsg->DevName, devName.c_str());
 

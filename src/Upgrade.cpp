@@ -280,7 +280,7 @@ INT32 UpgradeDSPSubItem::excuteUpgradeShell(UINT32 num, INT8 *PCIP) {
 	exeCMD += UpgradeShell;
 	if (this->getUpSystem()) {
 		exeCMD += " ";
-		cout << "PCIP::: "<<PCIP<<endl;
+		cout << "PCIP::: " << PCIP << endl;
 		exeCMD += PCIP;
 	}
 	if (NULL == (fstream = popen(exeCMD.c_str(), "r"))) {
@@ -294,14 +294,15 @@ INT32 UpgradeDSPSubItem::excuteUpgradeShell(UINT32 num, INT8 *PCIP) {
 	INT8 record[msgLen] = { 0 };
 	while (NULL != fgets(buff, sizeof(buff), fstream)) {
 		printf("buff: %s", buff);
-		if (strncmp(buff, SuccessUpShellRespond,
-				strlen(SuccessUpShellRespond) == 0)) {
+		//()==0
+		if ((strncmp(buff, SuccessUpShellRespond,
+				strlen(SuccessUpShellRespond)) == 0)) {
 			memset(record, 0, msgLen);
 			sprintf(record, "Upgrade item : %s successed !",
 					aUpSubItem->getMemberItemName());
 			aUpSubItem->setUpResult(true);
-		} else if (strncmp(buff, FailUpShellRespond,
-				strlen(FailUpShellRespond) == 0)) {
+		} else if ((strncmp(buff, FailUpShellRespond,
+				strlen(FailUpShellRespond)) == 0)) {
 			memset(record, 0, msgLen);
 			sprintf(record, "Upgrade item : %s failed !",
 					aUpSubItem->getMemberItemName());
@@ -310,7 +311,7 @@ INT32 UpgradeDSPSubItem::excuteUpgradeShell(UINT32 num, INT8 *PCIP) {
 			pclose(fstream);
 			return retError;
 		}
-		aUpSubItem->setUpResult(true);
+		memset(buff, 0, 256);
 	}
 	pclose(fstream);
 	FileOperation::deleteFile(UpgradeShellWithPath);
