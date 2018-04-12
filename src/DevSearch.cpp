@@ -13,8 +13,6 @@ DevSearchTerminal::DevSearchTerminal(SetNetworkTerminal *setNetworkTerminal) :
 DevSearchTerminal::~DevSearchTerminal() {
 	delete devReplyMsg;
 	devReplyMsg = 0;
-	// delete setNetworkTerminal;
-	// setNetworkTerminal = 0;
 }
 bool DevSearchTerminal::getSoftwareVersion(const INT8 *item, INT8 *version,
 		const INT8* pathVersionFile) {

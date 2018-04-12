@@ -16,7 +16,7 @@ WARNINGS := -Wall -Wno-unused   #-Wno-format
 DEFS     :=
 EXTRA_CFLAGS := 
 
-INC_DIR   = ./include ./include/configHeader
+INC_DIR   = ./include 
 SRC_DIR   := ./src
 SRC_D   = ./src
 OBJ_DIR   = ./obj

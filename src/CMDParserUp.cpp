@@ -26,7 +26,8 @@
     OFFSETPTR                                                                       \
     memcpy(netConfigTrans.serverPortT, pcSettingNet + 1, (INT32)pcSettingNet[0]);   
 
-CMDParserUp::CMDParserUp() {
+CMDParserUp::CMDParserUp() :
+		settingNum(0) {
 }
 CMDParserUp::~CMDParserUp() {
 }
@@ -44,15 +45,16 @@ UINT16 CMDParserUp::parserPCRequestHead(void *buffer, INT32 recvLen) {
 		return (UINT16) retError;
 	}
 	UINT16 headCMD = pcHead->HeadCmd;
-	cout << "cmd: " << pcHead->HeadCmd << endl;
 	return headCMD;
 }
 
 INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
-		SetNetworkTerminal *setNetworkTerminal, INT8 &failReason) {
+		SetNetworkTerminal *setNetworkTerminal,
+		map<string, string> &retContent) {
 	INT8 *pcSettingNet = (INT8 *) buffer;
 	pcSettingNet += sizeof(PC_DEV_Header);
 	UINT8 parameterNum = pcSettingNet[0];
+
 	pcSettingNet += 1;
 	{
 		NetConfigTransWithServer netConfigTrans;
@@ -60,30 +62,35 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 		GlobalProfile setServerConf;
 		switch (parameterNum) {
 		/* 03 495000 0E 3137322E31362E31302E31333300 */
+#if 0
 		case 0x01:
-			if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
-					PCREQUESTIP) != true) {
-				strcpy(&failReason, "Match IP failed !");
+		if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
+						PCREQUESTIP) != true) {
+
+			strcpy(&failReason, "Match IP failed !");
+			return retError;
+		} else {
+			COPYIP
+			;
+			if (setNetworkTerminal->setNetworkConfig(netConfigTrans.ipT,
+							NULL, NULL, NULL, INIFILE) != true) {
+
+				strcpy(&failReason, "Set IP failed !");
 				return retError;
-			} else {
-				COPYIP
-				;
-				if (setNetworkTerminal->setNetworkConfig(netConfigTrans.ipT,
-				NULL, NULL, NULL, INIFILE) != true) {
-					strcpy(&failReason, "Set IP failed !");
-					return retError;
-				}
 			}
-			break;
+		}
+		break;
+#endif
 		case 0x02:
-			// NetConfigTrans netConfigTrans;
 			if ((INT32) pcSettingNet[0] == 0x02) {
-				strcpy(&failReason, "Match failed !");
+				retContent[PCREQUESTSERVERIP] = "Match failed !";
+				retContent[PCREQUESTSERVERPORT] = "Match failed !";
 				return retError;
 			} else {
 				if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
 						PCREQUESTSERVERIP) != true) {
-					strcpy(&failReason, "Match failed !");
+					retContent[PCREQUESTSERVERIP] = "Match failed !";
+					retContent[PCREQUESTSERVERPORT] = "Match failed !";
 					return retError;
 				} else {
 					COPYSERVERIP
@@ -93,7 +100,8 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 				;
 				if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
 						PCREQUESTSERVERPORT) != true) {
-					strcpy(&failReason, "Match failed !");
+					retContent[PCREQUESTSERVERIP] = "Match failed !";
+					retContent[PCREQUESTSERVERPORT] = "Match failed !";
 					return retError;
 				} else {
 					COPYSERVERPORT
@@ -102,12 +110,16 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 				sscanf(netConfigTrans.serverPortT, "%hu", &port);
 				setServerConf.SetTCPCommServerIP(netConfigTrans.serverIPT,
 						port);
+				retContent[PCREQUESTSERVERIP] = "Set server IP OK!";
+				retContent[PCREQUESTSERVERPORT] = "Set server Port OK!";
 			}
 			break;
 		case 0x03:
 			if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
 					PCREQUESTIP) != true) {
-				strcpy(&failReason, "Match IP failed !");
+				retContent[PCREQUESTIP] = "Match IP failed !";
+				retContent[PCREQUESTSUBMASK] = "Match submask failed !";
+				retContent[PCREQUESTGATEWAY] = "Match gateway failed !";
 				return retError;
 			} else {
 				COPYIP
@@ -128,44 +140,55 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 					if (setNetworkTerminal->setNetworkConfig(netConfigTrans.ipT,
 							netConfigTrans.submaskT, netConfigTrans.gatewayT,
 							NULL, INIFILE) != true) {
-						strcpy(&failReason,
-								"Set IP submask and gateway failed !");
+						retContent[PCREQUESTIP] = "Set IP failed !";
+						retContent[PCREQUESTSUBMASK] = "Set submask failed !";
+						retContent[PCREQUESTGATEWAY] = "Set gateway failed !";
 						return retError;
+					} else {
+						retContent[PCREQUESTIP] = "Set IP OK !";
+						retContent[PCREQUESTSUBMASK] = "Set submask OK !";
+						retContent[PCREQUESTGATEWAY] = "Set gateway OK !";
 					}
 				} else {
-					strcpy(&failReason, "Match setting failed !");
+					retContent[PCREQUESTIP] = "Match setting failed !";
+					retContent[PCREQUESTSUBMASK] = "Match setting failed !";
+					retContent[PCREQUESTGATEWAY] = "Match setting failed !";
 					return retError;
 				}
-			} else if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
-					PCREQUESTSERVERIP) == true) {
-				COPYSERVERIP
-				;
-				OFFSETPTR
-				;
-				if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
-						PCREQUESTSERVERPORT) == true) {
-					COPYSERVERPORT
-					;
-					if (setNetworkTerminal->setNetworkConfig(netConfigTrans.ipT,
-					NULL, NULL, NULL, INIFILE) != true) {
-						strcpy(&failReason, "Set IP failed !");
-						return retError;
-					}
-					sscanf(netConfigTrans.serverPortT, "%hu", &port);
-					setServerConf.SetTCPCommServerIP(netConfigTrans.serverIPT,
-							port);
-				} else {
-					strcpy(&failReason, "Match setting failed !");
-					return retError;
-				}
-			} else {
-				strcpy(&failReason, "Match setting failed !");
+				//useless
+			} /*else if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
+			 PCREQUESTSERVERIP) == true) {
+			 COPYSERVERIP
+			 ;
+			 OFFSETPTR
+			 ;
+			 if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
+			 PCREQUESTSERVERPORT) == true) {
+			 COPYSERVERPORT
+			 ;
+			 if (setNetworkTerminal->setNetworkConfig(netConfigTrans.ipT,
+			 NULL, NULL, NULL, INIFILE) != true) {
+			 strcpy(&failReason, "Set IP failed !");
+			 return retError;
+			 }
+			 sscanf(netConfigTrans.serverPortT, "%hu", &port);
+			 setServerConf.SetTCPCommServerIP(netConfigTrans.serverIPT,
+			 port);
+			 } else {
+			 strcpy(&failReason, "Match setting failed !");
+			 return retError;
+			 }
+			 }*/else {
+				retContent[PCREQUESTIP] = "Match setting failed !";
+				retContent[PCREQUESTSUBMASK] = "Match setting failed !";
+				retContent[PCREQUESTGATEWAY] = "Match setting failed !";
 				return retError;
 			}
 			break;
-		case 0x05:
+#if 0
+			case 0x05:
 			if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
-					PCREQUESTIP) != true) {
+							PCREQUESTIP) != true) {
 				strcpy(&failReason, "Match IP failed !");
 				return retError;
 			} else {
@@ -175,7 +198,7 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 				;
 			}
 			if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
-					PCREQUESTSUBMASK) != true) {
+							PCREQUESTSUBMASK) != true) {
 				strcpy(&failReason, "Match submask failed !");
 				return retError;
 			} else {
@@ -185,7 +208,7 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 				;
 			}
 			if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
-					PCREQUESTGATEWAY) != true) {
+							PCREQUESTGATEWAY) != true) {
 				strcpy(&failReason, "Match gateway failed !");
 				return retError;
 			} else {
@@ -195,7 +218,7 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 				;
 			}
 			if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
-					PCREQUESTSERVERIP) != true) {
+							PCREQUESTSERVERIP) != true) {
 				strcpy(&failReason, "Match server IP failed !");
 				return retError;
 			} else {
@@ -205,7 +228,7 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 				;
 			}
 			if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
-					PCREQUESTSERVERPORT) != true) {
+							PCREQUESTSERVERPORT) != true) {
 				strcpy(&failReason, "Match server port failed !");
 				return retError;
 			} else {
@@ -213,16 +236,17 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 				;
 			}
 			if (setNetworkTerminal->setNetworkConfig(netConfigTrans.ipT,
-					netConfigTrans.submaskT, netConfigTrans.gatewayT, NULL,
-					INIFILE) != true) {
+							netConfigTrans.submaskT, netConfigTrans.gatewayT, NULL,
+							INIFILE) != true) {
 				strcpy(&failReason, "Set IP submask and gateway failed !");
 				return retError;
 			}
 			sscanf(netConfigTrans.serverPortT, "%hu", &port);
 			setServerConf.SetTCPCommServerIP(netConfigTrans.serverIPT, port);
 			break;
+#endif
 		default:
-			strcpy(&failReason, "Number of settings error !");
+//			strcpy(&failReason, "Number of settings error !");
 			return retError;
 			break;
 		}
@@ -234,23 +258,20 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 		UpFileAttrs &upFileAttr, INT8 *failReason) {
 	INT8 *pcUpgradeCMD = (INT8 *) buffer;
 	pcUpgradeCMD += sizeof(PC_DEV_Header);
-	cout << "test 1!" << endl;
-	INT8 hardVersion[8] = {0};
-	DevSearchTerminal::getSoftwareVersion("hardware_version", hardVersion, pathVersionFile);
-	if (compareUpgradeItem(pcUpgradeCMD, hardVersion,
-			strlen(hardVersion)) != true) {
+	INT8 hardVersion[8] = { 0 };
+	DevSearchTerminal::getSoftwareVersion("hardware_version", hardVersion,
+			pathVersionFile);
+	if (compareUpgradeItem(pcUpgradeCMD, hardVersion, strlen(hardVersion))
+			!= true) {
 
 	}
-	cout << "test 2!" << endl;
 	pcUpgradeCMD += hardVersionSize;
 	/* new software version */
 	upFileAttr.setNewSoftVersion(pcUpgradeCMD, 6);
-	cout << "test 3!" << endl;
 	INT8 fileDownloadName[fileDownloadPathSize] = { 0 };
 	memcpy(fileDownloadName, upFileDownload, strlen(upFileDownload));
 	strcat(fileDownloadName, upFileAttr.getNewSoftVersion());
 	upFileAttr.setFileDownloadPath(fileDownloadName, strlen(fileDownloadName));
-	cout << "test 4!" << endl;
 	INT8 version[7] = { 0 };
 	DevSearchTerminal::getSoftwareVersion(ProductVersionName, version,
 			pathVersionFile);
@@ -258,7 +279,6 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 	if (compareUpgradeItem(
 			pcUpgradeCMD + strlen(upFileAttr.getNewSoftVersion()), WEBREQUEST,
 			strlen(WEBREQUEST)) != 0) {
-		cout << "test 5!" << endl;
 		pcUpgradeCMD += newSoftVersionSize;
 		INT32 fileSize = 0;
 		memcpy(&fileSize, pcUpgradeCMD, sizeof(UINT32));
@@ -268,12 +288,10 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 		upFileAttr.setFileMD5Code(pcUpgradeCMD, upgradeFileMd5Size);
 		//printf("recv md5 : %u\n", upFileAttr.getFileMD5Code());
 	} else {
-		cout << "test 6!" << endl;
 		if (!FileOperation::isExistFile(upFileAttr.getFileDownloadPath())) {
 			strcpy(failReason, UPFILENOTEXIST);
 			return errorVersionStatus;
 		}
-		cout << "test 7!" << endl;
 //		strcpy(failReason, WEBBeginToUpgrade);
 		upFileAttr.setWebUpMethod(true);
 //		return higherVerison;

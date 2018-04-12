@@ -10,7 +10,7 @@
 #include "HandleUp.h"
 template<typename T>
 INT32 HandleUp::devReplyHandle(INT8 *sendtoBuff, T &s_devReply,
-		INT8 *failReason, INT32 result,
+		UINT32 reasonLen, const INT8 *failReason, INT32 result,
 		SetNetworkTerminal *setNetworkTerminal) {
 	s_devReply.header.HeadTag = 0x0101FBFC;
 	INT8 mac[13] = { 0 };
@@ -26,17 +26,17 @@ INT32 HandleUp::devReplyHandle(INT8 *sendtoBuff, T &s_devReply,
 		s_devReply.Result = 0;
 	} else
 		return retError;
-	UINT8 FailReasonLen = strlen(failReason);
+//	UINT8 FailReasonLen = strlen(failReason);
+	UINT8 FailReasonLen = '\0';
+	memcpy(&FailReasonLen, &reasonLen, 1);
 	cout << "text to send : " << failReason << endl;
 	s_devReply.header.DataLen = sizeof(s_devReply.DevID)
 			+ sizeof(s_devReply.Result) + sizeof(FailReasonLen)
-			+ strlen(failReason);
+			+ reasonLen;
 	memcpy(sendtoBuff, &s_devReply, sizeof(T));
-	memcpy(sendtoBuff + sizeof(T), &FailReasonLen,
-			sizeof(FailReasonLen));
-	memcpy(
-			sendtoBuff + sizeof(T)
-					+ sizeof(FailReasonLen), failReason, FailReasonLen);
+	memcpy(sendtoBuff + sizeof(T), &FailReasonLen, sizeof(FailReasonLen));
+	memcpy(sendtoBuff + sizeof(T) + sizeof(FailReasonLen), failReason,
+			FailReasonLen);
 	return retOk;
 }
 

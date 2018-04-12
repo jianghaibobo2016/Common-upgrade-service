@@ -34,7 +34,8 @@ public:
 
 	static INT32 setNetworkHandle(INT8 *recvBuff, INT8 *sendtoBuff,
 			DEV_Reply_ParameterSetting &,
-			SetNetworkTerminal *setNetworkTerminal);
+			SetNetworkTerminal *setNetworkTerminal, INT32 sockfd,
+			sockaddr_in recvAdd);
 
 	static INT32 upgradePCrequestHandle(INT8 *recvBuff, INT8 *sendtoBuff,
 			DEV_Reply_DevUpgrade &devReply, UpFileAttrs &upFileAttr,
@@ -56,8 +57,9 @@ public:
 	static INT32 writeFileFromPC(INT8 *recvBuff, const INT8 *fileName);
 
 	template<typename T>
-	static INT32 devReplyHandle(INT8 *sendtoBuff, T &, INT8 *failReason,
-			INT32 result, SetNetworkTerminal *setNetworkTerminal);
+	static INT32 devReplyHandle(INT8 *sendtoBuff, T &, UINT32 reasonLen,
+			const INT8 *failReason, INT32 result,
+			SetNetworkTerminal *setNetworkTerminal);
 private:
 };
 #include "HandleUp.hpp"

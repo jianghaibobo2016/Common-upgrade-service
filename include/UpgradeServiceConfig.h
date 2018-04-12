@@ -81,6 +81,8 @@ static const INT8 *PCREQUESTSUBMASK = "SubMask";
 static const INT8 *PCREQUESTGATEWAY = "GateWay";
 static const INT8 *PCREQUESTSERVERIP = "ServerIP";
 static const INT8 *PCREQUESTSERVERPORT = "ServerPort";
+static const INT8 *PCREQUESTMAC = "Mac";
+static const INT8 *PCREQUESTMASK = "Mask";
 
 /* upgrade */
 static const INT8 *NONEEDTOUPGRADE = "No need to upgrade !";
@@ -107,6 +109,7 @@ static const INT8 *NandVersionName = "nand_version";
 static const INT32 subNum = 9;
 /*WEB request */
 static const INT8 *WEBREQUEST = "WEBTERMINAL";
+static const INT8 *UPFILESYSTEM = "Upgrade filesystem!";
 static const INT8 *WEBBeginToUpgrade = "Begin to upgrade !";
 /* upgrade */
 
