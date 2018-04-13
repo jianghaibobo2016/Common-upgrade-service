@@ -112,6 +112,7 @@ bool FileOperation::extractTarFile(string fileName,
 	exeCMD += " -C ";
 	exeCMD += upFilePath;
 	exeCMD += " 2>/dev/null";
+	///////////chmod +x
 	if (NULL == (fstream = popen(exeCMD.c_str(), "r"))) {
 		fprintf(stderr, "execute command failed: %s", strerror(errno));
 		return false;

@@ -117,11 +117,17 @@ public:
 	bool getUpSystem() {
 		return upSystem;
 	}
+	bool getUpAmplifier() {
+		return upAmplifier;
+	}
 	void setEachItemUpResult(bool result) {
 		eachItemUpStatus = result;
 	}
 	void setUpSystem(bool upSys) {
 		upSystem = upSys;
+	}
+	void setUpAmplifier(bool upAmp) {
+		upAmplifier = upAmp;
 	}
 	map<INT32, string>& getExtractItem() {
 		return mUpSubItem;
@@ -141,6 +147,7 @@ private:
 	map<INT32, string> mUpSubItem;
 	UpgradeDSP *aUpSubItem;
 	bool upSystem;
+	bool upAmplifier;
 };
 #endif
 

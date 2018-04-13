@@ -11,7 +11,7 @@
 #include <netinet/in.h>
 #include <net/if.h>
 #include <net/route.h>
-#include <Logger.h>
+#include "Logger.h"
 #include <errno.h>
 #include <unistd.h>
 #include <arpa/inet.h>
@@ -246,7 +246,7 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 		} else if (subnet != NULL && gateway != NULL) {
 			if (checkNetConfig.checkGateway(ipaddr, subnet, gateway) != true) {
 				Logger::GetInstance().Error(
-						"%s() : Ip netmask gateywa input is incorrect !",
+						"%s() : Ip netmask gateyway input is incorrect !",
 						__FUNCTION__);
 				return false;
 			}

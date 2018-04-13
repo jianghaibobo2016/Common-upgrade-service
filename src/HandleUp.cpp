@@ -490,8 +490,8 @@ void HandleUp::TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 		INT32 retParser = subItems->parserSubItemsFileName(i);
 		if (retParser == retOk) {
 			cout << "up 5 !" << endl;
-		} else if (retParser == 1)
-			continue;
+		} /*else if (retParser == 1)
+		 continue;*/
 		else {
 			if (const_cast<UpgradeDSP*>(&subItems->getUpObj())->getUpStatus()
 					== equalVersion) {
@@ -532,15 +532,31 @@ void HandleUp::TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 			}
 			INT8 *PCIP = inet_ntoa(recvAddr.sin_addr);
 			if (subItems->excuteUpgradeShell(i, PCIP) == 0) {
-				if (subItems->modifyVersionFile() == retOk) {
-					percentUp += (30 / itemsNum);
-					sprintf(replyText, "Upgrading %u%%.", percentUp);
-					cout << "modify ok" << endl;
-					retUpStatus = retOk;
+				if (!subItems->getUpAmplifier()) {
+					if (subItems->modifyVersionFile() == retOk) {
+						percentUp += (30 / itemsNum);
+						sprintf(replyText, "Upgrading %u%%.", percentUp);
+						cout << "modify ok" << endl;
+						retUpStatus = retOk;
 
+					} else {
+						retUpStatus = retError;
+						subItems->setEachItemUpResult(false);
+						sprintf(replyText, "Modify version file failed !");
+
+					}
 				} else {
-					retUpStatus = retError;
-					sprintf(replyText, "Modify version file failed !");
+					INT32 retUpAmp = HandleUp::upAmplifier();
+					if (retUpAmp == retOk) {
+						percentUp += (30 / itemsNum);
+						sprintf(replyText, "Upgrading %u%%.", percentUp);
+						cout << "up Amplifier ok" << endl;
+						retUpStatus = retOk;
+					} else if (retUpAmp == retError) {
+						retUpStatus = retError;
+						subItems->setEachItemUpResult(false);
+						sprintf(replyText, "Upgrade Amplifier failed");
+					}
 				}
 				if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
 						*upgradeReply.get(), strlen(replyText), replyText,
@@ -556,6 +572,7 @@ void HandleUp::TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 				cout << "ok" << endl;
 			} else {
 				retUpStatus = retError;
+				subItems->setEachItemUpResult(false);
 				sprintf(replyText, "Modify version file failed !");
 				if (HandleUp::devReplyHandle<DEV_Request_UpgradeReply>(
 						sendtoBuffer, *upgradeReply.get(), strlen(replyText),
@@ -584,7 +601,8 @@ void HandleUp::TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 			break;
 		}
 	}
-	if (subItems->getEachItemUpResult()) {
+
+	if (subItems->getEachItemUpResult() == true) {
 		upDSPProduct->setUpResult(true);
 		cout << "all true" << endl;
 		memset(replyText, 0, msgLen);
@@ -713,14 +731,11 @@ INT32 HandleUp::upAmplifier() {
 		cout << "recv ret : " << retRecv << " recv buff : " << recvBuff << endl;
 		if (strncmp(recvBuff, AmplifierUpsuccess, strlen(AmplifierUpsuccess))
 				== 0) {
-			cout << "sudccccccccc" << endl;
 			return retOk;
 		} else if (strncmp(recvBuff, AmplifierUpFail, strlen(AmplifierUpFail))
 				== 0) {
-			cout << "faulllllllllll" << endl;
 			return retError;
 		} else {
-			cout << "faulllllll22222222222" << endl;
 			return retError;
 		}
 	}

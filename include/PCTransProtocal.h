@@ -195,5 +195,6 @@ typedef struct DEV_VersionNum_tag{
 	PC_DEV_Header header;
 	INT8 version[8];
 }DEV_VersionNum;
+#pragma pack(pop)
 //-------------------------------------------------------------------//
 #endif /* PCTRANSPROTOCAL_H_ */

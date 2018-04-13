@@ -1,6 +1,6 @@
 ///////////
 #include <iostream>
-#include <Logger.h>
+#include "Logger.h"
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -203,7 +203,7 @@ void UpgradeDSP::clearObj() {
 
 UpgradeDSPSubItem::UpgradeDSPSubItem() :
 		productTarFile(newTarPackage), eachItemUpStatus(true), mSubItems(), mUpSubItem(), upSystem(
-				false) {
+				false), upAmplifier(false) {
 	aUpSubItem = new UpgradeDSP(NULL);
 }
 UpgradeDSPSubItem::~UpgradeDSPSubItem() {
@@ -228,12 +228,14 @@ INT32 UpgradeDSPSubItem::parserSubItemsFileName(UINT32 num) {
 	if (strncmp(mSubItems[num].c_str() + strlen(upFilePath), AmplifierUpgrade,
 			strlen(AmplifierUpgrade)) == 0) {
 		cout << "up amplifier !!!!!!!!!!!!!!!!!!!!!!1" << endl;
-		INT32 retUpAmp = HandleUp::upAmplifier();
-		if (retUpAmp == retOk) {
-			return 1;
-		} else if (retUpAmp == retError) {
-			return retError;
-		}
+		this->setUpAmplifier(true);
+
+//		INT32 retUpAmp = HandleUp::upAmplifier();
+//		if (retUpAmp == retOk) {
+//			return 1;
+//		} else if (retUpAmp == retError) {
+//			return retError;
+//		}
 	}
 	if (strncmp(mSubItems[num].c_str() + strlen(upFilePath), MainRootfsUpgrade,
 			strlen(MainRootfsUpgrade)) == 0) {
@@ -242,19 +244,25 @@ INT32 UpgradeDSPSubItem::parserSubItemsFileName(UINT32 num) {
 	}
 	aUpSubItem->setUpgradeFile(const_cast<INT8 *>(mSubItems[num].c_str()));
 	INT8 record[msgLen] = { 0 };
-	if (aUpSubItem->parserFileName() != retOk) { //segmentation fault
-		sprintf(record, "Can not upgrade : %s to version %s !",
-				aUpSubItem->getMemberItemName(), aUpSubItem->getNewVersion());
-		aUpSubItem->setUpgraderecord(record);
-		return retError;
-	}
-	// high lower equal
-	if (aUpSubItem->getUpStatus() != higherVerison) {
+	if (!this->getUpAmplifier()){
+		if (aUpSubItem->parserFileName() != retOk) { //segmentation fault
+			sprintf(record, "Can not upgrade : %s to version %s !",
+					aUpSubItem->getMemberItemName(),
+					aUpSubItem->getNewVersion());
+			aUpSubItem->setUpgraderecord(record);
+			return retError;
+		}
+		// high lower equal
+		if (aUpSubItem->getUpStatus() != higherVerison) {
 
-		sprintf(record, "Can not upgrade : %s to version %s !",
-				aUpSubItem->getMemberItemName(), aUpSubItem->getNewVersion());
-		aUpSubItem->setUpgraderecord(record);
-		return retError;
+			sprintf(record, "Can not upgrade : %s to version %s !",
+					aUpSubItem->getMemberItemName(),
+					aUpSubItem->getNewVersion());
+			aUpSubItem->setUpgraderecord(record);
+			return retError;
+		}
+	}else{
+
 	}
 	return retOk;
 }
@@ -295,8 +303,8 @@ INT32 UpgradeDSPSubItem::excuteUpgradeShell(UINT32 num, INT8 *PCIP) {
 	while (NULL != fgets(buff, sizeof(buff), fstream)) {
 		printf("buff: %s", buff);
 		//()==0
-		if ((strncmp(buff, SuccessUpShellRespond,
-				strlen(SuccessUpShellRespond)) == 0)) {
+		if ((strncmp(buff, SuccessUpShellRespond, strlen(SuccessUpShellRespond))
+				== 0)) {
 			memset(record, 0, msgLen);
 			sprintf(record, "Upgrade item : %s successed !",
 					aUpSubItem->getMemberItemName());

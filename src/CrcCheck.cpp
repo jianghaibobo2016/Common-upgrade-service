@@ -2,7 +2,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <errno.h>
-#include <Logger.h>
+#include "Logger.h"
 #include "CrcCheck.h"
 #include "DevSearch.h"
 #include "Upgrade.h"
