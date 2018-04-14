@@ -45,8 +45,12 @@ NetConfigTransWithServer::NetConfigTransWithServer() :
 		NetConfigTrans() {
 	serverIPT = new INT8[18];
 	serverPortT = new INT8[5];
+	MAC = new INT8[13];
+	MASK = new INT8[16];
 }
 NetConfigTransWithServer::~NetConfigTransWithServer() {
 	delete[] serverIPT;
 	delete[] serverPortT;
+	delete[] MAC;
+	delete[] MASK;
 }

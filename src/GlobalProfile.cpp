@@ -6,9 +6,6 @@
  */
 
 
-
-
-
 #include "GlobalProfile.h"
 
 GlobalProfilePtr GlobalProfile::g_Profile = 0;

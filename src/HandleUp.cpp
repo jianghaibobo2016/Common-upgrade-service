@@ -400,6 +400,34 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 //	}
 }
 
+void devGetMaskCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
+		SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd,
+		UpFileAttrs &upFileAttr, FileTrans &fileTrans,
+		DEV_Request_FileProtocal *request) {
+	SmartPtr<DEV_Request_UpgradeReply> upgradeReply(
+				new DEV_Request_UpgradeReply);
+	INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
+	vector<UINT8> sendBuff;
+	DEV_Request_MaskInfo maskinfo;
+	memset(&maskinfo, 0, sizeof(DEV_Request_MaskInfo));
+	maskinfo.header.HeadTag = PROTOCAL_PC_DEV_HEAD;
+	maskinfo.header.HeadCmd = CMD_DEV_GETMASK;
+	maskinfo.header.DataLen = sizeof(maskinfo.DevID) + sizeof(maskinfo.m_mask);
+
+	char mac[13] = { 0 };
+	strcpy(mac,
+			setNetworkTerminal->castMacToChar13(mac,
+					setNetworkTerminal->getNetConfStruct().macAddr));
+	mac[12] = '\0';
+	strncpy(maskinfo.DevID, TerminalDevTypeID, strlen(TerminalDevTypeID));
+	strcpy(maskinfo.DevID + strlen(TerminalDevTypeID), mac);
+	//	memcpy(maskinfo.DevID, GlobalProfile::instance()->GetVideoTerminalID().c_str(), 16);
+
+	maskinfo.m_mask[0] = ~(GlobalStatus::instance()->g_sMask._mask[0]) + 1;
+	maskinfo.m_mask[1] = ~(GlobalStatus::instance()->g_sMask._mask[1]) + 1;
+	maskinfo.m_mask[2] = ~(GlobalStatus::instance()->g_sMask._mask[2]) + 1;
+	maskinfo.m_mask[3] = ~(GlobalStatus::instance()->g_sMask._mask[3]) + 1;
+}
 void HandleUp::TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 		SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd,
 		UpFileAttrs &upFileAttr, FileTrans &fileTrans,

@@ -26,6 +26,13 @@
     OFFSETPTR                                                                       \
     memcpy(netConfigTrans.serverPortT, pcSettingNet + 1, (INT32)pcSettingNet[0]);   
 
+#define COPYMAC                                                               	    \
+    OFFSETPTR                                                                       \
+    memcpy(netConfigTrans.MAC, pcSettingNet + 1, (INT32)pcSettingNet[0]);
+
+#define COPYMASK                                                                    \
+    OFFSETPTR                                                                       \
+    memcpy(netConfigTrans.MASK, pcSettingNet + 1, (INT32)pcSettingNet[0]);
 CMDParserUp::CMDParserUp() :
 		settingNum(0) {
 }
@@ -81,6 +88,51 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 		}
 		break;
 #endif
+		case 0x01:
+			if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
+					PCREQUESTMAC) == true) {
+//			} else {
+				COPYMAC
+				;
+				string mac;
+				for (int i = 0; i < (INT32) pcSettingNet[0];) {
+					mac += netConfigTrans.MAC[i];
+					mac += netConfigTrans.MAC[i + 1];
+					if (i + 3 < (INT32) pcSettingNet[0])
+						mac += ":";
+					i += 2;
+				}
+				if (setNetworkTerminal->setNetworkConfig(NULL, NULL, NULL,
+						netConfigTrans.MAC, INIFILE) != true) {
+					retContent[PCREQUESTMAC] = "Set MAC failed !";
+					return retError;
+				} else {
+					retContent[PCREQUESTMAC] = "Set MAC OK !";
+				}
+			} else if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
+					PCREQUESTMASK) == true) {
+
+				vector<UINT16> vHexArray;
+				vHexArray.resize(4);
+				vHexArray[0] = ~((netConfigTrans.MASK[1] << 8
+						| netConfigTrans.MASK[0]) - 1);
+				vHexArray[1] = ~((netConfigTrans.MASK[3] << 8
+						| netConfigTrans.MASK[2]) - 1);
+				vHexArray[2] = ~((netConfigTrans.MASK[5] << 8
+						| netConfigTrans.MASK[4]) - 1);
+				vHexArray[3] = ~((netConfigTrans.MASK[7] << 8
+						| netConfigTrans.MASK[6]) - 1);
+//				for (int i = 0; i < 4; i++) {
+//				}
+				if (writeMaskFile(vHexArray) == 1) {
+					retContent[PCREQUESTMASK] = "Get MASK OK !";
+				} else
+					retContent[PCREQUESTMASK] = "Get MASK failed !";
+			} else {
+				retContent[PCREQUESTMAC] = "Match failed !";
+				return retError;
+			}
+			break;
 		case 0x02:
 			if ((INT32) pcSettingNet[0] == 0x02) {
 				retContent[PCREQUESTSERVERIP] = "Match failed !";
@@ -323,11 +375,38 @@ bool CMDParserUp::campareNetSetMatch(INT8 *nameLen, INT8 *name,
 	if (nameLenComp != strlen(PCREQUESTIP) + 1
 			&& nameLenComp != strlen(PCREQUESTSUBMASK) + 1
 			&& nameLenComp != strlen(PCREQUESTSERVERIP) + 1
-			&& nameLenComp != strlen(PCREQUESTSERVERPORT) + 1) {
+			&& nameLenComp != strlen(PCREQUESTSERVERPORT) + 1
+			&& nameLenComp != strlen(PCREQUESTMAC) + 1
+			&& nameLenComp != strlen(PCREQUESTMASK) + 1) {
 		cout << "wrong input ip submask serverip..." << endl;
 		return false;
 	}
 	return !(bool) compareUpgradeItem(name, reName, nameLenComp);
 
 	// return true;
+}
+
+INT32 CMDParserUp::writeMaskFile(vector<UINT16> date) {
+
+	INT32 fileDes = open(MASKPATH, O_CREAT | O_RDWR | O_TRUNC, 0666);
+	if (fileDes == -1) {
+
+		return retError;
+	}
+	INT8 buf[1024] = { 0 };
+
+	buf[1] = (INT8) (date[0] >> 8);
+	buf[0] = (INT8) date[0];
+	buf[3] = (INT8) (date[1] >> 8);
+	buf[2] = (INT8) date[1];
+	buf[5] = (INT8) (date[2] >> 8);
+	buf[4] = (INT8) date[2];
+	buf[7] = (INT8) (date[3] >> 8);
+	buf[6] = (INT8) date[3];
+	for (INT32 i = 0; i < 8; i++)
+		for (INT32 i = 0; i < 8; i++) {
+			if (write(fileDes, &buf[i], 1) == -1) {
+			}
+		}
+	return retOk;
 }

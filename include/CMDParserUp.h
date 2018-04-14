@@ -34,6 +34,8 @@ private:
 		return strncmp(ptr, item, strlen(item));
 	}
 
+	INT32 writeMaskFile(vector<UINT16> date);
+
 	// static  getValue();
 };
 

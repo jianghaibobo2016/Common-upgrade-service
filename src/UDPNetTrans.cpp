@@ -104,6 +104,18 @@ INT32 UDPNetTrans::socketSelect() {
 
 			}
 				break;
+			case CMD_DEV_TESTMODE: {
+
+			}
+				break;
+			case CMD_DEV_GETMASK: {
+
+			}
+				break;
+			case CMD_DEV_REQUESTVERSION: {
+
+			}
+				break;
 			default:
 				break;
 			}

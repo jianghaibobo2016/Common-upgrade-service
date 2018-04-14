@@ -76,6 +76,8 @@ static const INT8 *AmplifierUpFail = "Upgrade failed!";
 static const INT8 *AmplifierUpsuccess = "Upgrade successed!";
 static const INT8 *IFNAMETERMINAL = "eth0";
 //static const INT8 *IFNAMETERMINAL = "ens33";
+
+/*Net Set Tag*/
 static const INT8 *PCREQUESTIP = "IP";
 static const INT8 *PCREQUESTSUBMASK = "SubMask";
 static const INT8 *PCREQUESTGATEWAY = "GateWay";
@@ -83,6 +85,8 @@ static const INT8 *PCREQUESTSERVERIP = "ServerIP";
 static const INT8 *PCREQUESTSERVERPORT = "ServerPort";
 static const INT8 *PCREQUESTMAC = "Mac";
 static const INT8 *PCREQUESTMASK = "Mask";
+static const INT8 *MASKPATH = "/usr/share/mask.bin";
+/*Net Set Tag*/
 
 /* upgrade */
 static const INT8 *NONEEDTOUPGRADE = "No need to upgrade !";

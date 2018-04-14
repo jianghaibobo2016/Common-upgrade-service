@@ -21,7 +21,6 @@
 #include <arpa/inet.h>
 #include "GlobDefine.h"
 #define PROTOCAL_PC_DEV_HEAD 0x0101FBFC
-#define PROTOCAL_PC_DEV_MAXSIZE 1400
 using namespace std;
 #pragma pack(push)
 #pragma pack(1)
@@ -34,7 +33,7 @@ enum PC_DEV_COMMAND{
 	CMD_DEV_BROADCAST_SELF_ADDRESS = 6,   //设备广播自己地址
 	CMD_DEV_TESTMODE	= 7,		      //设备进入测试模式
 	CMD_DEV_GETMASK     = 8,			  //获取设备加密信息
-	CMD_DEV_REQUESTVERSION     = 9	      //获取设备加密信息
+	CMD_DEV_REQUESTVERSION     = 9	      //获取版本号
 };
 /************************************1. Package defines***********************/
 //传输包结构:
@@ -183,6 +182,7 @@ typedef struct PC_Get_MaskInfo_tag{
 //-------------------------------------------------------------------//
 typedef struct DEV_Request_MaskInfo_tag{
 	PC_DEV_Header header;
+	char DevID[40]; //设备ID(前四个字符为设备类型)//add
 	unsigned short m_mask[4];//传送加密方式：~m_mask[0]+1,先取反后加一
 }DEV_Request_MaskInfo;
 

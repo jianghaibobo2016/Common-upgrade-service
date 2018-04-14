@@ -9,6 +9,9 @@ public:
 
 	INT8 *serverIPT;
 	INT8 *serverPortT;
+
+	INT8 *MAC;
+	INT8 *MASK;
 };
 
 class SetNetworkTerminal: public SetNetwork {
