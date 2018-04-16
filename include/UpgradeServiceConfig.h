@@ -15,6 +15,9 @@ static const INT8 *INIFILE = "/dsppa/SET_NET/DSP9903_NET_CONF.ini";
 static const INT8 *upFileDownload = "/nand/Update_File/DSP9903_PRODUCT_";
 static const INT8 *AmplifierUpgrade = "DSP9903_Amplifier_";
 static const INT8 *MainRootfsUpgrade = "DSP9903_MROOTFS_";
+/*log path setting*/
+static const INT8 *logPath="/nand/log/UpgardeService_9903";
+/*log path setting*/
 #endif
 #if (DSP9906)
 static const INT8 *TerminalDevType = "DSP9906";
@@ -22,6 +25,9 @@ static const INT8 *INIFILE = "/dsppa/SET_NET/DSP9906_NET_CONF.ini";
 static const INT8 *upFileDownload = "/nand/Update_File/DSP9906_PRODUCT_";
 static const INT8 *AmplifierUpgrade = "DSP9906_Amplifier_";
 static const INT8 *MainRootfsUpgrade = "DSP9906_MROOTFS_";
+/*log path setting*/
+static const INT8 *logPath="/nand/log/UpgardeService_9906";
+/*log path setting*/
 #endif
 #if (DSP9908)
 static const INT8 *TerminalDevType = "DSP9908";
@@ -29,6 +35,9 @@ static const INT8 *INIFILE = "/dsppa/SET_NET/DSP9903_NET_CONF.ini";
 static const INT8 *upFileDownload = "/nand/Update_File/DSP9908_PRODUCT_";
 static const INT8 *AmplifierUpgrade = "DSP9908_Amplifier_";
 static const INT8 *MainRootfsUpgrade = "DSP9908_MROOTFS_";
+/*log path setting*/
+static const INT8 *logPath="/nand/log/UpgardeService_9908";
+/*log path setting*/
 #endif
 /*type switch setting*/
 
@@ -116,5 +125,6 @@ static const INT8 *WEBREQUEST = "WEBTERMINAL";
 static const INT8 *UPFILESYSTEM = "Upgrade filesystem!";
 static const INT8 *WEBBeginToUpgrade = "Begin to upgrade !";
 /* upgrade */
+
 
 #endif /* UPGRADESERVICECONFIG_H */

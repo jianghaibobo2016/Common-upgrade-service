@@ -7,7 +7,6 @@ UpgradeService::UpgradeService(SetNetworkTerminal *setNetworkTerminal) :
 }
 
 UpgradeService::~UpgradeService() {
-	// delete setNetworkTerminal;
 }
 
 INT32 UpgradeService::start() {

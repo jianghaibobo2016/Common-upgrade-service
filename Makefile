@@ -104,7 +104,7 @@ $(TARGET): $(all_objs)
 else
 $(TARGET): LD = $(if $(strip $(src-cpp) $(src-cc) $(src-cxx)),$(G++),$(GCC))
 $(TARGET): $(all_objs)
-	$(LD) $(LDFLAGS) $(all_objs) -o $@ ./libLog-32.so -lpthread
+	$(LD) $(LDFLAGS) $(all_objs) -o $@  -lpthread
 endif
 
 .mkdir:

@@ -3,6 +3,7 @@
 #include "CMDParserUp.h"
 #include "Upgrade.h"
 #include "FileOperation.h"
+#include "LocalUDPTrans.h"
 #include <unistd.h>
 #include <sys/reboot.h>
 #include <sys/socket.h>
@@ -400,33 +401,34 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 //	}
 }
 
-void devGetMaskCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
-		SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd,
-		UpFileAttrs &upFileAttr, FileTrans &fileTrans,
-		DEV_Request_FileProtocal *request) {
+void HandleUp::devGetMaskCMDHandle(sockaddr_in &recvAddr,
+		SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd) {
 	SmartPtr<DEV_Request_UpgradeReply> upgradeReply(
-				new DEV_Request_UpgradeReply);
+			new DEV_Request_UpgradeReply);
 	INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
-	vector<UINT8> sendBuff;
-	DEV_Request_MaskInfo maskinfo;
-	memset(&maskinfo, 0, sizeof(DEV_Request_MaskInfo));
-	maskinfo.header.HeadTag = PROTOCAL_PC_DEV_HEAD;
-	maskinfo.header.HeadCmd = CMD_DEV_GETMASK;
-	maskinfo.header.DataLen = sizeof(maskinfo.DevID) + sizeof(maskinfo.m_mask);
-
+	SmartPtr<DEV_Request_MaskInfo> maskInfo(new DEV_Request_MaskInfo);
+	maskInfo->header.HeadTag = PROTOCAL_PC_DEV_HEAD;
+	maskInfo->header.HeadCmd = CMD_DEV_GETMASK;
+	maskInfo->header.DataLen = sizeof(maskInfo->DevID)
+			+ sizeof(maskInfo->m_mask);
 	char mac[13] = { 0 };
 	strcpy(mac,
 			setNetworkTerminal->castMacToChar13(mac,
 					setNetworkTerminal->getNetConfStruct().macAddr));
 	mac[12] = '\0';
-	strncpy(maskinfo.DevID, TerminalDevTypeID, strlen(TerminalDevTypeID));
-	strcpy(maskinfo.DevID + strlen(TerminalDevTypeID), mac);
-	//	memcpy(maskinfo.DevID, GlobalProfile::instance()->GetVideoTerminalID().c_str(), 16);
-
-	maskinfo.m_mask[0] = ~(GlobalStatus::instance()->g_sMask._mask[0]) + 1;
-	maskinfo.m_mask[1] = ~(GlobalStatus::instance()->g_sMask._mask[1]) + 1;
-	maskinfo.m_mask[2] = ~(GlobalStatus::instance()->g_sMask._mask[2]) + 1;
-	maskinfo.m_mask[3] = ~(GlobalStatus::instance()->g_sMask._mask[3]) + 1;
+	strncpy(maskInfo->DevID, TerminalDevTypeID, strlen(TerminalDevTypeID));
+	strcpy(maskInfo->DevID + strlen(TerminalDevTypeID), mac);
+	INT32 retGet = getMaskInfo(maskInfo->m_mask);
+	if (retGet == retOk) {
+		INT32 sendtoret = sendto(sockfd, (INT8*) maskInfo.get(),
+				sizeof(DEV_Request_MaskInfo), 0, (struct sockaddr *) &recvAddr,
+				tmp_server_addr_len);
+		if (sendtoret > 0)
+			return;
+		else {
+			return;
+		}
+	}
 }
 void HandleUp::TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 		SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd,
@@ -734,7 +736,7 @@ INT32 HandleUp::upAmplifier() {
 	struct sockaddr_in addr;
 	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (sockfd < 0) {
-		printf("I cannot socket success\n");
+		printf("I cannot open socket success\n");
 		return retError;
 	}
 	addrlen = sizeof(struct sockaddr_in);
@@ -793,3 +795,46 @@ INT32 HandleUp::upMainRootfsRespond(INT32 m_socket, SetNetworkTerminal &net) {
 void HandleUp::sysReboot() {
 	reboot(RB_AUTOBOOT);
 }
+
+INT32 HandleUp::getMaskInfo(UINT16 *mask) {
+//	NetTrans netTrans(AF_INET, SOCK_DGRAM, 0);
+	LocalUDPTrans netTrans;
+	struct sockaddr_in addr;
+	socklen_t addrlen;
+	addrlen = sizeof(struct sockaddr_in);
+	bzero(&addr, addrlen);
+	addr.sin_family = AF_INET;
+	addr.sin_addr.s_addr = htonl(INADDR_ANY); //任何主机地址
+	addr.sin_port = htons(UpAmplifierPort);
+
+	DEV_GetMaskInfo devGetMask;
+	devGetMask.devMaskTag = DEVMaskTag;
+	devGetMask.devMaskCmd = DEVGetMaskCmd;
+	INT32 retSend = sendto(netTrans.getSockfd(), &devGetMask,
+			sizeof(devGetMask), 0, (struct sockaddr*) &addr, addrlen);
+	if (retSend <= 0) {
+		cout << "errorsend" << endl;
+		return retError;
+	}
+	cout << "retsend : " << retSend << endl;
+	INT8 recvBuff[16] = { 0 };
+	INT32 retRecv = recvfrom(netTrans.getSockfd(), recvBuff, sizeof(recvBuff),
+			0, (struct sockaddr*) &addr, &addrlen);
+	if (retRecv == -1) {
+		cout << "recv error" << endl;
+		return retError;
+	} else if (retRecv > 0) {
+		cout << "recv ret : " << retRecv << " recv buff : " << recvBuff << endl;
+		SmartPtr<DEV_ReplyMaskInfo> devReply(new DEV_ReplyMaskInfo);
+		devReply = (DEV_ReplyMaskInfo*) recvBuff;
+		if (devReply->devMaskTag
+				== DEVMaskTag&& devReply->devMaskCmd == DEVReplyMaskCmd && devReply->m_mask != NULL) {
+			memcpy(mask, devReply->m_mask, sizeof(devReply->m_mask));
+		} else {
+			cout << "get failed!" << endl;
+			return retError;
+		}
+	}
+	return retOk;
+}
+

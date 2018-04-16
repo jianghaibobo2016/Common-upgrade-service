@@ -87,7 +87,7 @@ typedef struct PC_Request_ParameterSetting_tag{
 //设备端返回
 typedef struct DEV_Reply_ParameterSetting_tag{
 	PC_DEV_Header header;
-	char DevID[40]; //设备ID(前四个字符为设备类型)//add
+	INT8 DevID[40]; //设备ID(前四个字符为设备类型)//add
 	UINT8 Result; //1:成功,0:失败
 	// UINT8 FailReasonLen;
 	// char* FailReason;
@@ -142,7 +142,7 @@ typedef struct PC_Reply_FileProtocal_tag{
 //设备端请求
 typedef struct DEV_Request_UpgradeReply_tag{
 	PC_DEV_Header header;
-	char DevID[40]; //设备ID(前四个字符为设备类型)//add
+	INT8 DevID[40]; //设备ID(前四个字符为设备类型)//add
 	UINT8 Result; //升级结果反馈 成功:1, 失败:0
 	//char* text
 }DEV_Request_UpgradeReply;
@@ -182,9 +182,26 @@ typedef struct PC_Get_MaskInfo_tag{
 //-------------------------------------------------------------------//
 typedef struct DEV_Request_MaskInfo_tag{
 	PC_DEV_Header header;
-	char DevID[40]; //设备ID(前四个字符为设备类型)//add
-	unsigned short m_mask[4];//传送加密方式：~m_mask[0]+1,先取反后加一
+	INT8 DevID[40]; //设备ID(前四个字符为设备类型)//add
+	UINT16 m_mask[4];//传送加密方式：~m_mask[0]+1,先取反后加一
 }DEV_Request_MaskInfo;
+
+//0x0101FFFF devMaskTag
+//0x00F1 devMaskCmd  -->>get
+//0x00F2 devMaskCmd  -->>reply
+static const UINT32 DEVMaskTag = 0x0101FFFF;
+static const INT16 DEVGetMaskCmd = 0x00F1;
+static const INT16 DEVReplyMaskCmd = 0x00F2;
+typedef struct DEV_Get_MaskInfo_Tag{
+	UINT32 devMaskTag;
+	UINT16 devMaskCmd;
+}DEV_GetMaskInfo;
+
+typedef struct DEV_Reply_MaskInfo_tag{
+	UINT32 devMaskTag;
+	UINT16 devMaskCmd;
+	UINT16 m_mask[4];//传送加密方式：~m_mask[0]+1,先取反后加一
+}DEV_ReplyMaskInfo;
 
 //------------------------------9. 获取终端版本号------------------------//
 typedef struct DEV_Request_VersionNum_tag{

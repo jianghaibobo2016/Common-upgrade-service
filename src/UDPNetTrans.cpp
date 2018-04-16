@@ -109,7 +109,8 @@ INT32 UDPNetTrans::socketSelect() {
 			}
 				break;
 			case CMD_DEV_GETMASK: {
-
+				HandleUp::getInstance().devGetMaskCMDHandle(recvAddr, &netSet,
+						sockfd);
 			}
 				break;
 			case CMD_DEV_REQUESTVERSION: {

@@ -23,10 +23,7 @@ public:
 			SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd,
 			UpFileAttrs &upFileAttr, FileTrans &fileTrans,
 			DEV_Request_FileProtocal *request);
-	void devGetMaskCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
-			SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd,
-			UpFileAttrs &upFileAttr, FileTrans &fileTrans,
-			DEV_Request_FileProtocal *request);
+	void devGetMaskCMDHandle(sockaddr_in &recvAddr, SetNetworkTerminal *setNetworkTerminal,INT32 &sockfd);
 	/**************************mainly Handle function ************************/
 
 	void TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
@@ -65,6 +62,7 @@ public:
 			const INT8 *failReason, INT32 result,
 			SetNetworkTerminal *setNetworkTerminal);
 private:
+	INT32 getMaskInfo(UINT16 *mask);
 };
 #include "HandleUp.hpp"
 #endif /* HANDLEUP_H */
