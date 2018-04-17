@@ -14,6 +14,17 @@ public:
 	LocalUDPTrans();
 	~LocalUDPTrans();
 
+	sockaddr_in *getAddr() {
+		return &addr;
+	}
+
+	socklen_t *getAddrLen() {
+		return &addrLen;
+	}
+
+private:
+	struct sockaddr_in addr;
+	socklen_t addrLen;
 };
 
 #endif /* LOCALUDPTRANS_H_ */

@@ -203,7 +203,7 @@ void UpgradeDSP::clearObj() {
 
 UpgradeDSPSubItem::UpgradeDSPSubItem() :
 		productTarFile(newTarPackage), eachItemUpStatus(true), mSubItems(), mUpSubItem(), upSystem(
-				false), upAmplifier(false) {
+				false), upTerminalDevs(false), upDevType(ERROR_TYPE) {
 	aUpSubItem = new UpgradeDSP(NULL);
 }
 UpgradeDSPSubItem::~UpgradeDSPSubItem() {
@@ -228,23 +228,22 @@ INT32 UpgradeDSPSubItem::parserSubItemsFileName(UINT32 num) {
 	if (strncmp(mSubItems[num].c_str() + strlen(upFilePath), AmplifierUpgrade,
 			strlen(AmplifierUpgrade)) == 0) {
 		cout << "up amplifier !!!!!!!!!!!!!!!!!!!!!!1" << endl;
-		this->setUpAmplifier(true);
-
-//		INT32 retUpAmp = HandleUp::upAmplifier();
-//		if (retUpAmp == retOk) {
-//			return 1;
-//		} else if (retUpAmp == retError) {
-//			return retError;
-//		}
+		this->setUpTerminalDevs(true);
+		this->setUpDevType(UPDATE_DEV_AMP);
+	} else if (strncmp(mSubItems[num].c_str() + strlen(upFilePath),
+			PagerUpgrade, strlen(PagerUpgrade)) == 0) {
+		cout << "up pager !!!!!!!!!!!!!!!!!!!!!!2" << endl;
+		this->setUpTerminalDevs(true);
+		this->setUpDevType(UPDATE_DEV_AMP);
 	}
 	if (strncmp(mSubItems[num].c_str() + strlen(upFilePath), MainRootfsUpgrade,
 			strlen(MainRootfsUpgrade)) == 0) {
-		cout << "up mainrootfs !!!!!!!!!!!!!!!!!!!!!!1" << endl;
+		cout << "up mainrootfs !!!!!!!!!!!!!!!!!!!!!!3" << endl;
 		this->setUpSystem(true);
 	}
 	aUpSubItem->setUpgradeFile(const_cast<INT8 *>(mSubItems[num].c_str()));
 	INT8 record[msgLen] = { 0 };
-	if (!this->getUpAmplifier()){
+	if (!this->getUpTerminalDevs()) {
 		if (aUpSubItem->parserFileName() != retOk) { //segmentation fault
 			sprintf(record, "Can not upgrade : %s to version %s !",
 					aUpSubItem->getMemberItemName(),
@@ -261,7 +260,7 @@ INT32 UpgradeDSPSubItem::parserSubItemsFileName(UINT32 num) {
 			aUpSubItem->setUpgraderecord(record);
 			return retError;
 		}
-	}else{
+	} else {
 
 	}
 	return retOk;

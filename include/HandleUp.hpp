@@ -8,11 +8,14 @@
 #ifndef HANDLEUP_HPP_
 #define HANDLEUP_HPP_
 #include "HandleUp.h"
+#include "PCTransProtocal.h"
+
+
 template<typename T>
 INT32 HandleUp::devReplyHandle(INT8 *sendtoBuff, T &s_devReply,
 		UINT32 reasonLen, const INT8 *failReason, INT32 result,
 		SetNetworkTerminal *setNetworkTerminal) {
-	s_devReply.header.HeadTag = 0x0101FBFC;
+	s_devReply.header.HeadTag = PROTOCAL_PC_DEV_HEAD;
 	INT8 mac[13] = { 0 };
 	strcpy(mac,
 			SetNetworkTerminal::castMacToChar13(mac,
@@ -31,8 +34,7 @@ INT32 HandleUp::devReplyHandle(INT8 *sendtoBuff, T &s_devReply,
 	memcpy(&FailReasonLen, &reasonLen, 1);
 	cout << "text to send : " << failReason << endl;
 	s_devReply.header.DataLen = sizeof(s_devReply.DevID)
-			+ sizeof(s_devReply.Result) + sizeof(FailReasonLen)
-			+ reasonLen;
+			+ sizeof(s_devReply.Result) + sizeof(FailReasonLen) + reasonLen;
 	memcpy(sendtoBuff, &s_devReply, sizeof(T));
 	memcpy(sendtoBuff + sizeof(T), &FailReasonLen, sizeof(FailReasonLen));
 	memcpy(sendtoBuff + sizeof(T) + sizeof(FailReasonLen), failReason,
@@ -51,6 +53,12 @@ INT32 HandleUp::writeFileFromPC(INT8 *recvBuff, const INT8 *fileName) {
 		return retError;
 	}
 	fout.close();
+	return retOk;
+}
+template<typename T>
+INT32 HandleUp::localUpHandle(T &upControl) {
+	upControl.header.HeadTag = PROTOCAL_PC_DEV_HEAD;
+	upControl.header.DataLen = sizeof(T);
 	return retOk;
 }
 

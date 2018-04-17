@@ -3,6 +3,8 @@
 #include "GlobalProfile.h"
 #include "FileOperation.h"
 #include "DevSearch.h"
+#include "Logger.h"
+using namespace FrameWork;
 
 #define OFFSETPTR                                                                   \
     pcSettingNet += (1 + (INT32)pcSettingNet[0]);
@@ -40,13 +42,12 @@ CMDParserUp::~CMDParserUp() {
 }
 UINT16 CMDParserUp::parserPCRequestHead(void *buffer, INT32 recvLen) {
 	PC_DEV_Header *pcHead = (PC_DEV_Header *) buffer;
-	cout << "pcHead->HeadTag : " << pcHead->HeadTag << endl;
 
-	if (pcHead->HeadTag != 0x0101FBFC) {
+	Logger::GetInstance().Info("Recv CMD %d with tag %X from PC !", pcHead->HeadCmd, pcHead->HeadTag);
+	if (pcHead->HeadTag != PROTOCAL_PC_DEV_HEAD) {
 		return (UINT16) retError;
 	}
 	/* modify */
-	cout << "dalen: " << pcHead->DataLen << " recvlen: " << recvLen << endl;
 	if ((pcHead->DataLen != recvLen - sizeof(PC_DEV_Header))
 			&& (pcHead->DataLen != 0)) {
 		return (UINT16) retError;

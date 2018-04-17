@@ -14,6 +14,7 @@ static const INT8 *TerminalDevType = "DSP9903";
 static const INT8 *INIFILE = "/dsppa/SET_NET/DSP9903_NET_CONF.ini";
 static const INT8 *upFileDownload = "/nand/Update_File/DSP9903_PRODUCT_";
 static const INT8 *AmplifierUpgrade = "DSP9903_Amplifier_";
+static const INT8 *PagerUpgrade = "DSP9903_Pager_";
 static const INT8 *MainRootfsUpgrade = "DSP9903_MROOTFS_";
 /*log path setting*/
 static const INT8 *logPath="/nand/log/UpgardeService_9903";
@@ -24,9 +25,10 @@ static const INT8 *TerminalDevType = "DSP9906";
 static const INT8 *INIFILE = "/dsppa/SET_NET/DSP9906_NET_CONF.ini";
 static const INT8 *upFileDownload = "/nand/Update_File/DSP9906_PRODUCT_";
 static const INT8 *AmplifierUpgrade = "DSP9906_Amplifier_";
+static const INT8 *PagerUpgrade = "DSP9906_Pager_INVALID";
 static const INT8 *MainRootfsUpgrade = "DSP9906_MROOTFS_";
 /*log path setting*/
-static const INT8 *logPath="/nand/log/UpgardeService_9906";
+static const INT8 *logPath="/nand/log/UpgradeService_9906";
 /*log path setting*/
 #endif
 #if (DSP9908)
@@ -34,6 +36,7 @@ static const INT8 *TerminalDevType = "DSP9908";
 static const INT8 *INIFILE = "/dsppa/SET_NET/DSP9903_NET_CONF.ini";
 static const INT8 *upFileDownload = "/nand/Update_File/DSP9908_PRODUCT_";
 static const INT8 *AmplifierUpgrade = "DSP9908_Amplifier_";
+static const INT8 *PagerUpgrade = "DSP9908_Pager_";
 static const INT8 *MainRootfsUpgrade = "DSP9908_MROOTFS_";
 /*log path setting*/
 static const INT8 *logPath="/nand/log/UpgardeService_9908";
@@ -44,7 +47,7 @@ static const INT8 *logPath="/nand/log/UpgardeService_9908";
 /*net port*/
 static const INT32 UpUDPTransPort = 45535;
 static const INT32 UpRespondPort = 65530;
-static const INT32 UpAmplifierPort = 4305;
+static const INT32 UpLocalPort = 4307;
 /*net port*/
 
 /* struct of protocal member size */
@@ -75,7 +78,6 @@ static const INT8 *ProductItemName = "PRODUCT";
 static const INT8 *upFilePath = "/nand/Update_File/";
 
 static const INT8* newTarPackage = "/nand/Update_File/upgradefiletar.tar";
-static const INT8 *upgradeAmplifier = "Upgrade";
 //static const INT8 *AmplifierUpgrade = "DSP9903_ServerApp_";
 
 /* text :

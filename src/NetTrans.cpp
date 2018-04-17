@@ -31,7 +31,7 @@ NetTrans::NetTrans(int domain, int type, int protocol)
 }
 NetTrans::~NetTrans()
 {
-    cout <<"netclose"<<endl;
+    cout <<"Close socket!"<<endl;
     close(m_socket);
 }
 

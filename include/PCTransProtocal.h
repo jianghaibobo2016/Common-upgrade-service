@@ -175,33 +175,18 @@ typedef struct PC_Run_TestMode_tag{
 }PC_Run_TestMode;
 
 //------------------------------8.获取设备加密信息-------------------------//
+//PC发送
 typedef struct PC_Get_MaskInfo_tag{
 	PC_DEV_Header header;
 } PC_Get_MaskInfo;
 
 //-------------------------------------------------------------------//
+//终端反馈
 typedef struct DEV_Request_MaskInfo_tag{
 	PC_DEV_Header header;
 	INT8 DevID[40]; //设备ID(前四个字符为设备类型)//add
 	UINT16 m_mask[4];//传送加密方式：~m_mask[0]+1,先取反后加一
 }DEV_Request_MaskInfo;
-
-//0x0101FFFF devMaskTag
-//0x00F1 devMaskCmd  -->>get
-//0x00F2 devMaskCmd  -->>reply
-static const UINT32 DEVMaskTag = 0x0101FFFF;
-static const INT16 DEVGetMaskCmd = 0x00F1;
-static const INT16 DEVReplyMaskCmd = 0x00F2;
-typedef struct DEV_Get_MaskInfo_Tag{
-	UINT32 devMaskTag;
-	UINT16 devMaskCmd;
-}DEV_GetMaskInfo;
-
-typedef struct DEV_Reply_MaskInfo_tag{
-	UINT32 devMaskTag;
-	UINT16 devMaskCmd;
-	UINT16 m_mask[4];//传送加密方式：~m_mask[0]+1,先取反后加一
-}DEV_ReplyMaskInfo;
 
 //------------------------------9. 获取终端版本号------------------------//
 typedef struct DEV_Request_VersionNum_tag{

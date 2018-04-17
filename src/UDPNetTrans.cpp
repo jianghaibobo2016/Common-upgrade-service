@@ -79,8 +79,11 @@ INT32 UDPNetTrans::socketSelect() {
 			INT32 sockfd = m_socket;
 			switch (CMDParserUp::parserPCRequestHead(buffer, ret_recv)) {
 			case CMD_DEV_SEARCH: {
+				Logger::GetInstance().Info(
+						"Get test mode change command from PC : %s !",
+						inet_ntoa(recvAddr.sin_addr));
 				HandleUp::getInstance().devSearchCMDHandle(recvAddr, &netSet,
-						sockfd);
+						*upFileAttrs.get(), sockfd);
 			}/*end case 1*/
 				break;
 			case CMD_DEV_PARAMETER_SETTING: {
@@ -105,13 +108,19 @@ INT32 UDPNetTrans::socketSelect() {
 			}
 				break;
 			case CMD_DEV_TESTMODE: {
-
-			}
+				Logger::GetInstance().Info(
+						"Get test mode change command from PC : %s !",
+						inet_ntoa(recvAddr.sin_addr));
+				HandleUp::getInstance().devTestModeCntCMDHandle(buffer);
+			}/*end case 7*/
 				break;
 			case CMD_DEV_GETMASK: {
-				HandleUp::getInstance().devGetMaskCMDHandle(recvAddr, &netSet,
-						sockfd);
-			}
+				Logger::GetInstance().Info(
+						"Get request of  mask code command from PC : %s !",
+						inet_ntoa(recvAddr.sin_addr));
+//				HandleUp::getInstance().devGetMaskCMDHandle(recvAddr, &netSet,
+//						sockfd);
+			}/*end case 8*/
 				break;
 			case CMD_DEV_REQUESTVERSION: {
 

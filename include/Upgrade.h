@@ -4,6 +4,7 @@
 #include <string.h>
 #include "GlobDefine.h"
 #include "PCTransProtocal.h"
+#include "UpdateProgram_Protocal.h"
 #include "UpgradeServiceConfig.h"
 #include "md5.h"
 #include "Uncopyable.h"
@@ -117,8 +118,11 @@ public:
 	bool getUpSystem() {
 		return upSystem;
 	}
-	bool getUpAmplifier() {
-		return upAmplifier;
+	bool getUpTerminalDevs() {
+		return upTerminalDevs;
+	}
+	UPDATE_DEV_TYPE getUpDevType() {
+		return upDevType;
 	}
 	void setEachItemUpResult(bool result) {
 		eachItemUpStatus = result;
@@ -126,8 +130,11 @@ public:
 	void setUpSystem(bool upSys) {
 		upSystem = upSys;
 	}
-	void setUpAmplifier(bool upAmp) {
-		upAmplifier = upAmp;
+	void setUpTerminalDevs(bool upAmp) {
+		upTerminalDevs = upAmp;
+	}
+	void setUpDevType(UPDATE_DEV_TYPE type) {
+		upDevType = type;
 	}
 	map<INT32, string>& getExtractItem() {
 		return mUpSubItem;
@@ -147,7 +154,8 @@ private:
 	map<INT32, string> mUpSubItem;
 	UpgradeDSP *aUpSubItem;
 	bool upSystem;
-	bool upAmplifier;
+	bool upTerminalDevs;
+	UPDATE_DEV_TYPE upDevType;
 };
 #endif
 
