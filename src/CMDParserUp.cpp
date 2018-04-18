@@ -351,7 +351,7 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 	}
 
 	if (strlen(version) != 0) {
-		INT32 retCompare = compareUpgradeItem(upFileAttr.getNewSoftVersion(),
+		INT32 retCompare = compareUpgradeItem(const_cast<INT8*>(upFileAttr.getNewSoftVersion()),
 				version, strlen(version));
 		if (retCompare == retOk) {
 			strcpy(failReason, NONEEDTOUPGRADE);

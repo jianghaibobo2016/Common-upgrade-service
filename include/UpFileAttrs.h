@@ -3,42 +3,63 @@
 #include "GlobDefine.h"
 #include "RCSP.h"
 #include "FileTrans.h"
+#include "UpgradeServiceConfig.h"
 class UpFileAttrs {
 public:
 
 	static SmartPtr<UpFileAttrs> createFileAttrs();
+	UpFileAttrs(const UpFileAttrs &);
+	UpFileAttrs &operator=(const UpFileAttrs &fileAttr);
 
 	void setFileDownloadPath(const INT8 *path, INT32 length);
 	void setNewSoftVersion(const INT8 *version, INT32 length);
 	void setNewSoftFileSize(const INT32 size);
 	void setFileMD5Code(const INT8 *MD5, INT32 length);
 
-	INT8 *getFileDownloadPath() {
+	const INT8 *getFileDownloadPath() const {
 		return fileDownloadPath;
 	}
-	INT8 *getNewSoftVersion() {
+	const INT8 *getNewSoftVersion() const {
 		return newSoftVersion;
 	}
-	UINT32 getNewSoftFileSize() {
+	const UINT32 getNewSoftFileSize() const {
 		return newSoftFileSize;
 	}
-	INT8 *getFileMD5Code() {
+	const INT8 *getFileMD5Code() const {
 		return upFileMD5code;
 	}
-	bool getWebUpMethod() {
+	const bool getWebUpMethod() const {
 		return webUpMethod;
 	}
-	bool getInUpgradeStatus() {
+	const bool getInUpgradeStatus() const {
 		return inUpgrading;
 	}
+	const FileTrans &getFileTrans() const {
+		return fileTransRecord;
+	}
 
-	void setWebUpMethod(bool method) {
+	void setFileDownloadPath(const INT8 *path) {
+		memset(fileDownloadPath, 0, fileDownloadPathSize);
+		memcpy(fileDownloadPath, path, strlen(path));
+	}
+	void setNewSoftVersion(const INT8 *version) {
+		memset(newSoftVersion, 0, newSoftVersionSize);
+		memcpy(newSoftVersion, version, strlen(version));
+	}
+	void setNewFileSize(const UINT32 size) {
+		newSoftFileSize = size;
+	}
+	void setUpFileMD5Code(const INT8 *code) {
+		memset(upFileMD5code, 0, upgradeFileMd5Size);
+		memcpy(upFileMD5code, code, strlen(code));
+	}
+	void setWebUpMethod(const bool method) {
 		webUpMethod = method;
 	}
-	void setInUpgradeStatus(bool status) {
+	void setInUpgradeStatus(const bool status) {
 		inUpgrading = status;
 	}
-	void setFileTransRecord(FileTrans& fileTrans) {
+	void setFileTransRecord(const FileTrans& fileTrans) {
 		fileTransRecord = fileTrans;
 	}
 	bool clearMemberData(UpFileAttrs &);
@@ -48,9 +69,7 @@ private:
 	INT8 *newSoftVersion; /* 20B */
 	UINT32 newSoftFileSize;
 	INT8 *upFileMD5code; /* 16B */
-
 	bool webUpMethod;
-
 	bool inUpgrading;
 	FileTrans fileTransRecord;
 	UpFileAttrs();

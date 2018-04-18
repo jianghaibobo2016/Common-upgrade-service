@@ -26,10 +26,22 @@ SetNetworkTerminal::SetNetworkTerminal() :
 SetNetworkTerminal::SetNetworkTerminal(
 		const SetNetworkTerminal& setNetworkTerminal) :
 		SetNetwork(setNetworkTerminal) {
+	/////////so many
+	cout << "copy construct  ///////////////////////" << endl;
 	PCIP = new INT8[32];
 	memset(PCIP, 0, 32);
 	setPCIP(setNetworkTerminal.getPCIP());
 }
+
+SetNetworkTerminal &SetNetworkTerminal::operator=(
+		const SetNetworkTerminal &setNet) {
+	if (this != &setNet){
+		SetNetwork::operator =(setNet);
+		setPCIP(setNet.getPCIP());
+	}
+	return *this;
+}
+
 SetNetworkTerminal::~SetNetworkTerminal() {
 	delete[] PCIP;
 }

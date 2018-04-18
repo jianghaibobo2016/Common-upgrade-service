@@ -72,7 +72,7 @@ if (iniConfFile.setIniConfFile("NETWORK", "macaddr", macaddr) != retOk)         
 }
 
 SetNetwork::SetNetwork() :
-		m_netWorkConfig(), IFNAME(NULL), networkStatus(errorStatus),initSet(false) {
+		m_netWorkConfig(), IFNAME(NULL), networkStatus(errorStatus),initSet(false)/*,mutex(PTHREAD_MUTEX_INITIALIZER)*/ {
 	IFNAME = new INT8[8];
 }
 //???
@@ -83,7 +83,19 @@ SetNetwork::SetNetwork(const SetNetwork& setNet) :
 	if (IFNAME != NULL)
 		strcpy(IFNAME, setNet.IFNAME);
 	initSet=setNet.initSet;
+//	mutex=setNet.mutex;
 }
+
+SetNetwork &SetNetwork::operator=(const SetNetwork &setNet){
+	if (this != &setNet){
+		setNetConfStruct(setNet.getNetConfStruct());
+		setIfname(setNet.getIfname());
+		setNetStatus(setNet.getNetStatus());
+		setInitSet(setNet.getInitSet());
+	}
+	return *this;
+}
+
 SetNetwork::~SetNetwork() {
 	delete IFNAME;
 }

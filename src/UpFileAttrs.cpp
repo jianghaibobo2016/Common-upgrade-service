@@ -1,6 +1,8 @@
 #include <string.h>
+#include <iostream>
 #include "UpFileAttrs.h"
 #include "UpgradeServiceConfig.h"
+using namespace std;
 
 UpFileAttrs::UpFileAttrs() :
 		fileDownloadPath(), newSoftVersion(), newSoftFileSize(0), upFileMD5code(), webUpMethod(
@@ -20,6 +22,35 @@ SmartPtr<UpFileAttrs> UpFileAttrs::createFileAttrs() {
 	upFileAttrs->upFileMD5code = new char[upgradeFileMd5Size];
 	return upFileAttrs;
 }
+
+UpFileAttrs::UpFileAttrs(const UpFileAttrs & tmpFileAttr){
+	cout <<"upfileattrs copy constrcut !!!!!!start"<<endl;
+	fileDownloadPath = new char[fileDownloadPathSize];
+	memcpy(fileDownloadPath, tmpFileAttr.fileDownloadPath,strlen(tmpFileAttr.fileDownloadPath));
+	newSoftVersion = new char[newSoftVersionSize];
+	memcpy(newSoftVersion, tmpFileAttr.newSoftVersion,strlen(tmpFileAttr.newSoftVersion));
+	newSoftFileSize = tmpFileAttr.newSoftFileSize;
+	upFileMD5code = new char[upgradeFileMd5Size];
+	memcpy(upFileMD5code, tmpFileAttr.upFileMD5code,strlen(tmpFileAttr.upFileMD5code));
+	webUpMethod = tmpFileAttr.webUpMethod;
+	inUpgrading = tmpFileAttr.inUpgrading;
+	fileTransRecord = tmpFileAttr.fileTransRecord;
+	cout <<"upfileattrs copy constrcut !!!!!!end"<<endl;
+}
+
+UpFileAttrs &UpFileAttrs::operator=(const UpFileAttrs &fileAttr){
+	if (this != &fileAttr){
+		setFileDownloadPath(fileAttr.getFileDownloadPath());
+		setNewSoftVersion(fileAttr.getNewSoftVersion());
+		setNewFileSize(fileAttr.getNewSoftFileSize());
+		setUpFileMD5Code(fileAttr.getFileMD5Code());
+		setWebUpMethod(fileAttr.getWebUpMethod());
+		setInUpgradeStatus(fileAttr.getInUpgradeStatus());
+		setFileTransRecord(fileAttr.getFileTrans());
+	}
+	return *this;
+}
+
 void UpFileAttrs::setFileDownloadPath(const INT8 *path, INT32 length) {
 	memcpy(fileDownloadPath, path, length);
 }

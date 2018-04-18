@@ -101,6 +101,7 @@ bool FileOperation::alterFileName(string filename, string newname) {
 }
 bool FileOperation::extractTarFile(string fileName,
 		map<INT32, string> &subItems) {
+	cout << "extract 1 "<<endl;
 	if (isExistFile(fileName) != true) {
 		return false;
 	}
@@ -113,10 +114,12 @@ bool FileOperation::extractTarFile(string fileName,
 	exeCMD += upFilePath;
 	exeCMD += " 2>/dev/null";
 	///////////chmod +x
+	cout << "extract 1 "<<endl;
 	if (NULL == (fstream = popen(exeCMD.c_str(), "r"))) {
 		fprintf(stderr, "execute command failed: %s", strerror(errno));
 		return false;
 	}
+	cout << "extract 1 "<<endl;
 	char items[][32] = { 0 };
 	int num = 1, ch = 0, bufflen = 0;
 	while (NULL != fgets(buff, sizeof(buff), fstream)) {

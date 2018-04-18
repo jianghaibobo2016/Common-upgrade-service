@@ -35,6 +35,8 @@ INT32 UDPNetTrans::socketRunThread() {
 		printf("Create thread successfully!........\n");
 	} else
 		;
+
+//	pthread_join(t_fact, NULL);
 	return retOk;
 }
 
@@ -54,10 +56,16 @@ INT32 UDPNetTrans::socketSelect() {
 	FileTrans fileTrans;
 	SmartPtr<UpFileAttrs> upFileAttrs = UpFileAttrs::createFileAttrs();
 	SmartPtr<DEV_Request_FileProtocal> request(new DEV_Request_FileProtocal);
+	struct sockaddr_in recvAddr;
+	SetNetworkTerminal netSet(*setNetworkTerminal);
+
+//	pthread_mutex_t mutex;
+
 	while (!UDPStatus) {
 		FD_ZERO(&readfd);
 		FD_SET(m_socket, &readfd);
 		ret_select = select(m_socket + 1, &readfd, NULL, NULL, NULL);
+		cout << "start fd ::::::"<<m_socket<<endl;
 		if (ret_select < 0) {
 			break;
 		} else if (ret_select == 0) {
@@ -73,9 +81,7 @@ INT32 UDPNetTrans::socketSelect() {
 			if (ret_recv <= 0) {
 				break;
 			}
-			struct sockaddr_in recvAddr;
 			memcpy(&recvAddr, &recvSendAddr, sizeof(recvSendAddr));
-			SetNetworkTerminal netSet(*setNetworkTerminal);
 			INT32 sockfd = m_socket;
 			switch (CMDParserUp::parserPCRequestHead(buffer, ret_recv)) {
 			case CMD_DEV_SEARCH: {
@@ -133,6 +139,8 @@ INT32 UDPNetTrans::socketSelect() {
 		} /* end if FD_ISSET */
 //		} /* end if */
 	} /* end while(1) */
+	// 解锁
+//	pthread_mutex_destroy(&mutex);
 	return retOk;
 }
 

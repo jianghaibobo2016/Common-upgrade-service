@@ -19,6 +19,7 @@ public:
 
 	SetNetworkTerminal();
 	SetNetworkTerminal(const SetNetworkTerminal&);
+	SetNetworkTerminal &operator=(const SetNetworkTerminal &setNet);
 	~SetNetworkTerminal();
 
 	INT8 *getPCIP() const {

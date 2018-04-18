@@ -10,6 +10,7 @@
 
 #include <string.h>
 #include <vector>
+#include <pthread.h>
 #include "GlobDefine.h"
 #include "UpgradeServiceConfig.h"
 using namespace std;
@@ -63,16 +64,28 @@ public:
 
 	SetNetwork();
 	SetNetwork(const SetNetwork&);
+	SetNetwork &operator=(const SetNetwork &setNet);
 	~SetNetwork();
 
-	const NETWORKCONFIG& getNetConfStruct() const {
+	const NETWORKCONFIG& getNetConfStruct()  const {
+//		pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+//		if (pthread_mutex_lock(&mutex) != 0) {
+//		}
+
 		return m_netWorkConfig;
+//		pthread_mutex_unlock (&mutex);
 	}
 
 	const INT8* getIfname() const {
 		return IFNAME;
 	}
+	const NetworkStatus &getNetStatus()const {
+		return networkStatus;
+	}
 
+	const bool &getInitSet()const {
+		return initSet;
+	}
 	void setNetConfStruct(const NETWORKCONFIG& netConfig) {
 		m_netWorkConfig = netConfig;
 	}
@@ -80,6 +93,9 @@ public:
 	void setIfname(const INT8* ifname) {
 		memset(IFNAME, 0, 8);
 		memcpy(IFNAME, ifname, strlen(ifname));
+	}
+	void setNetStatus(const NetworkStatus &netConfig){
+		networkStatus = netConfig;
 	}
 	void setInitSet(bool set) {
 		initSet = set;
@@ -96,6 +112,7 @@ private:
 	INT8* IFNAME;
 	NetworkStatus networkStatus;
 	bool initSet;
+//	pthread_mutex_t mutex;
 
 	static string ByteToHexString(const void *pData,
 			int len/* , const string &split = "" */);

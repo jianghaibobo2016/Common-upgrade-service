@@ -6,25 +6,18 @@
 #include "UpdateProgram_Protocal.h"
 #pragma pack(push)
 #pragma pack(1)
+//typedef struct FileTransArgs_S_ {
+//	FileTransArgs_S_(sockaddr_in addr, SetNetworkTerminal *setNet, INT32 *fd,
+//			UpFileAttrs *fileAttr, FileTrans *file) :
+//			recvAddr(addr), setNetworkTerminal(setNet), sockfd(fd), upFileAttr(
+//					fileAttr), fileTrans(file) {
+//	}
 typedef struct FileTransArgs_S_ {
-	FileTransArgs_S_(sockaddr_in *addr, INT8 *buff, SetNetworkTerminal *setNet,
-			INT32 *fd, UpFileAttrs *fileAttr, FileTrans *file,
-			DEV_Request_FileProtocal *fileRequest) {
-		recvAddr = addr;
-		recvBuff = buff;
-		setNetworkTerminal = setNet;
-		sockfd = fd;
-		upFileAttr = fileAttr;
-		fileTrans = file;
-		request = fileRequest;
-	}
-	sockaddr_in *recvAddr;
-	INT8 *recvBuff;
+	sockaddr_in recvAddr;
 	SetNetworkTerminal *setNetworkTerminal;
 	INT32 *sockfd;
 	UpFileAttrs *upFileAttr;
 	FileTrans *fileTrans;
-	DEV_Request_FileProtocal *request;
 } FileTransArgs;
 #pragma pack(pop)
 class UDPNetTrans;
@@ -54,10 +47,11 @@ public:
 	/**************************mainly Handle function ************************/
 
 	/**************************thread function ************************/
-	void *TransUpgradeThreadFun(void *args);
+//	static void *TransUpgradeThreadFun(void *args);
+	static void *UpgradeThreadFun(void *args);
 	/**************************thread function ************************/
 
-	void TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
+	static void TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 			SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd,
 			UpFileAttrs &upFileAttr, FileTrans &fileTrans,
 			DEV_Request_FileProtocal *request);
