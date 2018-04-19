@@ -12,7 +12,7 @@
 
 CROSS_COMPILE = arm-hisiv400-linux-
 OPTIMIZE := -O2
-WARNINGS := -Wall -Wno-unused   #-Wno-format  
+WARNINGS := -g -Wall -Wno-unused   #-Wno-format  
 DEFS     :=
 EXTRA_CFLAGS := 
 

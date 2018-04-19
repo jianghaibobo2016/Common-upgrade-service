@@ -100,15 +100,15 @@ void InitLogging(const char *filename, LogLevel minlevel, const char *destFolder
     _destLevel = minlevel;
 }
 
-static string GetLocalDate(void)
-{
-    time_t t = time(0);
-    tm *ld;
-    char tmp[64] = "";
-    ld = localtime(&t);
-    strftime(tmp, sizeof(tmp), "%Y-%m-%d", ld);
-    return string(tmp);
-}
+//static string GetLocalDate(void)
+//{
+//    time_t t = time(0);
+//    tm *ld;
+//    char tmp[64] = "";
+//    ld = localtime(&t);
+//    strftime(tmp, sizeof(tmp), "%Y-%m-%d", ld);
+//    return string(tmp);
+//}
 static string GetCurTime(void)
 {
     time_t t = time(0);

@@ -5,6 +5,7 @@
 #include "PCTransProtocal.h"
 #include "xmlParser.h"
 #include "UpgradeServiceConfig.h"
+#include "Mutex.h"
 
 
 class DevSearch
@@ -17,6 +18,7 @@ public:
 
 class DevSearchTerminal : public DevSearch
 {
+	static Mutex mutex;
 public:
     DevSearchTerminal(SetNetworkTerminal *setNetworkTerminal);
     virtual ~DevSearchTerminal();

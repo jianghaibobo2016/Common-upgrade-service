@@ -13,6 +13,7 @@
 #include "UpgradeService.h"
 using namespace FrameWork;
 int main(int argc, char *argv[]) {
+	setvbuf(stdout, (char *) NULL, _IOLBF, 0);
 	const INT8 *ifname = IFNAMETERMINAL;
 	SetNetworkTerminal getnetwork;
 	InitLogging(argv[0], DEBUG, logPath);
@@ -25,8 +26,8 @@ int main(int argc, char *argv[]) {
 	cout << "start ifname : " << getnetwork.getIfname() << endl;
 	UpgradeService upgradeService(&getnetwork);
 	upgradeService.start();
-	while (1) {
-		sleep(1);
-	}
+//	while (1) {
+//		sleep(1);
+//	}
 }
 

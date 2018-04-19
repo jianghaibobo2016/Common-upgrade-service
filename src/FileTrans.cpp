@@ -15,13 +15,21 @@ FileTrans::FileTrans() :
 }
 FileTrans::~FileTrans() {
 }
+
+FileTrans::FileTrans(const FileTrans& fileTrans) :
+		startPosition(fileTrans.startPosition), fileTotalSize(
+				fileTrans.fileTotalSize), sendLen(fileTrans.sendLen), UpPercentageOld(
+				fileTrans.UpPercentageOld), UpPercentage(
+				fileTrans.UpPercentage), fileRemained(fileTrans.fileRemained) {
+}
+
 FileTrans& FileTrans::operator=(const FileTrans& fileTrans) {
-	startPosition=fileTrans.startPosition;
-	fileTotalSize=fileTrans.startPosition;
-	sendLen=fileTrans.startPosition;
-	UpPercentageOld=fileTrans.startPosition;
-	UpPercentage=fileTrans.startPosition;
-	fileRemained=fileTrans.startPosition;
+	startPosition = fileTrans.startPosition;
+	fileTotalSize = fileTrans.fileTotalSize;
+	sendLen = fileTrans.sendLen;
+	UpPercentageOld = fileTrans.UpPercentageOld;
+	UpPercentage = fileTrans.UpPercentage;
+	fileRemained = fileTrans.fileRemained;
 	return *this;
 }
 UINT32 FileTrans::iniPosition(UINT32 newSoftFileSize) {

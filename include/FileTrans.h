@@ -18,6 +18,7 @@ public:
     FileTrans();
     ~FileTrans();
 
+    FileTrans(const FileTrans& fileTrans);
     FileTrans& operator=(const FileTrans& fileTrans);
 
     UINT32 iniPosition(UINT32 newSoftFileSize);

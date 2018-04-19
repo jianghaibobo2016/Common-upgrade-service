@@ -35,8 +35,8 @@ INT32 UDPNetTrans::socketRunThread() {
 		printf("Create thread successfully!........\n");
 	} else
 		;
-
-//	pthread_join(t_fact, NULL);
+	void *result;
+	pthread_join(tid, &result);
 	return retOk;
 }
 
@@ -56,16 +56,14 @@ INT32 UDPNetTrans::socketSelect() {
 	FileTrans fileTrans;
 	SmartPtr<UpFileAttrs> upFileAttrs = UpFileAttrs::createFileAttrs();
 	SmartPtr<DEV_Request_FileProtocal> request(new DEV_Request_FileProtocal);
+	SmartPtr<HandleUp> upHandle(new HandleUp);
 	struct sockaddr_in recvAddr;
 	SetNetworkTerminal netSet(*setNetworkTerminal);
-
-//	pthread_mutex_t mutex;
 
 	while (!UDPStatus) {
 		FD_ZERO(&readfd);
 		FD_SET(m_socket, &readfd);
 		ret_select = select(m_socket + 1, &readfd, NULL, NULL, NULL);
-		cout << "start fd ::::::"<<m_socket<<endl;
 		if (ret_select < 0) {
 			break;
 		} else if (ret_select == 0) {
@@ -85,26 +83,27 @@ INT32 UDPNetTrans::socketSelect() {
 			INT32 sockfd = m_socket;
 			switch (CMDParserUp::parserPCRequestHead(buffer, ret_recv)) {
 			case CMD_DEV_SEARCH: {
+				cout << "=====================dev search start================================"<<endl;
 				Logger::GetInstance().Info(
-						"Get test mode change command from PC : %s !",
+						"Get dev search command from PC : %s !",
 						inet_ntoa(recvAddr.sin_addr));
-				HandleUp::getInstance().devSearchCMDHandle(recvAddr, &netSet,
+				upHandle->devSearchCMDHandle(recvAddr, &netSet,
 						*upFileAttrs.get(), sockfd);
 			}/*end case 1*/
 				break;
 			case CMD_DEV_PARAMETER_SETTING: {
-				HandleUp::getInstance().devParamSetCMDHandle(recvAddr, buffer,
+				upHandle->devParamSetCMDHandle(recvAddr, buffer,
 						&netSet, sockfd);
 			}/*end case 2*/
 				break;
 			case CMD_DEV_UPGRADE: {
-				HandleUp::getInstance().devUpgradePCRequestCMDHandle(recvAddr,
+				upHandle->devUpgradePCRequestCMDHandle(recvAddr,
 						buffer, &netSet, sockfd, *upFileAttrs.get(), fileTrans,
 						request.get());
 			}/*end case 3*/
 				break;
 			case CMD_DEV_FILE_TRANSPORT: {
-				HandleUp::getInstance().devFileTransCMDHandle(recvAddr, buffer,
+				upHandle->devFileTransCMDHandle(recvAddr, buffer,
 						&netSet, sockfd, *upFileAttrs.get(), fileTrans,
 						request.get());
 			}/*end case 4*/
@@ -117,14 +116,15 @@ INT32 UDPNetTrans::socketSelect() {
 				Logger::GetInstance().Info(
 						"Get test mode change command from PC : %s !",
 						inet_ntoa(recvAddr.sin_addr));
-				HandleUp::getInstance().devTestModeCntCMDHandle(buffer);
+				upHandle->devTestModeCntCMDHandle(buffer);
 			}/*end case 7*/
 				break;
 			case CMD_DEV_GETMASK: {
 				Logger::GetInstance().Info(
 						"Get request of  mask code command from PC : %s !",
 						inet_ntoa(recvAddr.sin_addr));
-//				HandleUp::getInstance().devGetMaskCMDHandle(recvAddr, &netSet,
+				cout << "=====================dev search end================================"<<endl;
+//				upHandle->devGetMaskCMDHandle(recvAddr, &netSet,
 //						sockfd);
 			}/*end case 8*/
 				break;

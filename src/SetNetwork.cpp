@@ -71,6 +71,8 @@ if (iniConfFile.setIniConfFile("NETWORK", "macaddr", macaddr) != retOk)         
     return false;                                                                                           \
 }
 
+Mutex SetNetwork::mutex;
+
 SetNetwork::SetNetwork() :
 		m_netWorkConfig(), IFNAME(NULL), networkStatus(errorStatus),initSet(false)/*,mutex(PTHREAD_MUTEX_INITIALIZER)*/ {
 	IFNAME = new INT8[8];
@@ -101,6 +103,9 @@ SetNetwork::~SetNetwork() {
 }
 
 bool SetNetwork::getNetworkConfig() {
+	cout << "This lock of auto lock of func :  "<<__FUNCTION__<<"()"<<endl;
+	AutoLock autoLock(&mutex);
+//	cout << "lock test 9 "<<endl;
 	INT32 sock;
 	struct sockaddr_in sin;
 	struct ifreq ifr;
@@ -192,6 +197,8 @@ bool SetNetwork::getNetworkConfig() {
 
 } /* getNetworkConfig */
 INT8* SetNetwork::castMacToChar13(INT8 *macDest, string macaddr) {
+	cout <<"This is castMac lock"<<endl;
+	mutex.Lock();
 	// sprintf(macResAddress, "%02x-%02x-%02x-%02x-%02x-%02x", macAddress[0]&0xff, macAddress[1]&0xff, macAddress[2]&0xff, macAddress[3]&0xff, macAddress[4]&0xff, macAddress[5]&0xff);
 	string strMACAddress = macaddr;
 	int j = 0;
@@ -208,6 +215,8 @@ INT8* SetNetwork::castMacToChar13(INT8 *macDest, string macaddr) {
 			j++;
 		}
 	}
+	cout <<"This is castMac unlock"<<endl;
+	mutex.Unlock();
 	return macDest;
 }
 

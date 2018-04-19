@@ -4,27 +4,20 @@
 #include "UpFileAttrs.h"
 #include "FileTrans.h"
 #include "UpdateProgram_Protocal.h"
+#include "Mutex.h"
 #pragma pack(push)
 #pragma pack(1)
-//typedef struct FileTransArgs_S_ {
-//	FileTransArgs_S_(sockaddr_in addr, SetNetworkTerminal *setNet, INT32 *fd,
-//			UpFileAttrs *fileAttr, FileTrans *file) :
-//			recvAddr(addr), setNetworkTerminal(setNet), sockfd(fd), upFileAttr(
-//					fileAttr), fileTrans(file) {
-//	}
-typedef struct FileTransArgs_S_ {
-	sockaddr_in recvAddr;
-	SetNetworkTerminal *setNetworkTerminal;
-	INT32 *sockfd;
-	UpFileAttrs *upFileAttr;
-	FileTrans *fileTrans;
-} FileTransArgs;
-#pragma pack(pop)
-class UDPNetTrans;
+
+
+
 class HandleUp {
+	static Mutex mutex;
 public:
 	HandleUp();
 	~HandleUp();
+
+	HandleUp(const HandleUp &handle);
+	HandleUp &operator=(const HandleUp &handle);
 
 	static HandleUp &getInstance();
 	/**************************mainly Handle function ************************/
@@ -63,7 +56,7 @@ public:
 			SetNetworkTerminal *setNetworkTerminal, INT32 sockfd,
 			sockaddr_in recvAdd);
 
-	static INT32 upgradePCrequestHandle(INT8 *recvBuff, INT8 *sendtoBuff,
+	INT32 upgradePCrequestHandle(INT8 *recvBuff, INT8 *sendtoBuff,
 			DEV_Reply_DevUpgrade &devReply, UpFileAttrs &upFileAttr,
 			SetNetworkTerminal *setNetworkTerminal);
 
@@ -84,7 +77,20 @@ public:
 	static INT32 devReplyHandle(INT8 *sendtoBuff, T &, UINT32 reasonLen,
 			const INT8 *failReason, INT32 result,
 			SetNetworkTerminal *setNetworkTerminal);
+
+	bool getInUpgrade() {
+		return inUpgrade;
+	}
+	void setInUpgrade(bool status) {
+//		mutex.Lock();
+		inUpgrade = status;
+//		mutex.Unlock();
+	}
+
 private:
+
+	static bool inUpgrade;
+
 	template<typename T>
 	static INT32 localUpHandle(T &);
 
@@ -92,5 +98,21 @@ private:
 
 	INT32 getMaskInfo(UINT16 *mask);
 };
+//typedef struct FileTransArgs_S_ {
+//	FileTransArgs_S_(sockaddr_in addr, SetNetworkTerminal *setNet, INT32 *fd,
+//			UpFileAttrs *fileAttr, FileTrans *file) :
+//			recvAddr(addr), setNetworkTerminal(setNet), sockfd(fd), upFileAttr(
+//					fileAttr), fileTrans(file) {
+//	}
+class UDPNetTrans;
+typedef struct FileTransArgs_S_ {
+	sockaddr_in recvAddr;
+	SetNetworkTerminal *setNetworkTerminal;
+	INT32 *sockfd;
+	UpFileAttrs *upFileAttr;
+	FileTrans *fileTrans;
+	HandleUp *handle;
+} FileTransArgs;
+#pragma pack(pop)
 #include "HandleUp.hpp"
 #endif /* HANDLEUP_H */

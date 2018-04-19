@@ -4,7 +4,8 @@
 
 using namespace FrameWork;
 
-// static const INT8 *xmlPath = "/nand/ServerAPP/video_conf.xml";
+
+Mutex DevSearchTerminal::mutex;
 
 DevSearchTerminal::DevSearchTerminal(SetNetworkTerminal *setNetworkTerminal) :
 		setNetworkTerminal(setNetworkTerminal) {
@@ -49,16 +50,22 @@ bool DevSearchTerminal::getSoftwareVersion(const INT8 *item, INT8 *version,
 
 DEV_Reply_GetDevMsg *DevSearchTerminal::getDevMsg(const string &pathXML,
 		const INT8 *pathVersionFile) {
+//	cout << "lock test 7 "<<endl;
 	if (setNetworkTerminal->getNetworkConfig() != true) {
 		Logger::GetInstance().Error("Get network config failed !");
+
 		return NULL;
 	}
+	cout << "This lock of auto lock of func :  "<<__FUNCTION__<<"()"<<endl;
+	AutoLock autoLock(&mutex);
+//	cout << "lock test 8 "<<endl;
 	INT8 mac[13] = { 0 };
+//	cout << "lock test 8.0 "<<endl;
 	strcpy(mac,
 			SetNetworkTerminal::castMacToChar13(mac,
 					setNetworkTerminal->getNetConfStruct().macAddr));
 	mac[12] = '\0';
-
+//	cout << "lock test 8.1 "<<endl;
 	XMLParser xmlParser(pathXML);
 	xmlParser.xmlInit();
 	string serverIP = xmlParser.getString("TCPServer", "ServerIP",

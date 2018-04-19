@@ -43,7 +43,8 @@ CMDParserUp::~CMDParserUp() {
 UINT16 CMDParserUp::parserPCRequestHead(void *buffer, INT32 recvLen) {
 	PC_DEV_Header *pcHead = (PC_DEV_Header *) buffer;
 
-	Logger::GetInstance().Info("Recv CMD %d with tag %X from PC !", pcHead->HeadCmd, pcHead->HeadTag);
+//	Logger::GetInstance().Info("Recv CMD %d with tag %X from PC !", pcHead->HeadCmd, pcHead->HeadTag);
+	printf("Recv CMD %d with tag %X from PC !\n", pcHead->HeadCmd, pcHead->HeadTag);
 	if (pcHead->HeadTag != PROTOCAL_PC_DEV_HEAD) {
 		return (UINT16) retError;
 	}

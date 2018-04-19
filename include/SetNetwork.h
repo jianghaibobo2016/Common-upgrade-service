@@ -13,6 +13,7 @@
 #include <pthread.h>
 #include "GlobDefine.h"
 #include "UpgradeServiceConfig.h"
+#include "Mutex.h"
 using namespace std;
 
 /************************static const variables*******************************/
@@ -60,6 +61,7 @@ public:
 
 /*Get and set net configuration main class*/
 class SetNetwork {
+	static Mutex mutex;
 public:
 
 	SetNetwork();
@@ -67,34 +69,36 @@ public:
 	SetNetwork &operator=(const SetNetwork &setNet);
 	~SetNetwork();
 
-	const NETWORKCONFIG& getNetConfStruct()  const {
-//		pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-//		if (pthread_mutex_lock(&mutex) != 0) {
-//		}
-
+	const NETWORKCONFIG& getNetConfStruct() const {
+//		cout << "This is get struct lock" << endl;
+//		mutex.Lock();
+//		cout << "This is get struct unlock" << endl;
+//		mutex.Unlock();
+//		cout << "mac: net config ::::::::::" << m_netWorkConfig.macAddr << endl;
 		return m_netWorkConfig;
-//		pthread_mutex_unlock (&mutex);
 	}
 
 	const INT8* getIfname() const {
 		return IFNAME;
 	}
-	const NetworkStatus &getNetStatus()const {
+	const NetworkStatus &getNetStatus() const {
 		return networkStatus;
 	}
 
-	const bool &getInitSet()const {
+	const bool &getInitSet() const {
 		return initSet;
 	}
 	void setNetConfStruct(const NETWORKCONFIG& netConfig) {
-		m_netWorkConfig = netConfig;
+		memset(&m_netWorkConfig, 0, sizeof(NETWORKCONFIG));
+		memcpy(&m_netWorkConfig, &netConfig, sizeof(NETWORKCONFIG));
+//		m_netWorkConfig = netConfig;
 	}
 
 	void setIfname(const INT8* ifname) {
 		memset(IFNAME, 0, 8);
 		memcpy(IFNAME, ifname, strlen(ifname));
 	}
-	void setNetStatus(const NetworkStatus &netConfig){
+	void setNetStatus(const NetworkStatus &netConfig) {
 		networkStatus = netConfig;
 	}
 	void setInitSet(bool set) {
