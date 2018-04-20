@@ -19,6 +19,9 @@ static const INT8 *MainRootfsUpgrade = "DSP9903_MROOTFS_";
 /*log path setting*/
 static const INT8 *logPath="/nand/log/UpgardeService_9903";
 /*log path setting*/
+/*mask.bin setting*/
+static const bool getMask =true;
+/*mask.bin setting*/
 #endif
 #if (DSP9906)
 static const INT8 *TerminalDevType = "DSP9906";
@@ -30,6 +33,9 @@ static const INT8 *MainRootfsUpgrade = "DSP9906_MROOTFS_";
 /*log path setting*/
 static const INT8 *logPath="/nand/log/UpgradeService_9906";
 /*log path setting*/
+/*mask.bin setting*/
+static const bool getMask =false;
+/*mask.bin setting*/
 #endif
 #if (DSP9908)
 static const INT8 *TerminalDevType = "DSP9908";

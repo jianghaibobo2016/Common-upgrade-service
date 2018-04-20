@@ -24,7 +24,6 @@ SmartPtr<UpFileAttrs> UpFileAttrs::createFileAttrs() {
 }
 
 UpFileAttrs::UpFileAttrs(const UpFileAttrs & tmpFileAttr){
-	cout <<"upfileattrs copy constrcut !!!!!!start"<<endl;
 	fileDownloadPath = new char[fileDownloadPathSize];
 	memcpy(fileDownloadPath, tmpFileAttr.fileDownloadPath,strlen(tmpFileAttr.fileDownloadPath));
 	newSoftVersion = new char[newSoftVersionSize];
@@ -35,7 +34,6 @@ UpFileAttrs::UpFileAttrs(const UpFileAttrs & tmpFileAttr){
 	webUpMethod = tmpFileAttr.webUpMethod;
 	inUpgrading = tmpFileAttr.inUpgrading;
 	fileTransRecord = tmpFileAttr.fileTransRecord;
-	cout <<"upfileattrs copy constrcut !!!!!!end"<<endl;
 }
 
 UpFileAttrs &UpFileAttrs::operator=(const UpFileAttrs &fileAttr){

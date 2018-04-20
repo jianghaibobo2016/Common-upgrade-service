@@ -5,13 +5,13 @@
 #include <netinet/in.h>
 #include <net/if.h>
 #include <net/route.h>
-#include "Logger.h"
 #include <errno.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <net/if_arp.h> /* ARPHRD_ETHER */
 #include <SetNetworkWithServer.h>
 #include "DevSearch.h"
+#include "Logger.h"
 #include "UpgradeServiceConfig.h"
 
 using namespace std;
@@ -26,8 +26,6 @@ SetNetworkTerminal::SetNetworkTerminal() :
 SetNetworkTerminal::SetNetworkTerminal(
 		const SetNetworkTerminal& setNetworkTerminal) :
 		SetNetwork(setNetworkTerminal) {
-	/////////so many
-	cout << "copy construct  ///////////////////////" << endl;
 	PCIP = new INT8[32];
 	memset(PCIP, 0, 32);
 	setPCIP(setNetworkTerminal.getPCIP());

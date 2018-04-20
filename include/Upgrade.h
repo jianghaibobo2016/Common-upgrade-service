@@ -128,6 +128,7 @@ public:
 		eachItemUpStatus = result;
 	}
 	void setUpSystem(bool upSys) {
+		cout<< "upsystem set tttttttttttttttttttttttttttttttto "<<upSys<<endl;
 		upSystem = upSys;
 	}
 	void setUpTerminalDevs(bool upAmp) {
@@ -153,7 +154,7 @@ private:
 	map<INT32, string> mSubItems;
 	map<INT32, string> mUpSubItem;
 	UpgradeDSP *aUpSubItem;
-	bool upSystem;
+	volatile bool upSystem;//////////
 	bool upTerminalDevs;
 	UPDATE_DEV_TYPE upDevType;
 };

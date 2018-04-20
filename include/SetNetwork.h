@@ -18,7 +18,7 @@ using namespace std;
 
 /************************static const variables*******************************/
 /*For modifying INI file.*/
-static const INT32 SUBNETFLAG = 1;
+static const INT32 SUBNETFLAG = 1; /// check subnet
 static const INT32 SETMAC = 1;
 static const INT8 LEFT_BRACE = '[';
 static const INT8 RIGHT_BRACE = ']';
@@ -130,7 +130,6 @@ private:
 
 class CheckNetConfig {
 public:
-
 	CheckNetConfig() {
 	}
 	~CheckNetConfig() {

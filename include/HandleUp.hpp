@@ -14,22 +14,14 @@ template<typename T>
 INT32 HandleUp::devReplyHandle(INT8 *sendtoBuff, T &s_devReply,
 		UINT32 reasonLen, const INT8 *failReason, INT32 result,
 		SetNetworkTerminal *setNetworkTerminal) {
-	cout << "This is devReply lock "<<endl;
+	cout << "This lock of auto lock of func :  "<<__FUNCTION__<<"()"<<endl;
 	AutoLock autoLock(&mutex);
-//	mutex.Lock();
 	cout << "text to send : " << failReason << endl;
 	s_devReply.header.HeadTag = PROTOCAL_PC_DEV_HEAD;
 	INT8 mac[13] = { 0 };
-//	cout << "This is devReply lock "<<endl;
-//	mutex.Lock();
-//	cout << "mac addr ::::::::::::::"<<setNetworkTerminal->getNetConfStruct().macAddr<<endl;
-//	cout <<"look over ;;;;;;;;"<<endl;
 	string strMac = SetNetworkTerminal::castMacToChar13(mac,
 			setNetworkTerminal->getNetConfStruct().macAddr);
-//	cout << "strmac ::::" << strMac << endl;
 	memcpy(mac, strMac.c_str(), strlen(strMac.c_str()));
-//	cout << "This devReply unlock "<<endl;
-//	mutex.Unlock();
 	mac[12] = '\0';
 	strncpy(s_devReply.DevID, TerminalDevTypeID, strlen(TerminalDevTypeID));
 	strcpy(s_devReply.DevID + strlen(TerminalDevTypeID), mac);
@@ -39,20 +31,17 @@ INT32 HandleUp::devReplyHandle(INT8 *sendtoBuff, T &s_devReply,
 		s_devReply.Result = 0;
 	} else {
 		cout << "This devReply unlock "<<endl;
-//		mutex.Unlock();
 		return retError;
 	}
 	UINT8 FailReasonLen = '\0';
 	memcpy(&FailReasonLen, &reasonLen, 1);
-//	cout << "text to send : " << failReason << endl;
 	s_devReply.header.DataLen = sizeof(s_devReply.DevID)
 			+ sizeof(s_devReply.Result) + sizeof(FailReasonLen) + reasonLen;
 	memcpy(sendtoBuff, &s_devReply, sizeof(T));
 	memcpy(sendtoBuff + sizeof(T), &FailReasonLen, sizeof(FailReasonLen));
 	memcpy(sendtoBuff + sizeof(T) + sizeof(FailReasonLen), failReason,
 			FailReasonLen);
-	cout << "This devReply unlock "<<endl;
-//	mutex.Unlock();
+//	cout << "This devReply unlock "<<endl;
 	return retOk;
 }
 

@@ -1,17 +1,10 @@
-#include "UDPNetTrans.h"
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <pthread.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <sys/select.h>
-#include <sys/socket.h>
 #include <iostream>
 #include "Logger.h"
 #include "CMDParserUp.h"
 #include "GlobDefine.h"
 #include "HandleUp.h"
 #include "PCTransProtocal.h"
+#include "UDPNetTrans.h"
 #include "RCSP.h"
 #include "UpFileAttrs.h"
 #include "FileTrans.h"
@@ -24,7 +17,6 @@ UDPNetTrans::UDPNetTrans(SetNetworkTerminal *setNetworkTerminal) :
 	buffer = new INT8[BufferSizeMax];
 }
 UDPNetTrans::~UDPNetTrans() {
-	cout << "udp destory" << endl;
 	delete buffer;
 	UDPStatus = true;
 }
@@ -32,7 +24,7 @@ UDPNetTrans::~UDPNetTrans() {
 INT32 UDPNetTrans::socketRunThread() {
 	pthread_t tid;
 	if (pthread_create(&tid, NULL, pthreadStart, (void *) this) == 0) {
-		printf("Create thread successfully!........\n");
+		printf("Create UDP thread successfully!........\n");
 	} else
 		;
 	void *result;
@@ -83,7 +75,9 @@ INT32 UDPNetTrans::socketSelect() {
 			INT32 sockfd = m_socket;
 			switch (CMDParserUp::parserPCRequestHead(buffer, ret_recv)) {
 			case CMD_DEV_SEARCH: {
-				cout << "=====================dev search start================================"<<endl;
+				cout
+						<< "=====================dev search start================================"
+						<< endl;
 				Logger::GetInstance().Info(
 						"Get dev search command from PC : %s !",
 						inet_ntoa(recvAddr.sin_addr));
@@ -92,20 +86,19 @@ INT32 UDPNetTrans::socketSelect() {
 			}/*end case 1*/
 				break;
 			case CMD_DEV_PARAMETER_SETTING: {
-				upHandle->devParamSetCMDHandle(recvAddr, buffer,
-						&netSet, sockfd);
+				upHandle->devParamSetCMDHandle(recvAddr, buffer, &netSet,
+						sockfd);
 			}/*end case 2*/
 				break;
 			case CMD_DEV_UPGRADE: {
-				upHandle->devUpgradePCRequestCMDHandle(recvAddr,
-						buffer, &netSet, sockfd, *upFileAttrs.get(), fileTrans,
+				upHandle->devUpgradePCRequestCMDHandle(recvAddr, buffer,
+						&netSet, sockfd, *upFileAttrs.get(), fileTrans,
 						request.get());
 			}/*end case 3*/
 				break;
 			case CMD_DEV_FILE_TRANSPORT: {
-				upHandle->devFileTransCMDHandle(recvAddr, buffer,
-						&netSet, sockfd, *upFileAttrs.get(), fileTrans,
-						request.get());
+				upHandle->devFileTransCMDHandle(recvAddr, buffer, &netSet,
+						sockfd, *upFileAttrs.get(), fileTrans, request.get());
 			}/*end case 4*/
 				break;
 			case CMD_DEV_UPGRADE_REPLY: {
@@ -123,14 +116,17 @@ INT32 UDPNetTrans::socketSelect() {
 				Logger::GetInstance().Info(
 						"Get request of  mask code command from PC : %s !",
 						inet_ntoa(recvAddr.sin_addr));
-				cout << "=====================dev search end================================"<<endl;
-//				upHandle->devGetMaskCMDHandle(recvAddr, &netSet,
-//						sockfd);
+				cout
+						<< "=====================dev search end================================"
+						<< endl;
+				if (getMask == true){
+					upHandle->devGetMaskCMDHandle(recvAddr, &netSet, sockfd);
+				}
 			}/*end case 8*/
 				break;
 			case CMD_DEV_REQUESTVERSION: {
-
-			}
+				upHandle->devGetVersionCMDHandle(sockfd, recvAddr);
+			}/*end case 9*/
 				break;
 			default:
 				break;
@@ -139,8 +135,6 @@ INT32 UDPNetTrans::socketSelect() {
 		} /* end if FD_ISSET */
 //		} /* end if */
 	} /* end while(1) */
-	// 解锁
-//	pthread_mutex_destroy(&mutex);
 	return retOk;
 }
 

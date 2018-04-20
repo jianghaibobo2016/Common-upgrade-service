@@ -8,8 +8,6 @@
 #pragma pack(push)
 #pragma pack(1)
 
-
-
 class HandleUp {
 	static Mutex mutex;
 public:
@@ -26,8 +24,8 @@ public:
 			INT32 sockfd);
 	void devParamSetCMDHandle(sockaddr_in recvAddr, INT8 *recvBuff,
 			SetNetworkTerminal *setNetworkTerminal, INT32 sockfd);
-	void devUpgradePCRequestCMDHandle(sockaddr_in recvAddr, INT8 *recvBuff,
-			SetNetworkTerminal *setNetworkTerminal, INT32 sockfd,
+	void devUpgradePCRequestCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
+			SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd,
 			UpFileAttrs &upFileAttr, FileTrans &fileTrans,
 			DEV_Request_FileProtocal *request);
 	void devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
@@ -37,17 +35,13 @@ public:
 	void devGetMaskCMDHandle(sockaddr_in &recvAddr,
 			SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd);
 	void devTestModeCntCMDHandle(INT8 *recvBuff);
+	void devGetVersionCMDHandle(INT32 &sockfd, sockaddr_in recvAddr);
 	/**************************mainly Handle function ************************/
 
 	/**************************thread function ************************/
 //	static void *TransUpgradeThreadFun(void *args);
 	static void *UpgradeThreadFun(void *args);
 	/**************************thread function ************************/
-
-	static void TerminalUpgradeHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
-			SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd,
-			UpFileAttrs &upFileAttr, FileTrans &fileTrans,
-			DEV_Request_FileProtocal *request);
 
 	static INT32 devSearchHandle(DEV_Reply_GetDevMsg &, DevSearchTerminal *);
 

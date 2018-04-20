@@ -19,7 +19,7 @@ UpgradeDSP::UpgradeDSP(INT8 *upgradeFile) :
 				false), upResult(false)
 
 {
-	cout << "construct " << endl;
+	cout << "UpgradeDSP Obj construct " << endl;
 	newVersion = new INT8[8];
 	localVersion = new INT8[8];
 	dependVersion = new INT8[8];
@@ -35,7 +35,7 @@ UpgradeDSP::~UpgradeDSP() {
 	delete[] itemName;
 	delete[] versionFileItemName;
 	delete[] upgraderecord;
-	cout << "destruct" << endl;
+	cout << "UpgradeDSP Objdestruct" << endl;
 }
 
 /*12 */
@@ -49,7 +49,7 @@ const INT8 UpgradeDSP::itemsVersionNameSet[11][32] = { "hardware_version",
 		"upgrade_version", "web_version", "nand_version", "product_version" };
 
 INT32 UpgradeDSP::getItemName() {
-	/*danchunwenjianming*/
+	/*Only file name*/
 	fileWithoutPath += strlen(TerminalDevType) + 1;
 	INT32 i = 0;
 	while (fileWithoutPath[i] != '_') {
@@ -236,11 +236,7 @@ INT32 UpgradeDSPSubItem::parserSubItemsFileName(UINT32 num) {
 		this->setUpTerminalDevs(true);
 		this->setUpDevType(UPDATE_DEV_AMP);
 	}
-	if (strncmp(mSubItems[num].c_str() + strlen(upFilePath), MainRootfsUpgrade,
-			strlen(MainRootfsUpgrade)) == 0) {
-		cout << "up mainrootfs !!!!!!!!!!!!!!!!!!!!!!3" << endl;
-		this->setUpSystem(true);
-	}
+
 	aUpSubItem->setUpgradeFile(const_cast<INT8 *>(mSubItems[num].c_str()));
 	INT8 record[msgLen] = { 0 };
 	if (!this->getUpTerminalDevs()) {
@@ -259,9 +255,13 @@ INT32 UpgradeDSPSubItem::parserSubItemsFileName(UINT32 num) {
 					aUpSubItem->getNewVersion());
 			aUpSubItem->setUpgraderecord(record);
 			return retError;
+		} else {
+			if (strncmp(mSubItems[num].c_str() + strlen(upFilePath),
+					MainRootfsUpgrade, strlen(MainRootfsUpgrade)) == 0) {
+				cout << "up mainrootfs !!!!!!!!!!!!!!!!!!!!!!3" << endl;
+				this->setUpSystem(true);
+			}
 		}
-	} else {
-
 	}
 	return retOk;
 }
