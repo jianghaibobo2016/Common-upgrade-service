@@ -10,13 +10,22 @@
 #include "HandleUp.h"
 #include "PCTransProtocal.h"
 
+/******************************************************************************
+ * Description :
+ Form buffer for sending with msg by different struct obj.
+ * Return Value : On success, it return 0. On error, -1 is returned.
+ * Author : JHB
+ * Create Data : 04/01/2018
+ * Revision History :
+ *   04/01/2018  JHB    Created.
+ *****************************************************************************/
 template<typename T>
 INT32 HandleUp::devReplyHandle(INT8 *sendtoBuff, T &s_devReply,
 		UINT32 reasonLen, const INT8 *failReason, INT32 result,
 		SetNetworkTerminal *setNetworkTerminal) {
 	cout << "This lock of auto lock of func :  "<<__FUNCTION__<<"()"<<endl;
 	AutoLock autoLock(&mutex);
-	cout << "text to send : " << failReason << endl;
+	cout << "Text to send : " << failReason << endl;
 	s_devReply.header.HeadTag = PROTOCAL_PC_DEV_HEAD;
 	INT8 mac[13] = { 0 };
 	string strMac = SetNetworkTerminal::castMacToChar13(mac,
@@ -40,8 +49,7 @@ INT32 HandleUp::devReplyHandle(INT8 *sendtoBuff, T &s_devReply,
 	memcpy(sendtoBuff, &s_devReply, sizeof(T));
 	memcpy(sendtoBuff + sizeof(T), &FailReasonLen, sizeof(FailReasonLen));
 	memcpy(sendtoBuff + sizeof(T) + sizeof(FailReasonLen), failReason,
-			FailReasonLen);
-//	cout << "This devReply unlock "<<endl;
+			reasonLen);
 	return retOk;
 }
 

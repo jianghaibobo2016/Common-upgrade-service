@@ -4,8 +4,8 @@
 #include "GlobDefine.h"
 // UpgradeServiceConfig.h
 /*switch type*/
-#define DSP9903 0
-#define DSP9906 1
+#define DSP9903 1
+#define DSP9906 0
 #define DSP9908 0
 /*switch type*/
 /*type switch setting*/
@@ -31,10 +31,10 @@ static const INT8 *AmplifierUpgrade = "DSP9906_Amplifier_";
 static const INT8 *PagerUpgrade = "DSP9906_Pager_INVALID";
 static const INT8 *MainRootfsUpgrade = "DSP9906_MROOTFS_";
 /*log path setting*/
-static const INT8 *logPath="/nand/log/UpgradeService_9906";
+static const INT8 *logPath = "/nand/log/UpgradeService_9906";
 /*log path setting*/
 /*mask.bin setting*/
-static const bool getMask =false;
+static const bool getMask = false;
 /*mask.bin setting*/
 #endif
 #if (DSP9908)
@@ -107,6 +107,7 @@ static const INT8 *MASKPATH = "/usr/share/mask.bin";
 
 /* upgrade */
 static const INT8 *NONEEDTOUPGRADE = "No need to upgrade !";
+static const INT8 *INUPGRADING = "Upgrading...";
 static const INT8 *LOWERVERSION =
 		"Request soft version lower than local soft version !";
 static const INT8 *GETVERSIONFAILED = "Get local version failed!";
@@ -133,6 +134,5 @@ static const INT8 *WEBREQUEST = "WEBTERMINAL";
 static const INT8 *UPFILESYSTEM = "Upgrade filesystem!";
 static const INT8 *WEBBeginToUpgrade = "Begin to upgrade !";
 /* upgrade */
-
 
 #endif /* UPGRADESERVICECONFIG_H */

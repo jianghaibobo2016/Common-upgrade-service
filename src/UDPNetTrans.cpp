@@ -119,9 +119,9 @@ INT32 UDPNetTrans::socketSelect() {
 				cout
 						<< "=====================dev search end================================"
 						<< endl;
-				if (getMask == true){
-					upHandle->devGetMaskCMDHandle(recvAddr, &netSet, sockfd);
-				}
+//				if (getMask == true){
+//					upHandle->devGetMaskCMDHandle(recvAddr, &netSet, sockfd);
+//				}
 			}/*end case 8*/
 				break;
 			case CMD_DEV_REQUESTVERSION: {

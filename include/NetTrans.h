@@ -6,10 +6,6 @@
 #include "GlobDefine.h"
 #include "Uncopyable.h"
 
-// enum NetTransMethod
-// {
-
-// };
 //! Signals a problem with the execution of a socket call
 class SocketException: public std::exception {
 public:

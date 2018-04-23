@@ -50,6 +50,7 @@ bool DevSearchTerminal::getSoftwareVersion(const INT8 *item, INT8 *version,
 		return false;
 }
 
+
 DEV_Reply_GetDevMsg *DevSearchTerminal::getDevMsg(const string &pathXML,
 		const INT8 *pathVersionFile) {
 	if (setNetworkTerminal->getNetworkConfig() != true) {

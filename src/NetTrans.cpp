@@ -1,10 +1,10 @@
 #include <unistd.h>
 #include <string.h>
+#include <iostream>
 #include <errno.h>
 #include <arpa/inet.h>
 #include "Logger.h"
 #include "NetTrans.h"
-#include <iostream>
 using namespace std;
 using namespace FrameWork;
 SocketException::SocketException(const std::string &message, bool inclSysMsg /* = true */) throw()

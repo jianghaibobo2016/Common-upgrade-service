@@ -44,7 +44,8 @@ UINT16 CMDParserUp::parserPCRequestHead(void *buffer, INT32 recvLen) {
 	PC_DEV_Header *pcHead = (PC_DEV_Header *) buffer;
 
 //	Logger::GetInstance().Info("Recv CMD %d with tag %X from PC !", pcHead->HeadCmd, pcHead->HeadTag);
-	printf("Recv CMD %d with tag %X from PC !\n", pcHead->HeadCmd, pcHead->HeadTag);
+	printf("Recv CMD %d with tag %X from PC !\n", pcHead->HeadCmd,
+			pcHead->HeadTag);
 	if (pcHead->HeadTag != PROTOCAL_PC_DEV_HEAD) {
 		return (UINT16) retError;
 	}
@@ -57,6 +58,15 @@ UINT16 CMDParserUp::parserPCRequestHead(void *buffer, INT32 recvLen) {
 	return headCMD;
 }
 
+/******************************************************************************
+ * Description :
+ Set net or settings after parsering CMD of params setting.
+ * Return Value : On success, it return 0. On error, -1 is returned.
+ * Author : JHB
+ * Create Data : 04/01/2018
+ * Revision History :
+ *   04/01/2018  JHB    Created.
+ *****************************************************************************/
 INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 		SetNetworkTerminal *setNetworkTerminal,
 		map<string, string> &retContent) {
@@ -71,25 +81,6 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 		GlobalProfile setServerConf;
 		switch (parameterNum) {
 		/* 03 495000 0E 3137322E31362E31302E31333300 */
-#if 0
-		case 0x01:
-		if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
-						PCREQUESTIP) != true) {
-
-			strcpy(&failReason, "Match IP failed !");
-			return retError;
-		} else {
-			COPYIP
-			;
-			if (setNetworkTerminal->setNetworkConfig(netConfigTrans.ipT,
-							NULL, NULL, NULL, INIFILE) != true) {
-
-				strcpy(&failReason, "Set IP failed !");
-				return retError;
-			}
-		}
-		break;
-#endif
 		case 0x01:
 			if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
 					PCREQUESTMAC) == true) {
@@ -239,66 +230,6 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 				return retError;
 			}
 			break;
-#if 0
-			case 0x05:
-			if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
-							PCREQUESTIP) != true) {
-				strcpy(&failReason, "Match IP failed !");
-				return retError;
-			} else {
-				COPYIP
-				;
-				OFFSETPTR
-				;
-			}
-			if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
-							PCREQUESTSUBMASK) != true) {
-				strcpy(&failReason, "Match submask failed !");
-				return retError;
-			} else {
-				COPYSUBMASK
-				;
-				OFFSETPTR
-				;
-			}
-			if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
-							PCREQUESTGATEWAY) != true) {
-				strcpy(&failReason, "Match gateway failed !");
-				return retError;
-			} else {
-				COPYGATEWAY
-				;
-				OFFSETPTR
-				;
-			}
-			if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
-							PCREQUESTSERVERIP) != true) {
-				strcpy(&failReason, "Match server IP failed !");
-				return retError;
-			} else {
-				COPYSERVERIP
-				;
-				OFFSETPTR
-				;
-			}
-			if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
-							PCREQUESTSERVERPORT) != true) {
-				strcpy(&failReason, "Match server port failed !");
-				return retError;
-			} else {
-				COPYSERVERPORT
-				;
-			}
-			if (setNetworkTerminal->setNetworkConfig(netConfigTrans.ipT,
-							netConfigTrans.submaskT, netConfigTrans.gatewayT, NULL,
-							INIFILE) != true) {
-				strcpy(&failReason, "Set IP submask and gateway failed !");
-				return retError;
-			}
-			sscanf(netConfigTrans.serverPortT, "%hu", &port);
-			setServerConf.SetTCPCommServerIP(netConfigTrans.serverIPT, port);
-			break;
-#endif
 		default:
 //			strcpy(&failReason, "Number of settings error !");
 			return retError;
@@ -352,8 +283,9 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 	}
 
 	if (strlen(version) != 0) {
-		INT32 retCompare = compareUpgradeItem(const_cast<INT8*>(upFileAttr.getNewSoftVersion()),
-				version, strlen(version));
+		INT32 retCompare = compareUpgradeItem(
+				const_cast<INT8*>(upFileAttr.getNewSoftVersion()), version,
+				strlen(version));
 		if (retCompare == retOk) {
 			strcpy(failReason, NONEEDTOUPGRADE);
 			return equalVersion;

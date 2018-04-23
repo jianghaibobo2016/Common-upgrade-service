@@ -216,6 +216,16 @@ INT8* SetNetwork::castMacToChar13(INT8 *macDest, string macaddr) {
 	return macDest;
 }
 
+/******************************************************************************
+ * Description :
+ Set network according inputs.
+ IniFile is a configuration file of network.
+ * Return Value : On success ,it return true. On error, false is returned.
+ * Author : JHB
+ * Create Data : 04/01/2018
+ * Revision History :
+ *   04/01/2018  JHB    Created.
+ *****************************************************************************/
 bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 		const INT8 *gateway, const INT8* macaddr, const INT8* iniFile) {
 	CheckNetConfig checkNetConfig;

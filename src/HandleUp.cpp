@@ -10,6 +10,7 @@
 #include <sys/reboot.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <iomanip> //hex dec cout
 using namespace FrameWork;
 
 HandleUp::HandleUp() /*:
@@ -18,8 +19,7 @@ HandleUp::HandleUp() /*:
 HandleUp::~HandleUp() {
 }
 
-HandleUp::HandleUp(const HandleUp &handle) /*:
- inUpgrade(handle.inUpgrade)*/{
+HandleUp::HandleUp(const HandleUp &handle) {
 	inUpgrade = handle.inUpgrade;
 }
 HandleUp &HandleUp::operator=(const HandleUp &handle) {
@@ -37,6 +37,15 @@ HandleUp& HandleUp::getInstance() {
 	return handle;
 }
 
+/******************************************************************************
+ * Description :
+ Get device's info and send. Send an extra msg while dev is upgrading.
+ * Return Value : void.
+ * Author : JHB
+ * Create Data : 04/01/2018
+ * Revision History :
+ *   04/01/2018  JHB    Created.
+ *****************************************************************************/
 void HandleUp::devSearchCMDHandle(sockaddr_in recvAddr,
 		SetNetworkTerminal *setNetworkTerminal, UpFileAttrs &upFileAttr,
 		INT32 sockfd) {
@@ -44,19 +53,19 @@ void HandleUp::devSearchCMDHandle(sockaddr_in recvAddr,
 	DevSearchTerminal devSearchTerminal(setNetworkTerminal);
 	SmartPtr<DEV_Reply_GetDevMsg> tmpReMsg(new DEV_Reply_GetDevMsg);
 	devSearchHandle(*tmpReMsg.get(), &devSearchTerminal);
-	cout << "headtasearchgudp  "
-			<< devSearchTerminal.devReplyMsg->header.HeadTag << endl;
-	cout << "headtag  " << tmpReMsg->header.HeadTag << endl;
+	cout << "HeadTag  " << hex << devSearchTerminal.devReplyMsg->header.HeadTag
+			<< endl;
 	cout << "HeadCmd  " << tmpReMsg->header.HeadCmd << endl;
-	cout << "DataLen  " << tmpReMsg->header.DataLen << endl;
+	cout << "DataLen  " << dec << tmpReMsg->header.DataLen << endl;
 	struct sockaddr_in sin;
+	sin.sin_addr.s_addr = tmpReMsg->DevIP;
+	cout << "DevIP  " << inet_ntoa(sin.sin_addr) << endl;
+	sin.sin_addr.s_addr = tmpReMsg->DevMask;
+	cout << "DevMask  " << inet_ntoa(sin.sin_addr) << endl;
+	sin.sin_addr.s_addr = tmpReMsg->DevGateway;
+	cout << "DevGateway  " << inet_ntoa(sin.sin_addr) << endl;
 	sin.sin_addr.s_addr = tmpReMsg->DevServerIP;
-	INT8 *devIP = NULL;
-	devIP = inet_ntoa(sin.sin_addr);
-	cout << "DevIP  " << tmpReMsg->DevIP << endl;
-	cout << "DevMask  " << tmpReMsg->DevMask << endl;
-	cout << "DevGateway  " << tmpReMsg->DevGateway << endl;
-	cout << "DevServerIP  " << devIP << endl;
+	cout << "DevServerIP  " << inet_ntoa(sin.sin_addr) << endl;
 	cout << "DevServerPort  " << tmpReMsg->DevServerPort << endl;
 	cout << "DevMACAddress  " << tmpReMsg->DevMACAddress << endl;
 	cout << "DevID  " << tmpReMsg->DevID << endl;
@@ -73,7 +82,7 @@ void HandleUp::devSearchCMDHandle(sockaddr_in recvAddr,
 				new DEV_Request_UpgradeReply);
 		upgradeReply->header.HeadCmd = 0x0005;
 		INT8 replyText[msgLen] = { 0 };
-		memcpy(replyText, "Upgrading...", strlen("Upgrading..."));
+		memcpy(replyText, INUPGRADING, strlen(INUPGRADING));
 		INT8 sendtoBuffer[SendBufferSizeMax] = { 0 };
 		if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
 				*upgradeReply.get(), strlen(replyText), replyText, retUpStatus,
@@ -85,6 +94,15 @@ void HandleUp::devSearchCMDHandle(sockaddr_in recvAddr,
 	}
 }
 
+/******************************************************************************
+ * Description :
+ Parser CMD of params setting and send msg.
+ * Return Value : void.
+ * Author : JHB
+ * Create Data : 04/01/2018
+ * Revision History :
+ *   04/01/2018  JHB    Created.
+ *****************************************************************************/
 INT32 HandleUp::setNetworkHandle(INT8 *recvBuff, INT8 *sendtoBuff,
 		DEV_Reply_ParameterSetting &devReplySetPara,
 		SetNetworkTerminal *setNetworkTerminal, INT32 sockfd,
@@ -141,12 +159,12 @@ void HandleUp::devUpgradePCRequestCMDHandle(sockaddr_in &recvAddr,
 	INT8 sendtoBuffer[SendBufferSizeMax] = { 0 };
 	INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
 	SmartPtr<DEV_Reply_DevUpgrade> devReply(new DEV_Reply_DevUpgrade);
+	/*set inUpgrading*/
 	INT32 retHandle = upgradePCrequestHandle(recvBuff, sendtoBuffer,
 			*devReply.get(), upFileAttr, setNetworkTerminal);
 	INT32 retSendto = sendto(sockfd, sendtoBuffer,
 			sizeof(PC_DEV_Header) + devReply->header.DataLen, 0,
 			(struct sockaddr *) &recvAddr, tmp_server_addr_len);
-	cout<< "up request first ::::::::::::::::::::"<<endl;
 	if (retHandle != retOk) {
 		return;
 	}
@@ -163,8 +181,9 @@ void HandleUp::devUpgradePCRequestCMDHandle(sockaddr_in &recvAddr,
 		if (pthread_create(&tid, NULL, UpgradeThreadFun,
 				(void *) transArgs.get()) == 0) {
 			printf("Create upgrade thread successfully!........\n");
-		} else
-			;
+		} else {
+			setInUpgrade(false);
+		}
 //		TerminalUpgradeHandle(recvAddr, recvBuff, setNetworkTerminal, sockfd,
 //				upFileAttr, fileTrans, request);
 		return;
@@ -199,22 +218,6 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 		SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd,
 		UpFileAttrs &upFileAttr, FileTrans &fileTrans,
 		DEV_Request_FileProtocal *request) {
-//	SmartPtr<FileTransArgs> transArgs(
-//			new FileTransArgs(&recvAddr, recvBuff, setNetworkTerminal, &sockfd,
-//					&upFileAttr, &fileTrans, request));
-//	transArgs->recvAddr = &recvAddr;
-//	transArgs->recvBuff = recvBuff;
-//	transArgs->setNetworkTerminal = setNetworkTerminal;
-//	transArgs->sockfd = &sockfd;
-//	transArgs->upFileAttr = upFileAttr;
-//	transArgs->fileTrans = &fileTrans;
-//	transArgs->request = request;
-//	pthread_t tid;
-//	if (pthread_create(&tid, NULL, TransUpgradeThreadFun,
-//			(void *) transArgs.get()) == 0) {
-//		printf("Create file transport thread successfully!........\n");
-//	} else
-//		;
 #if 1
 	SmartPtr<DEV_Request_UpgradeReply> upgradeReply(
 			new DEV_Request_UpgradeReply);
@@ -273,8 +276,10 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 		sendto(sockfd, (INT8*) sendtoBuffer,
 				sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
 				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
-		if (retUpStatus == retError)
+		if (retUpStatus == retError) {
+			setInUpgrade(false);
 			return;
+		}
 		/*next step*/
 		SmartPtr<FileTransArgs> transArgs(new FileTransArgs);
 		memcpy(&transArgs->recvAddr, &recvAddr, sizeof(sockaddr_in));
@@ -287,10 +292,9 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 		if (pthread_create(&tid, NULL, UpgradeThreadFun,
 				(void *) transArgs.get()) == 0) {
 			printf("Create upgrade thread successfully!........\n");
-		} else
-			;
-//		pthread_mutex_destroy(&mutex);
-//		pthread_mutex_destroy(&mutex);
+		} else {
+			setInUpgrade(false);
+		}
 //		TerminalUpgradeHandle(recvAddr, recvBuff, setNetworkTerminal, sockfd,
 //				upFileAttr, fileTrans, request);
 	}
@@ -369,25 +373,15 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 	sockaddr_in sendaddr;
 	memset(&sendaddr, 0, sizeof(sockaddr_in));
 	memcpy(&sendaddr, &upgradeArgs->recvAddr, sizeof(sockaddr_in));
-	INT8 *PCIP1 = inet_ntoa(sendaddr.sin_addr);
-	cout << "PCIPLLLLLLLLLLLLLLLLL!!!!!!!!111:" << " " << PCIP1 << endl;
+//	INT8 *PCIP1 = inet_ntoa(sendaddr.sin_addr);
+//	cout << "PCIPLLLLLLLLLLLLLLLLL!!!!!!!!111:" << " " << PCIP1 << endl;
 	INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
-	INT32 retsendfirs0 = sendto(*upgradeArgs->sockfd, "111111111111",
-			sizeof("111111111111"), 0, (struct sockaddr *) &sendaddr,
-			tmp_server_addr_len);
-	cout << "web send to first 0 " << retsendfirs0 << endl;
 	SmartPtr<SetNetworkTerminal> setNet(
 			new SetNetworkTerminal(*upgradeArgs->setNetworkTerminal));
 	INT32 sockfd = *upgradeArgs->sockfd;
-	cout <<"sockfd : 00000000000000"<<sockfd<<endl;
-	cout << "================================================"<<endl;
 	SmartPtr<UpFileAttrs> fileAttrs(new UpFileAttrs(*upgradeArgs->upFileAttr));
 	SmartPtr<FileTrans> fileTrans(new FileTrans(*upgradeArgs->fileTrans));
 //	SmartPtr<HandleUp> handle(new HandleUp(*upgradeArgs->handle));
-
-	INT32 retsendfirs1 = sendto(sockfd, "111111111111", sizeof("111111111111"),
-			0, (struct sockaddr *) &sendaddr, tmp_server_addr_len);
-	cout << "web send to first 1 " << retsendfirs1 << endl;
 
 	SmartPtr<DEV_Request_UpgradeReply> upgradeReply(
 			new DEV_Request_UpgradeReply);
@@ -413,8 +407,10 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 				sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
 				(struct sockaddr *) &sendaddr, tmp_server_addr_len);
 		cout << "first sendto :: " << retsendtotmp << endl;
-		if (retUpStatus == retError)
+		if (retUpStatus == retError) {
+			upgradeArgs->handle->setInUpgrade(false);
 			return NULL;
+		}
 	}
 
 	cout << "up 3 !" << endl;
@@ -431,8 +427,6 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 				== retOk) {
 		}
 		INT32 sendlen = sizeof(PC_DEV_Header) + upgradeReply->header.DataLen;
-//		INT8 *PCIP1 = inet_ntoa(sendaddr.sin_addr);
-//		cout << "PCIPLLLLLLLLLLLLLLLLL!!!!!!!!111:" << " " << PCIP1 << endl;
 		INT32 retSendTmp = sendto(sockfd, (INT8 *) sendtoBuffer, sendlen, 0,
 				(struct sockaddr *) &sendaddr, tmp_server_addr_len);
 	} else {
@@ -446,8 +440,10 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 		INT32 sendtoret = sendto(sockfd, (INT8 *) sendtoBuffer,
 				sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
 				(struct sockaddr *) &sendaddr, tmp_server_addr_len);
-		if (retUpStatus == retError)
+		if (retUpStatus == retError) {
+			upgradeArgs->handle->setInUpgrade(false);
 			return NULL;
+		}
 	}
 	SmartPtr<UpgradeDSPSubItem> subItems(new UpgradeDSPSubItem);
 	if (subItems->getSubItems() != true) {
@@ -464,8 +460,10 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 		sendto(sockfd, (INT8 *) sendtoBuffer,
 				sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
 				(struct sockaddr *) &sendaddr, tmp_server_addr_len);
-		if (retUpStatus == retError)
+		if (retUpStatus == retError) {
+			upgradeArgs->handle->setInUpgrade(false);
 			return NULL;
+		}
 		cout << "up 6 !" << endl;
 	}
 	UINT32 itemsNum = subItems->getItemsNum();
@@ -500,6 +498,7 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 				sendto(sockfd, (INT8 *) sendtoBuffer,
 						sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
 						(struct sockaddr *) &sendaddr, tmp_server_addr_len);
+				upgradeArgs->handle->setInUpgrade(false);
 				break;
 			}
 		}
@@ -529,11 +528,6 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 						cout << "modify ok" << endl;
 						retUpStatus = retOk;
 						INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
-						INT32 retsendfirs2 = sendto(*upgradeArgs->sockfd,
-								"111111111111", sizeof("111111111111"), 0,
-								(struct sockaddr *) &sendaddr,
-								tmp_server_addr_len);
-						cout << "web send to first 2 " << retsendfirs2 << endl;
 					} else {
 						retUpStatus = retError;
 						subItems->setEachItemUpResult(false);
@@ -561,8 +555,10 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 						sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
 						(struct sockaddr *) &sendaddr, tmp_server_addr_len);
 				cout << "retsendot ::::" << retsendto << endl;
-				if (retUpStatus == retError)
+				if (retUpStatus == retError) {
+					upgradeArgs->handle->setInUpgrade(false);
 					break;
+				}
 				cout << "ok" << endl;
 			} else {
 				retUpStatus = retError;
@@ -592,6 +588,7 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 			sendto(sockfd, (INT8 *) sendtoBuffer,
 					sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
 					(struct sockaddr *) &sendaddr, tmp_server_addr_len);
+			upgradeArgs->handle->setInUpgrade(false);
 			break;
 		}
 	}
@@ -607,7 +604,7 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 		} else {
 			retUpStatus = retOk;
 			if (subItems->getUpSystem() == true) {
-				cout << "upsystemmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm"<<endl;
+				cout << "upsystemmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm" << endl;
 				if (fileAttrs->getWebUpMethod())
 					memcpy(replyText, UPFILESYSTEM, strlen(UPFILESYSTEM));
 				else
@@ -637,9 +634,7 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 
 INT32 HandleUp::devSearchHandle(DEV_Reply_GetDevMsg & devMsg,
 		DevSearchTerminal * devSearch) {
-//	cout << "lock test 5 "<<endl;
 	devMsg = *devSearch->getDevMsg(pathXml, pathVersionFile);
-//	cout << "lock test 6 "<<endl;
 	return retOk;
 }
 INT32 HandleUp::upgradePCrequestHandle(INT8 * recvBuff, INT8 * sendtoBuff,
@@ -650,12 +645,9 @@ INT32 HandleUp::upgradePCrequestHandle(INT8 * recvBuff, INT8 * sendtoBuff,
 	INT32 status = 0;
 	retUpStatus = CMDParserUp::parserPCUpgradeCMD(recvBuff, upFileAttr,
 			failReason);
-	if (retUpStatus == higherVerison) {
-		setInUpgrade(true);
-//		upFileAttr.setInUpgradeStatus(true);
-	}
 	devReply.header.HeadCmd = 0x0003;
 	if (retUpStatus == higherVerison) {
+		setInUpgrade(true);
 		status = retOk;
 	} else if (retUpStatus == lowerVersion) {
 		status = retError;
@@ -668,7 +660,6 @@ INT32 HandleUp::upgradePCrequestHandle(INT8 * recvBuff, INT8 * sendtoBuff,
 			strlen(failReason), failReason, status, setNetworkTerminal)
 			== retOk) {
 	}
-
 	return status;
 }
 
@@ -715,7 +706,11 @@ INT32 HandleUp::upTerminalDevs(UPDATE_DEV_TYPE type) {
 		return retError;
 	}
 	Logger::GetInstance().Info("Will upgrade device type %d !", devUp.dev_type);
-//	cout << "retsend : " << retSend << endl;
+//	struct timeval timeout = { 300, 0 }; //3s
+//	setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_SNDTIMEO, (const char *) &timeout,
+//			sizeof(timeout));
+//	setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_RCVTIMEO, (const char *) &timeout,
+//			sizeof(timeout));
 	INT32 retRecv = recvfrom(netTrans.getSockfd(), recvBuff, sizeof(recvBuff),
 			0, (struct sockaddr*) netTrans.getAddr(), netTrans.getAddrLen());
 	if (retRecv == -1) {

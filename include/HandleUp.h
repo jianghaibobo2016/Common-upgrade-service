@@ -92,12 +92,6 @@ private:
 
 	INT32 getMaskInfo(UINT16 *mask);
 };
-//typedef struct FileTransArgs_S_ {
-//	FileTransArgs_S_(sockaddr_in addr, SetNetworkTerminal *setNet, INT32 *fd,
-//			UpFileAttrs *fileAttr, FileTrans *file) :
-//			recvAddr(addr), setNetworkTerminal(setNet), sockfd(fd), upFileAttr(
-//					fileAttr), fileTrans(file) {
-//	}
 class UDPNetTrans;
 typedef struct FileTransArgs_S_ {
 	sockaddr_in recvAddr;
