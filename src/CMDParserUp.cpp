@@ -239,6 +239,15 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 	return retOk;
 }
 
+/******************************************************************************
+ * Description : Parser the upgrade file from PC.
+ * Return Value : It returns a status of upgrade file' version. On error, 2 is
+ * returned.
+ * Author : JHB
+ * Create Data : 04/01/2018
+ * Revision History :
+ *   04/01/2018  JHB    Created.
+ *****************************************************************************/
 upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 		UpFileAttrs &upFileAttr, INT8 *failReason) {
 	INT8 *pcUpgradeCMD = (INT8 *) buffer;
@@ -271,15 +280,12 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 
 		pcUpgradeCMD += sizeof(UINT32);
 		upFileAttr.setFileMD5Code(pcUpgradeCMD, upgradeFileMd5Size);
-		//printf("recv md5 : %u\n", upFileAttr.getFileMD5Code());
 	} else {
 		if (!FileOperation::isExistFile(upFileAttr.getFileDownloadPath())) {
 			strcpy(failReason, UPFILENOTEXIST);
 			return errorVersionStatus;
 		}
-//		strcpy(failReason, WEBBeginToUpgrade);
 		upFileAttr.setWebUpMethod(true);
-//		return higherVerison;
 	}
 
 	if (strlen(version) != 0) {
@@ -317,7 +323,6 @@ bool CMDParserUp::campareNetSetMatch(INT8 *nameLen, INT8 *name,
 	}
 	return !(bool) compareUpgradeItem(name, reName, nameLenComp);
 
-	// return true;
 }
 
 INT32 CMDParserUp::writeMaskFile(vector<UINT16> date) {

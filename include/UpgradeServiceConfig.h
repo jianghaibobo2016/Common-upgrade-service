@@ -20,7 +20,7 @@ static const INT8 *MainRootfsUpgrade = "DSP9903_MROOTFS_";
 static const INT8 *logPath="/nand/log/UpgardeService_9903";
 /*log path setting*/
 /*mask.bin setting*/
-static const bool getMask =true;
+static const bool getMask =false;
 /*mask.bin setting*/
 #endif
 #if (DSP9906)

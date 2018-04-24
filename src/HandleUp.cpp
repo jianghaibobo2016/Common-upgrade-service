@@ -97,7 +97,7 @@ void HandleUp::devSearchCMDHandle(sockaddr_in recvAddr,
 /******************************************************************************
  * Description :
  Parser CMD of params setting and send msg.
- * Return Value : void.
+ * Return Value : On success, it return 0. On error, -1 is returned.
  * Author : JHB
  * Create Data : 04/01/2018
  * Revision History :
@@ -142,6 +142,15 @@ INT32 HandleUp::setNetworkHandle(INT8 *recvBuff, INT8 *sendtoBuff,
 	return retOk;
 }
 
+/******************************************************************************
+ * Description :
+ Going to set network after getting CMD.
+ * Return Value : void.
+ * Author : JHB
+ * Create Data : 04/01/2018
+ * Revision History :
+ *   04/01/2018  JHB    Created.
+ *****************************************************************************/
 void HandleUp::devParamSetCMDHandle(sockaddr_in recvAddr, INT8 *recvBuff,
 		SetNetworkTerminal *setNetworkTerminal, INT32 sockfd) {
 	SmartPtr<DEV_Reply_ParameterSetting> devReplyParaSetting(
@@ -152,6 +161,17 @@ void HandleUp::devParamSetCMDHandle(sockaddr_in recvAddr, INT8 *recvBuff,
 			setNetworkTerminal, sockfd, recvAddr);
 }
 
+/******************************************************************************
+ * Description :
+ Upgrade CMD will handled by this function. It sends a msg for ready upgrading
+ or not to client, then goes to a thread to upgrade by web upgrade method or
+ return for transfering file.
+ * Return Value : void.
+ * Author : JHB
+ * Create Data : 04/01/2018
+ * Revision History :
+ *   04/01/2018  JHB    Created.
+ *****************************************************************************/
 void HandleUp::devUpgradePCRequestCMDHandle(sockaddr_in &recvAddr,
 		INT8 *recvBuff, SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd,
 		UpFileAttrs &upFileAttr, FileTrans &fileTrans,
@@ -218,15 +238,21 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 		SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd,
 		UpFileAttrs &upFileAttr, FileTrans &fileTrans,
 		DEV_Request_FileProtocal *request) {
+	INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
 #if 1
 	SmartPtr<DEV_Request_UpgradeReply> upgradeReply(
 			new DEV_Request_UpgradeReply);
 	INT8 replyText[msgLen] = { 0 };
 	INT8 sendtoBuffer[SendBufferSizeMax] = { 0 };
-	INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
 	INT32 retUpStatus = retOk;
-	writeFileFromPC<PC_Reply_FileProtocal>(recvBuff,
+	INT32 retWrite = writeFileFromPC<PC_Reply_FileProtocal>(recvBuff,
 			upFileAttr.getFileDownloadPath());
+	if (retWrite == retError) {
+		////////////reason
+		setInUpgrade(false);
+		return;
+	}
+#endif
 
 	fileTrans.changeRemainedPos().setPersentage();
 	if (devRequestFile(*request, fileTrans) == retOk) {
@@ -234,6 +260,7 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 				sizeof(PC_DEV_Header) + request->header.DataLen, 0,
 				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
 	}
+#if 1
 	if (fileTrans.getNewPercent() > fileTrans.getOldPercent()) {
 		upgradeReply->header.HeadCmd = 0x0005;
 		memset(replyText, 0, msgLen);
@@ -250,6 +277,9 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 	}
 	fileTrans.setOldPercent(fileTrans.getNewPercent());
 	if (0 == fileTrans.getFileRemainedLen()) {
+//		clock_t endtime = clock();
+//		cout << "spend time:: "<< (double)(endtime - time)/ CLOCKS_PER_SEC<<endl;
+//		system("date");
 		UINT8 md5_str[MD5_SIZE];
 		if (!GetFileMD5(upFileAttr.getFileDownloadPath(), md5_str)) {
 			cout << "get file md5 error" << endl;
@@ -373,15 +403,12 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 	sockaddr_in sendaddr;
 	memset(&sendaddr, 0, sizeof(sockaddr_in));
 	memcpy(&sendaddr, &upgradeArgs->recvAddr, sizeof(sockaddr_in));
-//	INT8 *PCIP1 = inet_ntoa(sendaddr.sin_addr);
-//	cout << "PCIPLLLLLLLLLLLLLLLLL!!!!!!!!111:" << " " << PCIP1 << endl;
 	INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
 	SmartPtr<SetNetworkTerminal> setNet(
 			new SetNetworkTerminal(*upgradeArgs->setNetworkTerminal));
 	INT32 sockfd = *upgradeArgs->sockfd;
 	SmartPtr<UpFileAttrs> fileAttrs(new UpFileAttrs(*upgradeArgs->upFileAttr));
 	SmartPtr<FileTrans> fileTrans(new FileTrans(*upgradeArgs->fileTrans));
-//	SmartPtr<HandleUp> handle(new HandleUp(*upgradeArgs->handle));
 
 	SmartPtr<DEV_Request_UpgradeReply> upgradeReply(
 			new DEV_Request_UpgradeReply);
@@ -624,8 +651,8 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 
 		fileTrans->clearFileTrans();
 		sync();
-		sleep(2);
-//		HandleUp::sysReboot();
+		sleep(3);
+		HandleUp::sysReboot();
 		return NULL;
 	}
 
@@ -637,6 +664,16 @@ INT32 HandleUp::devSearchHandle(DEV_Reply_GetDevMsg & devMsg,
 	devMsg = *devSearch->getDevMsg(pathXml, pathVersionFile);
 	return retOk;
 }
+
+/******************************************************************************
+ * Description :
+ To know the version to upgrade is available or not.
+ * Return Value : On available, it return 0. On unavailable, -1 is returned.
+ * Author : JHB
+ * Create Data : 04/01/2018
+ * Revision History :
+ *   04/01/2018  JHB    Created.
+ *****************************************************************************/
 INT32 HandleUp::upgradePCrequestHandle(INT8 * recvBuff, INT8 * sendtoBuff,
 		DEV_Reply_DevUpgrade & devReply, UpFileAttrs & upFileAttr,
 		SetNetworkTerminal * setNetworkTerminal) {
@@ -706,11 +743,18 @@ INT32 HandleUp::upTerminalDevs(UPDATE_DEV_TYPE type) {
 		return retError;
 	}
 	Logger::GetInstance().Info("Will upgrade device type %d !", devUp.dev_type);
-//	struct timeval timeout = { 300, 0 }; //3s
-//	setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_SNDTIMEO, (const char *) &timeout,
-//			sizeof(timeout));
-//	setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_RCVTIMEO, (const char *) &timeout,
-//			sizeof(timeout));
+	struct timeval timeout /*= { 300, 0 }*/; //3s
+	if (type == UPDATE_DEV_AMP) {
+		timeout.tv_sec = 60;
+		timeout.tv_usec = 0;
+	} else if (type == UPDATE_DEV_PAGER) {
+		timeout.tv_sec = 600;
+		timeout.tv_usec = 0;
+	}
+//	setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_SNDTIMEO,
+//			(const char *) &timeout, sizeof(timeout));
+	setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_RCVTIMEO,
+			(const char *) &timeout, sizeof(timeout));
 	INT32 retRecv = recvfrom(netTrans.getSockfd(), recvBuff, sizeof(recvBuff),
 			0, (struct sockaddr*) netTrans.getAddr(), netTrans.getAddrLen());
 	if (retRecv == -1) {
@@ -783,9 +827,7 @@ INT32 HandleUp::getMaskInfo(UINT16 *mask) {
 		return retError;
 	} else if (retRecv > 0) {
 		cout << "recv ret : " << retRecv << " recv buff : " << recvBuff << endl;
-		SmartPtr<ARM_REPLAYUPDATE_GETMASK> devReply(
-				new ARM_REPLAYUPDATE_GETMASK);
-		devReply = (ARM_REPLAYUPDATE_GETMASK*) recvBuff;
+		ARM_REPLAYUPDATE_GETMASK *devReply=(ARM_REPLAYUPDATE_GETMASK*)recvBuff;
 		if (devReply->header.HeadCmd == CMD_LOCALDEV_GETMASK) {
 			memcpy(mask, devReply->m_mask, sizeof(devReply->m_mask));
 		} else {

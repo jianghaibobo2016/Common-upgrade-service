@@ -44,6 +44,9 @@ INT32 UDPNetTrans::socketSelect() {
 	fd_set readfd; //读文件描述符集合
 	INT32 ret_select = 0;
 	INT32 ret_recv = 0;
+//	clock_t t;
+//	t = clock();
+//	system("date");
 	/*  超时 */
 	FileTrans fileTrans;
 	SmartPtr<UpFileAttrs> upFileAttrs = UpFileAttrs::createFileAttrs();
@@ -97,6 +100,11 @@ INT32 UDPNetTrans::socketSelect() {
 			}/*end case 3*/
 				break;
 			case CMD_DEV_FILE_TRANSPORT: {
+//				request->FileDataLen = 1024;
+//				cout <<"file start: "<<request->StartPosition<<"lengethj"<<request->FileDataLen<<endl;
+//				sendto(sockfd, (INT8*) request.get(),
+//						sizeof(PC_DEV_Header) + request->header.DataLen, 0,
+//						(struct sockaddr *) &recvAddr, tmp_server_addr_len);
 				upHandle->devFileTransCMDHandle(recvAddr, buffer, &netSet,
 						sockfd, *upFileAttrs.get(), fileTrans, request.get());
 			}/*end case 4*/
@@ -119,9 +127,9 @@ INT32 UDPNetTrans::socketSelect() {
 				cout
 						<< "=====================dev search end================================"
 						<< endl;
-//				if (getMask == true){
-//					upHandle->devGetMaskCMDHandle(recvAddr, &netSet, sockfd);
-//				}
+				if (getMask == true) {
+					upHandle->devGetMaskCMDHandle(recvAddr, &netSet, sockfd);
+				}
 			}/*end case 8*/
 				break;
 			case CMD_DEV_REQUESTVERSION: {

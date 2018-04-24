@@ -53,7 +53,7 @@ if (setNet(this->m_netWorkConfig.ipAddr.c_str(),                                
     Logger::GetInstance().Info("%s() : Restore network ! LINE : %d", __FUNCTION__, __LINE__);
 
 #define SETMACADDR                                                                                          \
-if (setNet(SETMAC, macaddr) != true)                                                                        \
+if (setNet(SETMAC, macaddrSet) != true)                                                                     \
 {                                                                                                           \
     UPNET;                                                                                                  \
     RESTORENET;                                                                                             \
@@ -74,7 +74,8 @@ if (iniConfFile.setIniConfFile("NETWORK", "macaddr", macaddr) != retOk)         
 Mutex SetNetwork::mutex;
 
 SetNetwork::SetNetwork() :
-		m_netWorkConfig(), IFNAME(NULL), networkStatus(errorStatus),initSet(false)/*,mutex(PTHREAD_MUTEX_INITIALIZER)*/ {
+		m_netWorkConfig(), IFNAME(NULL), networkStatus(errorStatus), initSet(
+				false)/*,mutex(PTHREAD_MUTEX_INITIALIZER)*/{
 	IFNAME = new INT8[8];
 }
 //???
@@ -84,11 +85,11 @@ SetNetwork::SetNetwork(const SetNetwork& setNet) :
 	IFNAME = new INT8[10];
 	if (IFNAME != NULL)
 		strcpy(IFNAME, setNet.IFNAME);
-	initSet=setNet.initSet;
+	initSet = setNet.initSet;
 }
 
-SetNetwork &SetNetwork::operator=(const SetNetwork &setNet){
-	if (this != &setNet){
+SetNetwork &SetNetwork::operator=(const SetNetwork &setNet) {
+	if (this != &setNet) {
 		setNetConfStruct(setNet.getNetConfStruct());
 		setIfname(setNet.getIfname());
 		setNetStatus(setNet.getNetStatus());
@@ -102,7 +103,8 @@ SetNetwork::~SetNetwork() {
 }
 
 bool SetNetwork::getNetworkConfig() {
-	cout << "This lock of auto lock of func :  "<<__FUNCTION__<<"()"<<endl;
+	cout << "This lock of auto lock of func :  " << __FUNCTION__ << "()"
+			<< endl;
 	AutoLock autoLock(&mutex);
 	INT32 sock;
 	struct sockaddr_in sin;
@@ -238,7 +240,7 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 		Logger::GetInstance().Error("%s() :None ini file input!", __FUNCTION__);
 		return false;
 	}
-	if (!initSet){
+	if (!initSet) {
 		// SetNetworkTerminal setNet;
 		if (this->getNetworkConfig() != true) {
 			Logger::GetInstance().Error("%s() :Get network config failed !",
@@ -298,9 +300,26 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 		} else
 			return false;
 	} else {
+		if (strlen(macaddr) != 12) {
+			Logger::GetInstance().Error(
+					"%s() :Mac input is incorrect !", __FUNCTION__);
+		}
+		//modify 20aabbcc..--->> 20:aa:bb:cc...
 		INT8 macCheck[18] = { 0 };
-		memcpy(macCheck, macaddr, strlen(macaddr));
-		macCheck[17] = '\0';
+		UINT32 i, iPos = 0;
+		for (i = 0; i < strlen(macaddr); i++) {
+			if (i != 0 && i % 2 == 0) {
+				memcpy(&macCheck[iPos], ":", 1);
+				iPos++;
+				memcpy(&macCheck[iPos], &macaddr[i], 1);
+				iPos++;
+			} else {
+				memcpy(&macCheck[iPos], &macaddr[i], 1);
+				iPos++;
+			}
+		}
+		INT8 macaddrSet[18] = { 0 };
+		memcpy(macaddrSet, macCheck, strlen(macCheck));
 		if (checkNetConfig.checkMAC(macCheck) != true) {
 			Logger::GetInstance().Error("%s() : Mac input is incorrect !",
 					__FUNCTION__);
@@ -487,7 +506,8 @@ bool SetNetwork::setNet(const INT8 *ipaddr, const INT8 *subnet,
 bool SetNetwork::setNet(INT32 mac, const INT8 *macaddr) {
 	struct ifreq temp;
 	struct sockaddr *addr;
-
+	cout << "mac before stringToHex " << macaddr << " " << __FUNCTION__ << " "
+			<< __LINE__ << endl;
 	INT32 fd = 0;
 	INT32 ret = -1;
 	INT8 tmpMac[6] = { 0 };
@@ -950,6 +970,7 @@ INT32 IniConfigFile::setIniConfFile(const INT8 *section, const INT8 *key,
 }
 INT32 SetNetwork::stringToHex(const string &strNum) {
 	if (strNum.length() != 2) {
+		cout << "string ::::" << strNum << endl;
 		cout << "String to Hex false" << endl;
 		return 0;
 	}

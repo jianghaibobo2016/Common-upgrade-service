@@ -23,7 +23,8 @@ template<typename T>
 INT32 HandleUp::devReplyHandle(INT8 *sendtoBuff, T &s_devReply,
 		UINT32 reasonLen, const INT8 *failReason, INT32 result,
 		SetNetworkTerminal *setNetworkTerminal) {
-	cout << "This lock of auto lock of func :  "<<__FUNCTION__<<"()"<<endl;
+	cout << "This lock of auto lock of func :  " << __FUNCTION__ << "()"
+			<< endl;
 	AutoLock autoLock(&mutex);
 	cout << "Text to send : " << failReason << endl;
 	s_devReply.header.HeadTag = PROTOCAL_PC_DEV_HEAD;
@@ -39,7 +40,7 @@ INT32 HandleUp::devReplyHandle(INT8 *sendtoBuff, T &s_devReply,
 	} else if (result == retError) {
 		s_devReply.Result = 0;
 	} else {
-		cout << "This devReply unlock "<<endl;
+		cout << "This devReply unlock " << endl;
 		return retError;
 	}
 	UINT8 FailReasonLen = '\0';
@@ -66,6 +67,7 @@ INT32 HandleUp::writeFileFromPC(INT8 *recvBuff, const INT8 *fileName) {
 	fout.close();
 	return retOk;
 }
+
 template<typename T>
 INT32 HandleUp::localUpHandle(T &upControl) {
 	upControl.header.HeadTag = PROTOCAL_PC_DEV_HEAD;

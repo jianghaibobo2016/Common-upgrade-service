@@ -234,7 +234,7 @@ INT32 UpgradeDSPSubItem::parserSubItemsFileName(UINT32 num) {
 			PagerUpgrade, strlen(PagerUpgrade)) == 0) {
 		cout << "up pager !!!!!!!!!!!!!!!!!!!!!!2" << endl;
 		this->setUpTerminalDevs(true);
-		this->setUpDevType(UPDATE_DEV_AMP);
+		this->setUpDevType(UPDATE_DEV_PAGER);
 	}
 
 	aUpSubItem->setUpgradeFile(const_cast<INT8 *>(mSubItems[num].c_str()));

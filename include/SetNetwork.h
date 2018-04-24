@@ -70,11 +70,6 @@ public:
 	~SetNetwork();
 
 	const NETWORKCONFIG& getNetConfStruct() const {
-//		cout << "This is get struct lock" << endl;
-//		mutex.Lock();
-//		cout << "This is get struct unlock" << endl;
-//		mutex.Unlock();
-//		cout << "mac: net config ::::::::::" << m_netWorkConfig.macAddr << endl;
 		return m_netWorkConfig;
 	}
 
