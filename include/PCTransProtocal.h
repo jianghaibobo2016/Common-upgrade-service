@@ -106,8 +106,6 @@ typedef struct PC_Request_DevUpgrade_tag{
 	char UpgradeFileMd5[16];	//MD5校验值//add
 }PC_Request_DevUpgrade;
 //设备升级功放
-//string:
-//INT8 *upgrade = "Upgrade";
 //设备端返回
 typedef struct DEV_Reply_DevUpgrade_tag{
 	PC_DEV_Header header;

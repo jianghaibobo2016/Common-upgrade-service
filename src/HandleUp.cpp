@@ -189,6 +189,8 @@ void HandleUp::devUpgradePCRequestCMDHandle(sockaddr_in &recvAddr,
 		return;
 	}
 	if (upFileAttr.getWebUpMethod() == true) {
+
+
 		SmartPtr<FileTransArgs> transArgs(new FileTransArgs);
 		memcpy(&transArgs->recvAddr, &recvAddr, sizeof(sockaddr_in));
 		transArgs->setNetworkTerminal = setNetworkTerminal;
@@ -204,8 +206,8 @@ void HandleUp::devUpgradePCRequestCMDHandle(sockaddr_in &recvAddr,
 		} else {
 			setInUpgrade(false);
 		}
-//		TerminalUpgradeHandle(recvAddr, recvBuff, setNetworkTerminal, sockfd,
-//				upFileAttr, fileTrans, request);
+
+		sleep(1);
 		return;
 	}
 #if 0
@@ -239,7 +241,6 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 		UpFileAttrs &upFileAttr, FileTrans &fileTrans,
 		DEV_Request_FileProtocal *request) {
 	INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
-#if 1
 	SmartPtr<DEV_Request_UpgradeReply> upgradeReply(
 			new DEV_Request_UpgradeReply);
 	INT8 replyText[msgLen] = { 0 };
@@ -252,7 +253,6 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 		setInUpgrade(false);
 		return;
 	}
-#endif
 
 	fileTrans.changeRemainedPos().setPersentage();
 	if (devRequestFile(*request, fileTrans) == retOk) {
@@ -260,7 +260,6 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 				sizeof(PC_DEV_Header) + request->header.DataLen, 0,
 				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
 	}
-#if 1
 	if (fileTrans.getNewPercent() > fileTrans.getOldPercent()) {
 		upgradeReply->header.HeadCmd = 0x0005;
 		memset(replyText, 0, msgLen);
@@ -277,9 +276,6 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 	}
 	fileTrans.setOldPercent(fileTrans.getNewPercent());
 	if (0 == fileTrans.getFileRemainedLen()) {
-//		clock_t endtime = clock();
-//		cout << "spend time:: "<< (double)(endtime - time)/ CLOCKS_PER_SEC<<endl;
-//		system("date");
 		UINT8 md5_str[MD5_SIZE];
 		if (!GetFileMD5(upFileAttr.getFileDownloadPath(), md5_str)) {
 			cout << "get file md5 error" << endl;
@@ -325,10 +321,8 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 		} else {
 			setInUpgrade(false);
 		}
-//		TerminalUpgradeHandle(recvAddr, recvBuff, setNetworkTerminal, sockfd,
-//				upFileAttr, fileTrans, request);
+		sleep(1);
 	}
-#endif
 	return;
 }
 
@@ -404,6 +398,8 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 	memset(&sendaddr, 0, sizeof(sockaddr_in));
 	memcpy(&sendaddr, &upgradeArgs->recvAddr, sizeof(sockaddr_in));
 	INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
+
+//
 	SmartPtr<SetNetworkTerminal> setNet(
 			new SetNetworkTerminal(*upgradeArgs->setNetworkTerminal));
 	INT32 sockfd = *upgradeArgs->sockfd;
@@ -640,6 +636,7 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 				sprintf(replyText, "Upgrade successed !");
 			}
 		}
+		upgradeArgs->upFileAttr->clearMemberData();
 		if (HandleUp::devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
 				*upgradeReply.get(), strlen(replyText), replyText, retUpStatus,
 				setNet.get()) == retOk) {
@@ -652,7 +649,7 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 		fileTrans->clearFileTrans();
 		sync();
 		sleep(3);
-		HandleUp::sysReboot();
+//		HandleUp::sysReboot();
 		return NULL;
 	}
 

@@ -62,7 +62,7 @@ public:
 	void setFileTransRecord(const FileTrans& fileTrans) {
 		fileTransRecord = fileTrans;
 	}
-	bool clearMemberData(UpFileAttrs &);
+	bool clearMemberData();
 	~UpFileAttrs();
 private:
 	INT8 *fileDownloadPath; /* 64B */

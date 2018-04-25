@@ -105,6 +105,8 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 			} else if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
 					PCREQUESTMASK) == true) {
 
+
+
 				vector<UINT16> vHexArray;
 				vHexArray.resize(4);
 				vHexArray[0] = ~((netConfigTrans.MASK[1] << 8

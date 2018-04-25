@@ -62,7 +62,7 @@ if (setNet(SETMAC, macaddrSet) != true)                                         
 }
 
 #define SETMACINTOINI                                                                                       \
-if (iniConfFile.setIniConfFile("NETWORK", "macaddr", macaddr) != retOk)                                     \
+if (iniConfFile.setIniConfFile("NETWORK", "macaddr", macaddrSet) != retOk)                                     \
 {                                                                                                           \
     Logger::GetInstance().Error("%s() : Set MAC into ini file ! LINE : %d", __FUNCTION__, __LINE__);        \
     DOWNNET                                                                                                 \
@@ -247,6 +247,7 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 					__FUNCTION__);
 			return false;
 		}
+		cout << "mac::get net config :::::"<<this->m_netWorkConfig.macAddr<<endl;
 	}
 	IniConfigFile iniConfFile;
 	/*  */
@@ -304,7 +305,7 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 			Logger::GetInstance().Error(
 					"%s() :Mac input is incorrect !", __FUNCTION__);
 		}
-		//modify 20aabbcc..--->> 20:aa:bb:cc...
+		//modify macCheck::20aabbcc..--->> 20:aa:bb:cc...
 		INT8 macCheck[18] = { 0 };
 		UINT32 i, iPos = 0;
 		for (i = 0; i < strlen(macaddr); i++) {

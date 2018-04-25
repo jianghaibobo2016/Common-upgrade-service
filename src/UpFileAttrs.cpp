@@ -62,7 +62,7 @@ void UpFileAttrs::setFileMD5Code(const INT8 *MD5, INT32 length) {
 	memcpy(upFileMD5code, MD5, length);
 }
 
-bool UpFileAttrs::clearMemberData(UpFileAttrs &) {
+bool UpFileAttrs::clearMemberData() {
 	memset(this->fileDownloadPath, 0, fileDownloadPathSize);
 	memset(this->newSoftVersion, 0, newSoftVersionSize);
 	this->newSoftFileSize = 0;

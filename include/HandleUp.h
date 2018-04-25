@@ -76,9 +76,7 @@ public:
 		return inUpgrade;
 	}
 	void setInUpgrade(bool status) {
-//		mutex.Lock();
 		inUpgrade = status;
-//		mutex.Unlock();
 	}
 
 private:
