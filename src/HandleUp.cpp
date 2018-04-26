@@ -129,15 +129,42 @@ INT32 HandleUp::setNetworkHandle(INT8 *recvBuff, INT8 *sendtoBuff,
 				iter->second.c_str(), strlen(iter->second.c_str()));
 		failReason[strlen(iter->first.c_str()) + 3
 				+ strlen(iter->second.c_str())] = '\0';
-		UINT32 reasonLen = strlen(iter->first.c_str()) + 3
+		UINT32 reasonLen = strlen(iter->first.c_str()) + 4
 				+ strlen(iter->second.c_str());
-		if (devReplyHandle<DEV_Reply_ParameterSetting>(sendtoBuff,
-				devReplySetPara, reasonLen, failReason, retSetNet,
-				setNetworkTerminal) == retOk) {
-			sendto(sockfd, sendtoBuff,
-					sizeof(PC_DEV_Header) + devReplySetPara.header.DataLen, 0,
-					(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+		{
+			AutoLock autoLock(&mutex);
+			cout << "Text to send : " << failReason << endl;
+			devReplySetPara.header.HeadTag = PROTOCAL_PC_DEV_HEAD;
+			INT8 mac[13] = { 0 };
+			string strMac = SetNetworkTerminal::castMacToChar13(mac,
+					setNetworkTerminal->getNetConfStruct().macAddr);
+			memcpy(mac, strMac.c_str(), strlen(strMac.c_str()));
+			mac[12] = '\0';
+			strncpy(devReplySetPara.DevID, TerminalDevTypeID,
+					strlen(TerminalDevTypeID));
+			strcpy(devReplySetPara.DevID + strlen(TerminalDevTypeID), mac);
+			if (retSetNet == retOk) {
+				devReplySetPara.Result = 1;
+			} else if (retSetNet == retError) {
+				devReplySetPara.Result = 0;
+			} else {
+				cout << "This devReply unlock " << endl;
+				return retError;
+			}
+			devReplySetPara.header.DataLen = sizeof(devReplySetPara.DevID)
+					+ sizeof(devReplySetPara.Result) + reasonLen;
+			memcpy(sendtoBuff, &devReplySetPara,
+					sizeof(DEV_Reply_ParameterSetting));
+			memcpy(sendtoBuff + sizeof(DEV_Reply_ParameterSetting), failReason,
+					reasonLen);
 		}
+//		if (devReplyHandle<DEV_Reply_ParameterSetting>(sendtoBuff,
+//				devReplySetPara, reasonLen, failReason, retSetNet,
+//				setNetworkTerminal) == retOk) {
+		sendto(sockfd, sendtoBuff,
+				sizeof(PC_DEV_Header) + devReplySetPara.header.DataLen, 0,
+				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+//		}
 	}
 	return retOk;
 }
@@ -189,7 +216,6 @@ void HandleUp::devUpgradePCRequestCMDHandle(sockaddr_in &recvAddr,
 		return;
 	}
 	if (upFileAttr.getWebUpMethod() == true) {
-
 
 		SmartPtr<FileTransArgs> transArgs(new FileTransArgs);
 		memcpy(&transArgs->recvAddr, &recvAddr, sizeof(sockaddr_in));
@@ -649,7 +675,7 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 		fileTrans->clearFileTrans();
 		sync();
 		sleep(3);
-//		HandleUp::sysReboot();
+		HandleUp::sysReboot();
 		return NULL;
 	}
 
@@ -824,7 +850,8 @@ INT32 HandleUp::getMaskInfo(UINT16 *mask) {
 		return retError;
 	} else if (retRecv > 0) {
 		cout << "recv ret : " << retRecv << " recv buff : " << recvBuff << endl;
-		ARM_REPLAYUPDATE_GETMASK *devReply=(ARM_REPLAYUPDATE_GETMASK*)recvBuff;
+		ARM_REPLAYUPDATE_GETMASK *devReply =
+				(ARM_REPLAYUPDATE_GETMASK*) recvBuff;
 		if (devReply->header.HeadCmd == CMD_LOCALDEV_GETMASK) {
 			memcpy(mask, devReply->m_mask, sizeof(devReply->m_mask));
 		} else {

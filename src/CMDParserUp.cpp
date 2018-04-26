@@ -104,8 +104,7 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 				}
 			} else if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
 					PCREQUESTMASK) == true) {
-
-
+				COPYMASK
 
 				vector<UINT16> vHexArray;
 				vHexArray.resize(4);
@@ -117,8 +116,9 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 						| netConfigTrans.MASK[4]) - 1);
 				vHexArray[3] = ~((netConfigTrans.MASK[7] << 8
 						| netConfigTrans.MASK[6]) - 1);
-//				for (int i = 0; i < 4; i++) {
-//				}
+				for (int i = 0; i < 4; i++) {
+					printf("vHexArray[%d] : %04x\n",i, vHexArray[i]);
+				}
 				if (writeMaskFile(vHexArray) == 1) {
 					retContent[PCREQUESTMASK] = "Get MASK OK !";
 				} else
@@ -344,7 +344,7 @@ INT32 CMDParserUp::writeMaskFile(vector<UINT16> date) {
 	buf[4] = (INT8) date[2];
 	buf[7] = (INT8) (date[3] >> 8);
 	buf[6] = (INT8) date[3];
-	for (INT32 i = 0; i < 8; i++)
+//	for (INT32 i = 0; i < 8; i++)
 		for (INT32 i = 0; i < 8; i++) {
 			if (write(fileDes, &buf[i], 1) == -1) {
 			}
