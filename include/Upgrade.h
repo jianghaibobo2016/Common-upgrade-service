@@ -54,7 +54,9 @@ public:
 	bool getUpResult() {
 		return upResult;
 	}
-
+	const bool getForceStatus() const {
+		return forceUpgrade;
+	}
 	void setUpgradeFile(INT8 *file) {
 		upgradeFile = file;
 	}
@@ -71,7 +73,9 @@ public:
 	void setUpResult(bool result) {
 		upResult = result;
 	}
-
+	void setForceUpgrade(const bool force) {
+		forceUpgrade = force;
+	}
 	static void getVersionByItemName(INT8 *itemName, INT8 *version);
 	INT32 modifyVersionFile();
 	void clearObj();
@@ -88,6 +92,8 @@ private:
 	INT8 *versionFileItemName;
 	INT8 *upgraderecord;
 	bool upResult;
+
+	bool forceUpgrade;
 
 	static const INT8 itemsSet[][16];
 	static const INT8 itemsVersionNameSet[11][32];
@@ -124,11 +130,14 @@ public:
 	UPDATE_DEV_TYPE getUpDevType() {
 		return upDevType;
 	}
+
+	const bool getForceStatus() const {
+		return forceUpgrade;
+	}
 	void setEachItemUpResult(bool result) {
 		eachItemUpStatus = result;
 	}
 	void setUpSystem(bool upSys) {
-		cout<< "upsystem set tttttttttttttttttttttttttttttttto "<<upSys<<endl;
 		upSystem = upSys;
 	}
 	void setUpTerminalDevs(bool upAmp) {
@@ -137,13 +146,18 @@ public:
 	void setUpDevType(UPDATE_DEV_TYPE type) {
 		upDevType = type;
 	}
+	void setForceUpgrade(const bool force) {
+		forceUpgrade = force;
+	}
 	map<INT32, string>& getExtractItem() {
-		return mUpSubItem;
+		return mSubItemName;
 	}
 	const UpgradeDSP &getUpObj() {
 		return *aUpSubItem;
 	}
-	bool getSubItems();
+
+	bool getSubItems(map<INT32, DEV_MODULES_TYPE>& devModuleToUpgrade);
+	bool adjustOrder(map<INT32, DEV_MODULES_TYPE>& devModuleToUpgrade);
 	INT32 parserSubItemsFileName(UINT32 num);
 	INT32 upgradeItem(UINT32 num);
 	INT32 excuteUpgradeShell(UINT32 num, INT8 *PCIP);
@@ -152,11 +166,14 @@ private:
 	const INT8 *productTarFile;
 	bool eachItemUpStatus;
 	map<INT32, string> mSubItems;
-	map<INT32, string> mUpSubItem;
+	map<INT32, string> mSubItemName;
 	UpgradeDSP *aUpSubItem;
-	volatile bool upSystem;//////////
+	volatile bool upSystem; //////////
 	bool upTerminalDevs;
 	UPDATE_DEV_TYPE upDevType;
+
+	bool forceUpgrade;
+
 };
 #endif
 

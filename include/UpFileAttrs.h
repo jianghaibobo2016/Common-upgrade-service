@@ -37,6 +37,9 @@ public:
 	const FileTrans &getFileTrans() const {
 		return fileTransRecord;
 	}
+	const bool getForceStatus() const {
+		return forceUpgrade;
+	}
 
 	void setFileDownloadPath(const INT8 *path) {
 		memset(fileDownloadPath, 0, fileDownloadPathSize);
@@ -62,6 +65,9 @@ public:
 	void setFileTransRecord(const FileTrans& fileTrans) {
 		fileTransRecord = fileTrans;
 	}
+	void setForceUpgrade(const bool force) {
+		forceUpgrade = force;
+	}
 	bool clearMemberData();
 	~UpFileAttrs();
 private:
@@ -72,6 +78,9 @@ private:
 	bool webUpMethod;
 	bool inUpgrading;
 	FileTrans fileTransRecord;
+
+	bool forceUpgrade;
+
 	UpFileAttrs();
 };
 #endif /* UPFILEATTRS_H */

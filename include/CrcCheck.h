@@ -1,6 +1,8 @@
 #ifndef CRCCHECK_H
 #define CRCCHECK_H
 #include "GlobDefine.h"
+#include "UpgradeServiceConfig.h"
+#include <map>
 
 #pragma pack(push, 1)
 typedef struct _PACK_HEAD_S {
@@ -12,6 +14,7 @@ typedef struct _PACK_HEAD_S {
 	UINT32 crcCode;
 	INT8 m_version[64];
 	INT8 dependVersion[8];
+	INT8 TerminalDevs[TerminalDevsMaxNum][TerminalDevsNameLenMax]; // 160
 } PACK_HEAD;
 #pragma pack(pop)
 
@@ -26,6 +29,7 @@ public:
 
 	static INT32 parser_Package(const INT8* filename, INT8 *newVersion,
 			INT8 *itemName, INT8 *dependVersion);
+	static INT32 getDevModules(const INT8* filename, map<INT32, DEV_MODULES_TYPE>&devModules);
 private:
 	static UINT32 crc32(UINT32 crc, UINT8 *buff, UINT32 size);
 	static const UINT32 crc32_table[256];

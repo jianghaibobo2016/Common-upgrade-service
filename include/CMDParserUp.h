@@ -14,7 +14,7 @@ public:
 	static INT32 parserPCSetNetCMD(void *buffer, SetNetworkTerminal *,
 			map<string, string> &retContent);
 	static upgradeFileStatus parserPCUpgradeCMD(void *buffer, UpFileAttrs&,
-			INT8 *failReason);
+			INT8 *failReason, map<INT32, DEV_MODULES_TYPE> &devModuleToUpgrade);
 
 	const INT32 getSettingNum() const {
 		return settingNum;
@@ -23,9 +23,13 @@ public:
 		settingNum = num;
 	}
 
+	static INT32 isDevModulesUpgradeEnable(
+			map<INT32, DEV_MODULES_TYPE> &devModuleToUpgrade,
+			map<INT32, DEV_MODULES_TYPE>&devModules, UpFileAttrs &upFileAttr);
 private:
 
 	INT32 settingNum;
+
 
 	static bool campareNetSetMatch(INT8 *nameLen, INT8 *name,
 			const INT8 *reName);

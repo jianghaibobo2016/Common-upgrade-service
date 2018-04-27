@@ -4,6 +4,10 @@
 #include "FileOperation.h"
 #include "DevSearch.h"
 #include "Logger.h"
+
+#include "LocalUDPTrans.h"
+#include "HandleUp.h"
+
 using namespace FrameWork;
 
 #define OFFSETPTR                                                                   \
@@ -117,7 +121,7 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 				vHexArray[3] = ~((netConfigTrans.MASK[7] << 8
 						| netConfigTrans.MASK[6]) - 1);
 				for (int i = 0; i < 4; i++) {
-					printf("vHexArray[%d] : %04x\n",i, vHexArray[i]);
+					printf("vHexArray[%d] : %04x\n", i, vHexArray[i]);
 				}
 				if (writeMaskFile(vHexArray) == 1) {
 					retContent[PCREQUESTMASK] = "Get MASK OK !";
@@ -251,7 +255,8 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
  *   04/01/2018  JHB    Created.
  *****************************************************************************/
 upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
-		UpFileAttrs &upFileAttr, INT8 *failReason) {
+		UpFileAttrs &upFileAttr, INT8 *failReason,
+		map<INT32, DEV_MODULES_TYPE> &devModuleToUpgrade) {
 	INT8 *pcUpgradeCMD = (INT8 *) buffer;
 	pcUpgradeCMD += sizeof(PC_DEV_Header);
 	INT8 hardVersion[8] = { 0 };
@@ -273,8 +278,24 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 			pathVersionFile);
 	/*WEB request to upgrade CMD judgement*/
 	if (compareUpgradeItem(
+			pcUpgradeCMD + strlen(upFileAttr.getNewSoftVersion()), FORCEUPGRADE,
+			strlen(FORCEUPGRADE)) == 0) {
+		if (!FileOperation::isExistFile(upFileAttr.getFileDownloadPath())) {
+			strcpy(failReason, UPFILENOTEXIST);
+			return errorVersionStatus;
+		}
+		upFileAttr.setWebUpMethod(true);
+		upFileAttr.setForceUpgrade(true);
+	} else if (compareUpgradeItem(
 			pcUpgradeCMD + strlen(upFileAttr.getNewSoftVersion()), WEBREQUEST,
-			strlen(WEBREQUEST)) != 0) {
+			strlen(WEBREQUEST)) == 0) {
+		if (!FileOperation::isExistFile(upFileAttr.getFileDownloadPath())) {
+			strcpy(failReason, UPFILENOTEXIST);
+			return errorVersionStatus;
+		}
+		upFileAttr.setWebUpMethod(true);
+
+	} else {
 		pcUpgradeCMD += newSoftVersionSize;
 		INT32 fileSize = 0;
 		memcpy(&fileSize, pcUpgradeCMD, sizeof(UINT32));
@@ -282,33 +303,110 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 
 		pcUpgradeCMD += sizeof(UINT32);
 		upFileAttr.setFileMD5Code(pcUpgradeCMD, upgradeFileMd5Size);
-	} else {
-		if (!FileOperation::isExistFile(upFileAttr.getFileDownloadPath())) {
-			strcpy(failReason, UPFILENOTEXIST);
+	}
+//check 9903?
+//	map<INT32, DEV_MODULES_TYPE> devModules;
+//	CrcCheck::getDevModules(upFileAttr.getFileDownloadPath(), devModules);
+
+//	isDevModulesUpgradeEnable(devModuleToUpgrade, devModules, upFileAttr);
+
+/*	if (devModuleToUpgrade.size() == 0
+			&& upFileAttr.getForceStatus() == false) {
+		if (strlen(version) != 0) {
+			INT32 retCompare = compareUpgradeItem(
+					const_cast<INT8*>(upFileAttr.getNewSoftVersion()), version,
+					strlen(version));
+			if (retCompare == retOk) {
+				strcpy(failReason, NONEEDTOUPGRADE);
+				return equalVersion;
+			} else if (retCompare < retOk) {
+				strcpy(failReason, LOWERVERSION);
+				return lowerVersion;
+			} else if (retCompare > retOk) {
+				strcpy(failReason, BeginToUpgrade);
+				return higherVerison;
+			}
+		} else {
+			strcpy(failReason, GETVERSIONFAILED);
 			return errorVersionStatus;
 		}
-		upFileAttr.setWebUpMethod(true);
-	}
+	} else {*/
+		strcpy(failReason, BeginToUpgrade);
+		return higherVerison;
+//	}
 
-	if (strlen(version) != 0) {
-		INT32 retCompare = compareUpgradeItem(
-				const_cast<INT8*>(upFileAttr.getNewSoftVersion()), version,
-				strlen(version));
-		if (retCompare == retOk) {
-			strcpy(failReason, NONEEDTOUPGRADE);
-			return equalVersion;
-		} else if (retCompare < retOk) {
-			strcpy(failReason, LOWERVERSION);
-			return lowerVersion;
-		} else if (retCompare > retOk) {
-			strcpy(failReason, WEBBeginToUpgrade);
-			return higherVerison;
-		}
-	} else {
-		strcpy(failReason, GETVERSIONFAILED);
-		return errorVersionStatus;
-	}
 	return errorVersionStatus;
+}
+
+INT32 CMDParserUp::isDevModulesUpgradeEnable(
+		map<INT32, DEV_MODULES_TYPE> &devModuleToUpgrade,
+		map<INT32, DEV_MODULES_TYPE>&devModules, UpFileAttrs &upFileAttr) {
+	LocalUDPTrans netTrans;
+	UPDATE_GET_DEVSTATUS getDevStatus;
+	UINT32 num = 1;
+	INT32 validDevModule = 1;
+	for (; num <= devModules.size(); num++) {
+		getDevStatus.header.HeadCmd = 0x0004;
+		getDevStatus.dev_type = devModules[num];
+		HandleUp::localUpHandle<UPDATE_GET_DEVSTATUS>(getDevStatus);
+		INT32 retSend = sendto(netTrans.getSockfd(), &getDevStatus,
+				sizeof(UPDATE_SEND_UPDATEDEV), 0,
+				(struct sockaddr*) netTrans.getAddr(), *netTrans.getAddrLen());
+		if (retSend <= 0) {
+			cout << "errorsend" << endl;
+			return retError;
+		}
+		Logger::GetInstance().Info("Ask device type %d is online or not!",
+				getDevStatus.dev_type);
+		struct timeval timeout = { 10, 0 }; //3s
+		setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_RCVTIMEO,
+				(const char *) &timeout, sizeof(timeout));
+		INT8 recvBuff[16] = { 0 };
+		INT32 retRecv = recvfrom(netTrans.getSockfd(), recvBuff,
+				sizeof(recvBuff), 0, (struct sockaddr*) netTrans.getAddr(),
+				netTrans.getAddrLen());
+		if (retRecv == -1) {
+			Logger::GetInstance().Error("Device type %d no recv !",
+					getDevStatus.dev_type);
+			return retError;
+		} else if (retRecv > 0) {
+			ARM_REPLAY_GETDEVSTATUS *devStatus =
+					(ARM_REPLAY_GETDEVSTATUS*) recvBuff;
+			if (devStatus->header.HeadCmd != CMD_DEV_ONLINE) {
+				Logger::GetInstance().Error("Device type %d recv error!",
+						getDevStatus.dev_type);
+				return retError;
+			} else {
+				if (devStatus->dev_type != devModules[num]) {
+					Logger::GetInstance().Error(
+							"Want to get device type %d but recv device type %d !",
+							devModules[num], devStatus->dev_type);
+					return retError;
+				}
+				if (upFileAttr.getForceStatus() == true) {
+					if (devStatus->state == UPGRADE_VALID
+							|| devStatus->state == NONEEDUP) {
+						devModuleToUpgrade[validDevModule] =
+								(DEV_MODULES_TYPE) devStatus->dev_type;
+						validDevModule++;
+					}
+				} else {
+					if (devStatus->state == UPGRADE_VALID) {
+						devModuleToUpgrade[validDevModule] =
+								(DEV_MODULES_TYPE) devStatus->dev_type;
+						validDevModule++;
+					}
+				}
+			}
+		}
+
+	}
+	map<INT32, DEV_MODULES_TYPE>::iterator iter;
+	for (iter = devModuleToUpgrade.begin(); iter != devModuleToUpgrade.end();
+			iter++) {
+		cout << "up a dev name : "<<iter->first<<" and status : "<<iter->second<<endl;
+	}
+	return retOk;
 }
 
 bool CMDParserUp::campareNetSetMatch(INT8 *nameLen, INT8 *name,
@@ -345,9 +443,9 @@ INT32 CMDParserUp::writeMaskFile(vector<UINT16> date) {
 	buf[7] = (INT8) (date[3] >> 8);
 	buf[6] = (INT8) date[3];
 //	for (INT32 i = 0; i < 8; i++)
-		for (INT32 i = 0; i < 8; i++) {
-			if (write(fileDes, &buf[i], 1) == -1) {
-			}
+	for (INT32 i = 0; i < 8; i++) {
+		if (write(fileDes, &buf[i], 1) == -1) {
 		}
+	}
 	return retOk;
 }

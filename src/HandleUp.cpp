@@ -10,27 +10,30 @@
 #include <sys/reboot.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include "CrcCheck.h"
 #include <iomanip> //hex dec cout
 using namespace FrameWork;
 
-HandleUp::HandleUp() /*:
- inUpgrade(false)*/{
+HandleUp::HandleUp() :
+		devModuleToUpgrade() {
 }
 HandleUp::~HandleUp() {
 }
 
 HandleUp::HandleUp(const HandleUp &handle) {
 	inUpgrade = handle.inUpgrade;
+	devModuleToUpgrade = handle.devModuleToUpgrade;
 }
 HandleUp &HandleUp::operator=(const HandleUp &handle) {
 	if (this != &handle) {
 		inUpgrade = handle.inUpgrade;
+		devModuleToUpgrade = handle.devModuleToUpgrade;
 	}
 	return *this;
 }
 
 Mutex HandleUp::mutex;
-bool HandleUp::inUpgrade;
+bool HandleUp::inUpgrade = false;
 
 HandleUp& HandleUp::getInstance() {
 	static HandleUp handle;
@@ -321,6 +324,33 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 			Logger::GetInstance().Info("File MD5 check finished !");
 		}
 		cout << "replytext : " << replyText << endl;
+
+		//dev module check
+		map<INT32, DEV_MODULES_TYPE> devModules;
+		CrcCheck::getDevModules(upFileAttr.getFileDownloadPath(), devModules);
+
+		CMDParserUp::isDevModulesUpgradeEnable(devModuleToUpgrade, devModules,
+				upFileAttr);
+		if (devModuleToUpgrade.size() == 0) {
+			INT8 version[7] = { 0 };
+			DevSearchTerminal::getSoftwareVersion(ProductVersionName, version,
+					pathVersionFile);
+			if (strlen(version) != 0) {
+				INT32 retCompare = strncmp(
+						const_cast<INT8*>(upFileAttr.getNewSoftVersion()),
+						version, strlen(version));
+				if (retCompare == retOk) {
+					memset(replyText, 0, msgLen);
+					strcpy(replyText, NONEEDTOUPGRADE);
+					retUpStatus = retError;
+				} else if (retCompare < retOk) {
+					memset(replyText, 0, msgLen);
+					strcpy(replyText, LOWERVERSION);
+					retUpStatus = retError;
+				}
+			}
+		}
+
 		if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
 				*upgradeReply.get(), strlen(replyText), replyText, retUpStatus,
 				setNetworkTerminal) == retOk) {
@@ -495,7 +525,10 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 		}
 	}
 	SmartPtr<UpgradeDSPSubItem> subItems(new UpgradeDSPSubItem);
-	if (subItems->getSubItems() != true) {
+	//adjust order
+	//set function dev module?
+	if (subItems->getSubItems(upgradeArgs->handle->devModuleToUpgrade)
+			!= true) {
 		cout << "up 4 !" << endl;
 		memset(replyText, 0, msgLen);
 		memset(sendtoBuffer, 0, SendBufferSizeMax);
@@ -515,6 +548,7 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 		}
 		cout << "up 6 !" << endl;
 	}
+
 	UINT32 itemsNum = subItems->getItemsNum();
 	cout << "item num : " << itemsNum << endl;
 	UINT32 percentUp = 65;
@@ -522,6 +556,8 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 		cout << "up 7 !" << endl;
 		const_cast<UpgradeDSP *>(&subItems->getUpObj())->clearObj();
 		cout << "up 7.5 clear" << endl;
+		if (fileAttrs->getForceStatus() == true)
+			subItems->setForceUpgrade(true);
 		INT32 retParser = subItems->parserSubItemsFileName(i);
 		if (retParser == retOk) {
 			cout << "up 5 !" << endl;
@@ -583,6 +619,7 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 						sprintf(replyText, "Modify version file failed !");
 					}
 				} else {
+					/////////process
 					INT32 retUpAmp = HandleUp::upTerminalDevs(
 							subItems->getUpDevType());
 					if (retUpAmp == retOk) {
@@ -605,14 +642,16 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 						(struct sockaddr *) &sendaddr, tmp_server_addr_len);
 				cout << "retsendot ::::" << retsendto << endl;
 				if (retUpStatus == retError) {
-					upgradeArgs->handle->setInUpgrade(false);
-					break;
+//					upgradeArgs->handle->setInUpgrade(false);
+//					break;
+					continue;
 				}
 				cout << "ok" << endl;
 			} else {
 				retUpStatus = retError;
 				subItems->setEachItemUpResult(false);
-				sprintf(replyText, "Modify version file failed !");
+				sprintf(replyText, "Modify item : %s version file failed !",
+						subItems->getExtractItem()[i].c_str());
 				if (HandleUp::devReplyHandle<DEV_Request_UpgradeReply>(
 						sendtoBuffer, *upgradeReply.get(), strlen(replyText),
 						replyText, retUpStatus, setNet.get()) == retOk) {
@@ -637,10 +676,11 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 			sendto(sockfd, (INT8 *) sendtoBuffer,
 					sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
 					(struct sockaddr *) &sendaddr, tmp_server_addr_len);
-			upgradeArgs->handle->setInUpgrade(false);
-			break;
+//			upgradeArgs->handle->setInUpgrade(false);
+//			break;
+			continue;
 		}
-	}
+	}	//end of for()
 
 	if (subItems->getEachItemUpResult() == true) {
 		upDSPProduct->setUpResult(true);
@@ -662,22 +702,44 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 				sprintf(replyText, "Upgrade successed !");
 			}
 		}
-		upgradeArgs->upFileAttr->clearMemberData();
-		if (HandleUp::devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
-				*upgradeReply.get(), strlen(replyText), replyText, retUpStatus,
-				setNet.get()) == retOk) {
-		}
-		sendto(sockfd, (INT8 *) sendtoBuffer,
-				sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
-				(struct sockaddr *) &sendaddr, tmp_server_addr_len);
-		upgradeArgs->handle->setInUpgrade(false);
-
-		fileTrans->clearFileTrans();
-		sync();
-		sleep(3);
-		HandleUp::sysReboot();
-		return NULL;
+//		upgradeArgs->upFileAttr->clearMemberData();
+//		if (HandleUp::devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
+//				*upgradeReply.get(), strlen(replyText), replyText, retUpStatus,
+//				setNet.get()) == retOk) {
+//		}
+//		sendto(sockfd, (INT8 *) sendtoBuffer,
+//				sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
+//				(struct sockaddr *) &sendaddr, tmp_server_addr_len);
+//		upgradeArgs->handle->setInUpgrade(false);
+//
+//		fileTrans->clearFileTrans();
+//		sync();
+//		sleep(3);
+//		HandleUp::sysReboot();
+//		return NULL;
+	} else {
+		retUpStatus = retError;
+		memset(replyText, 0, msgLen);
+		memset(sendtoBuffer, 0, SendBufferSizeMax);
+		sprintf(replyText, "Upgrade failed for some modules!");
 	}
+
+	upgradeArgs->upFileAttr->clearMemberData();
+	if (HandleUp::devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
+			*upgradeReply.get(), strlen(replyText), replyText, retUpStatus,
+			setNet.get()) == retOk) {
+	}
+	sendto(sockfd, (INT8 *) sendtoBuffer,
+			sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
+			(struct sockaddr *) &sendaddr, tmp_server_addr_len);
+	upgradeArgs->handle->setInUpgrade(false);
+
+	fileTrans->clearFileTrans();
+	sync();
+	sleep(3);
+//	HandleUp::sysReboot();
+//		return NULL;
+//	}
 
 	return NULL;
 }
@@ -704,8 +766,7 @@ INT32 HandleUp::upgradePCrequestHandle(INT8 * recvBuff, INT8 * sendtoBuff,
 	upgradeFileStatus retUpStatus = errorVersionStatus;
 	INT32 status = 0;
 	retUpStatus = CMDParserUp::parserPCUpgradeCMD(recvBuff, upFileAttr,
-			failReason);
-	devReply.header.HeadCmd = 0x0003;
+			failReason, devModuleToUpgrade);
 	if (retUpStatus == higherVerison) {
 		setInUpgrade(true);
 		status = retOk;
@@ -716,6 +777,7 @@ INT32 HandleUp::upgradePCrequestHandle(INT8 * recvBuff, INT8 * sendtoBuff,
 	} else if (retUpStatus == errorVersionStatus) {
 		status = retError;
 	}
+	devReply.header.HeadCmd = 0x0003;
 	if (devReplyHandle<DEV_Reply_DevUpgrade>(sendtoBuff, devReply,
 			strlen(failReason), failReason, status, setNetworkTerminal)
 			== retOk) {
@@ -781,7 +843,7 @@ INT32 HandleUp::upTerminalDevs(UPDATE_DEV_TYPE type) {
 	INT32 retRecv = recvfrom(netTrans.getSockfd(), recvBuff, sizeof(recvBuff),
 			0, (struct sockaddr*) netTrans.getAddr(), netTrans.getAddrLen());
 	if (retRecv == -1) {
-		Logger::GetInstance().Info("Upgrade device type %d no recv !",
+		Logger::GetInstance().Error("Upgrade device type %d no recv !",
 				devUp.dev_type);
 		cout << "recv error" << endl;
 		return retError;
@@ -790,14 +852,15 @@ INT32 HandleUp::upTerminalDevs(UPDATE_DEV_TYPE type) {
 				(ARM_REPLAYUPDATE_UPDATEDEV*) recvBuff;
 		cout << "recv ret : " << retRecv << endl;
 		if (upReply->header.HeadCmd == CMD_LOCALDEV_UPGRADE) {
-			if (upReply->state == 1) {
+			if (upReply->state == 1 || upReply->state == 2) {
 				return retOk;
-			} else if (upReply->state == 0) {
+			} else if (upReply->state == 0 || upReply->state == 3) {
 				return retError;
 			} else {
 				return retError;
 			}
-		}
+		} else
+			return retError;
 	}
 	return retOk;
 }

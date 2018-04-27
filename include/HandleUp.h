@@ -79,12 +79,12 @@ public:
 		inUpgrade = status;
 	}
 
+	template<typename T>
+	static INT32 localUpHandle(T &);
 private:
 
 	static bool inUpgrade;
-
-	template<typename T>
-	static INT32 localUpHandle(T &);
+	map<INT32, DEV_MODULES_TYPE> devModuleToUpgrade;
 
 	static INT32 upTerminalDevs(UPDATE_DEV_TYPE type);
 

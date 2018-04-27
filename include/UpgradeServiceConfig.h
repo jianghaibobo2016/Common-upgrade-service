@@ -11,6 +11,7 @@
 /*type switch setting*/
 #if (DSP9903)
 static const INT8 *TerminalDevType = "DSP9903";
+static const INT8 *StringFind = "DSP9903_";
 static const INT8 *INIFILE = "/dsppa/SET_NET/DSP9903_NET_CONF.ini";
 static const INT8 *upFileDownload = "/nand/Update_File/DSP9903_PRODUCT_";
 static const INT8 *AmplifierUpgrade = "DSP9903_Amplifier_";
@@ -22,9 +23,17 @@ static const INT8 *logPath="/nand/log/UpgardeService_9903";
 /*mask.bin setting*/
 static const bool getMask =true;
 /*mask.bin setting*/
+/*Devs type*/
+enum DEV_MODULES_TYPE {
+	DEV_AMPLIFIER = 1,			 //功放板
+	DEV_PAGER = 2,		 //寻呼器
+	INVALID_TYPE
+};
+/*Devs type*/
 #endif
 #if (DSP9906)
 static const INT8 *TerminalDevType = "DSP9906";
+static const INT8 *StringFind = "DSP9906_";
 static const INT8 *INIFILE = "/dsppa/SET_NET/DSP9906_NET_CONF.ini";
 static const INT8 *upFileDownload = "/nand/Update_File/DSP9906_PRODUCT_";
 static const INT8 *AmplifierUpgrade = "DSP9906_Amplifier_";
@@ -36,19 +45,18 @@ static const INT8 *logPath = "/nand/log/UpgradeService_9906";
 /*mask.bin setting*/
 static const bool getMask = false;
 /*mask.bin setting*/
-#endif
-#if (DSP9908)
-static const INT8 *TerminalDevType = "DSP9908";
-static const INT8 *INIFILE = "/dsppa/SET_NET/DSP9903_NET_CONF.ini";
-static const INT8 *upFileDownload = "/nand/Update_File/DSP9908_PRODUCT_";
-static const INT8 *AmplifierUpgrade = "DSP9908_Amplifier_";
-static const INT8 *PagerUpgrade = "DSP9908_Pager_";
-static const INT8 *MainRootfsUpgrade = "DSP9908_MROOTFS_";
-/*log path setting*/
-static const INT8 *logPath="/nand/log/UpgardeService_9908";
-/*log path setting*/
+/*Devs type*/
+enum DEV_MODULES_TYPE {
+	INVALID_TYPE
+};
+/*Devs type*/
 #endif
 /*type switch setting*/
+
+/*devs type define*/
+static const INT8 *AMPLIFIER="Amplifier";
+static const INT8 *PAGER="Pager";
+/*devs type define*/
 
 /*net port*/
 static const INT32 UpUDPTransPort = 45535;
@@ -67,6 +75,8 @@ static const INT32 newSoftVersionSize = 20;
 static const INT32 upgradeFileMd5Size = 16;
 static const INT32 fileDownloadPathSize = 64;
 static const INT32 msgLen = 64;
+static const INT32 TerminalDevsMaxNum = 8;
+static const INT32 TerminalDevsNameLenMax = 20;
 /* struct of protocal member size */
 
 /*file trans config*/
@@ -131,8 +141,12 @@ static const INT8 *NandVersionName = "nand_version";
 static const INT32 subNum = 9;
 /*WEB request */
 static const INT8 *WEBREQUEST = "WEBTERMINAL";
+
+/*Force to upgrade*/
+static const INT8 *FORCEUPGRADE = "FORCE";
+
 static const INT8 *UPFILESYSTEM = "Upgrade filesystem!";
-static const INT8 *WEBBeginToUpgrade = "Begin to upgrade !";
+static const INT8 *BeginToUpgrade = "Begin to upgrade !";
 /* upgrade */
 
 #endif /* UPGRADESERVICECONFIG_H */

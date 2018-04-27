@@ -6,7 +6,7 @@ using namespace std;
 
 UpFileAttrs::UpFileAttrs() :
 		fileDownloadPath(), newSoftVersion(), newSoftFileSize(0), upFileMD5code(), webUpMethod(
-				false), inUpgrading(false), fileTransRecord() {
+				false), inUpgrading(false), fileTransRecord(),forceUpgrade(false){
 }
 
 UpFileAttrs::~UpFileAttrs() {
@@ -34,6 +34,7 @@ UpFileAttrs::UpFileAttrs(const UpFileAttrs & tmpFileAttr){
 	webUpMethod = tmpFileAttr.webUpMethod;
 	inUpgrading = tmpFileAttr.inUpgrading;
 	fileTransRecord = tmpFileAttr.fileTransRecord;
+	forceUpgrade = tmpFileAttr.forceUpgrade;
 }
 
 UpFileAttrs &UpFileAttrs::operator=(const UpFileAttrs &fileAttr){
@@ -45,6 +46,7 @@ UpFileAttrs &UpFileAttrs::operator=(const UpFileAttrs &fileAttr){
 		setWebUpMethod(fileAttr.getWebUpMethod());
 		setInUpgradeStatus(fileAttr.getInUpgradeStatus());
 		setFileTransRecord(fileAttr.getFileTrans());
+		setForceUpgrade(fileAttr.getForceStatus());
 	}
 	return *this;
 }

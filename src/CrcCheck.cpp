@@ -18,7 +18,7 @@ INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 	if (filename == NULL) {
 		return retError;
 	}
-	SmartPtr<PACK_HEAD> pack_head (new PACK_HEAD);
+	SmartPtr<PACK_HEAD> pack_head(new PACK_HEAD);
 	INT32 n_read = 0;
 	INT32 n_write = 0;
 	INT32 count_write = 0;
@@ -52,8 +52,7 @@ INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 			fclose(src_fd);
 			Logger::GetInstance().Fatal(
 					"%s(): Request %s version must not be lower than %s !",
-					__FUNCTION__, itemName,
-					pack_head->dependVersion);
+					__FUNCTION__, itemName, pack_head->dependVersion);
 			return retError;
 		}
 	} else if (strncmp(pack_head->m_version + strlen(TerminalDevType) + 1,
@@ -105,6 +104,50 @@ INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 	fclose(src_fd);
 	fclose(dst_fd);
 	return 0;
+}
+
+INT32 CrcCheck::getDevModules(const INT8* filename,
+		map<INT32, DEV_MODULES_TYPE>&devModules) {
+	if (filename == NULL) {
+		return retError;
+	}
+	SmartPtr<PACK_HEAD> pack_head(new PACK_HEAD);
+	INT32 n_read = 0;
+	INT32 count_write = 0;
+
+	INT32 packhead_len = sizeof(PACK_HEAD);
+	UINT8 buff[BUFFER_SIZE];
+	bzero(buff, BUFFER_SIZE);
+	FILE *src_fd = fopen(filename, "rb");
+	if (src_fd == NULL) {
+		printf("errr: %s\n", strerror(errno));
+		printf("ERROR : Can not open file : %s !\n", filename);
+		return retError;
+	}
+
+	n_read = fread(buff, 1, packhead_len, src_fd);
+	memcpy(pack_head.get(), buff, packhead_len);
+	if ((strncmp(pack_head->head, HEAD, 8)) != 0) {
+		printf("ERROR : File's head is not right !\n");
+		fclose(src_fd);
+		return retError;
+	} else
+		fclose(src_fd);
+
+	INT32 nums = 0;
+	for (; nums < TerminalDevsMaxNum; nums++) {
+		if (strlen(pack_head->TerminalDevs[nums]) != 0) {
+			if (pack_head->TerminalDevs[nums], AMPLIFIER, strlen(AMPLIFIER) == 0)
+				devModules[nums + 1] = DEV_AMPLIFIER;
+			else if (pack_head->TerminalDevs[nums], PAGER, strlen(PAGER) == 0)
+				devModules[nums + 1] = DEV_PAGER;
+			else
+				devModules[nums + 1] = INVALID_TYPE;
+		} else
+			break;
+	}
+
+	return retOk;
 }
 
 UINT32 CrcCheck::crc32(UINT32 crc, UINT8 *buff, UINT32 size) {
