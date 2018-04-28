@@ -8,6 +8,7 @@
 #include "RCSP.h"
 #include "UpFileAttrs.h"
 #include "FileTrans.h"
+#include <sys/time.h>
 
 using namespace std;
 using namespace FrameWork;
@@ -24,7 +25,10 @@ UDPNetTrans::~UDPNetTrans() {
 
 INT32 UDPNetTrans::socketRunThread() {
 	pthread_t tid;
+	struct timeval tv;
 	if (pthread_create(&tid, NULL, pthreadStart, (void *) this) == 0) {
+		gettimeofday(&tv, NULL);
+		Logger::GetInstance().Info("System time is %d", (INT32) tv.tv_sec);
 		printf("Create UDP thread successfully!........\n");
 	} else
 		;

@@ -135,6 +135,8 @@ public:
 		return forceUpgrade;
 	}
 	void setEachItemUpResult(bool result) {
+		if (result == false)
+			cout << "setEachItemUpResult(false)"<<endl;
 		eachItemUpStatus = result;
 	}
 	void setUpSystem(bool upSys) {
@@ -161,11 +163,12 @@ public:
 	INT32 parserSubItemsFileName(UINT32 num);
 	INT32 upgradeItem(UINT32 num);
 	INT32 excuteUpgradeShell(UINT32 num, INT8 *PCIP);
+	static bool excuteDevShell();
 	INT32 modifyVersionFile();
+	map<INT32, string> mSubItems;
 private:
 	const INT8 *productTarFile;
 	bool eachItemUpStatus;
-	map<INT32, string> mSubItems;
 	map<INT32, string> mSubItemName;
 	UpgradeDSP *aUpSubItem;
 	volatile bool upSystem; //////////

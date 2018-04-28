@@ -86,9 +86,13 @@ private:
 	static bool inUpgrade;
 	map<INT32, DEV_MODULES_TYPE> devModuleToUpgrade;
 
-	static INT32 upTerminalDevs(UPDATE_DEV_TYPE type);
+	static INT32 upTerminalDevs(UPDATE_DEV_TYPE type, INT32 &sockfd,
+			sockaddr_in &addr, SetNetworkTerminal *setNet);
+	static INT32 executeDevModuleUp(const INT8 *module,
+			map<INT32, string> &mExtract);
 
 	INT32 getMaskInfo(UINT16 *mask);
+
 };
 class UDPNetTrans;
 typedef struct FileTransArgs_S_ {

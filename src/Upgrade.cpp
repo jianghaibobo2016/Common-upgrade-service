@@ -131,6 +131,7 @@ INT32 UpgradeDSP::parserFileName() {
 }
 
 INT32 UpgradeDSP::parserItemPackage(INT8 *PCRequestVersion) {
+	cout << "today test !!!!!!!!!!!!!!!!!!!!!!!!!-------- 1 " << endl;
 	if (CrcCheck::parser_Package(upgradeFile, newVersion, itemName,
 			dependVersion) != 0) {
 		return retError;
@@ -139,6 +140,7 @@ INT32 UpgradeDSP::parserItemPackage(INT8 *PCRequestVersion) {
 		return retError;
 	} else {
 		FileOperation::deleteFile(upgradeFile);
+		cout << "today test !!!!!!!!!!!!!!!!!!!!!!!!!-------- 1 " << endl;
 	}
 	return retOk;
 }
@@ -195,7 +197,8 @@ void UpgradeDSP::clearObj() {
 	fileWithoutPath = NULL;
 	memset(newVersion, 0, strlen(newVersion));
 	memset(localVersion, 0, strlen(localVersion));
-	upStatus = errorVersionStatus;;
+	upStatus = errorVersionStatus;
+	;
 	productItem = false;
 	memset(itemName, 0, strlen(itemName));
 	memset(versionFileItemName, 0, strlen(versionFileItemName));
@@ -204,7 +207,7 @@ void UpgradeDSP::clearObj() {
 }
 
 UpgradeDSPSubItem::UpgradeDSPSubItem() :
-		productTarFile(newTarPackage), eachItemUpStatus(true), mSubItems(), mSubItemName(), upSystem(
+		mSubItems(), productTarFile(newTarPackage), eachItemUpStatus(true), mSubItemName(), upSystem(
 				false), upTerminalDevs(false), upDevType(ERROR_TYPE), forceUpgrade(
 				false) {
 	aUpSubItem = new UpgradeDSP(NULL);
@@ -212,30 +215,31 @@ UpgradeDSPSubItem::UpgradeDSPSubItem() :
 UpgradeDSPSubItem::~UpgradeDSPSubItem() {
 	delete aUpSubItem;
 }
+
 bool UpgradeDSPSubItem::getSubItems(
 		map<INT32, DEV_MODULES_TYPE>& devModuleToUpgrade) {
-	if (FileOperation::extractTarFile(productTarFile, mSubItems) != true) {
-		FileOperation::deleteFile(productTarFile);
-		return false;
-	} else {
-		for (UINT32 i = 1; i <= mSubItems.size(); i++) {
-			string strTmp = mSubItems[i];
-			INT32 npos = strTmp.find("_V");
+//	if (FileOperation::extractTarFile(productTarFile, mSubItems) != true) {
+//		FileOperation::deleteFile(productTarFile);
+//		return false;
+//	} else {
+	for (UINT32 i = 1; i <= mSubItems.size(); i++) {
+		string strTmp = mSubItems[i];
+		INT32 npos = strTmp.find("_V");
 
-			mSubItemName[i] = strTmp.substr(strlen(StringFind),
-					npos - strlen(StringFind));
-		}
-		mSubItems.clear();
-		cout << "test amp mapppppppppppppppppppppppppppppppppp::3 "
-				<< mSubItemName[1] << endl;
-		cout << "test amp sizeeeeeeeeeeeeeeeeedevM::4 "
-				<< devModuleToUpgrade.size() << endl;
-		//adjust order
-		adjustOrder(devModuleToUpgrade);
-		cout << "test amp mapppppppppppppppppppppppppppppppppp::2 "
-				<< mSubItems[1] << endl;
+		mSubItemName[i] = strTmp.substr(strlen(StringFind),
+				npos - strlen(StringFind));
 	}
-	FileOperation::deleteFile(productTarFile);
+//		mSubItems.clear();
+	cout << "test amp mapppppppppppppppppppppppppppppppppp::3 "
+			<< mSubItemName[1] << endl;
+	cout << "test amp sizeeeeeeeeeeeeeeeeedevM::4 " << devModuleToUpgrade.size()
+			<< endl;
+	//adjust order
+	adjustOrder(devModuleToUpgrade);
+	cout << "test amp mapppppppppppppppppppppppppppppppppp::2 " << mSubItems[1]
+			<< endl;
+//	}
+//	FileOperation::deleteFile(productTarFile);
 	return true;
 }
 
@@ -254,7 +258,7 @@ bool UpgradeDSPSubItem::adjustOrder(
 			return false;
 		}
 	}
-	UINT32 nameLen = mSubItemName.size();
+	UINT32 nameLen = mSubItems.size();
 	UINT32 moduleLen = m_dev_type.size();
 	INT32 flag = 0;
 	INT32 mSubNum = 1;
@@ -263,47 +267,56 @@ bool UpgradeDSPSubItem::adjustOrder(
 
 	for (i = 1; i <= nameLen; i++) {
 		for (UINT32 j = 1; j <= moduleLen; j++) {
-			if (mSubItemName[i] == m_dev_type[j]) {
-				m_devs[mDevNum] = m_dev_type[j];
-				mDevNum++;
+			if (mSubItems[i].find(m_dev_type[j]) != string::npos) {
+				m_devs[j] = mSubItems[i];
+//				mDevNum++;
+				cout << "set flag1111" << endl;
 				matchFlag = true;
 				break;
 			}
 		}
 		if (!matchFlag && mSubItemName[i] != AMPLIFIER
 				&& mSubItemName[i] != PAGER) {
-			mSubItems[mSubNum] = mSubItemName[i];
+			cout << "set flag2222" << endl;
+//			mSubItems[mSubNum] = mSubItemName[i];
+			m_subItem[mSubNum] = mSubItems[i];
+			cout << m_subItem[mSubNum] << endl;
+			matchFlag = false;
 			mSubNum++;
 		}
+		matchFlag = false;
 	}
 
-	for (i = 1; i <= m_devs.size(); i++) {
-		mSubItems[mSubNum] = m_devs[i];
-	}
-
-//	for (i = 1; i <= mSubItemName.size(); i++) {
-//		if (mSubItemName[i] != m_dev_type[devNum]) {
-//
-//			m_subItem[i - flag] = mSubItems[i];
-//		} else {
-//			cout << "HHHHHHHHHHHHHHHHHHHHHHHHHHHHH" << endl;
-//			m_subItem[mSubItemName.size() - (m_dev_type.size() - devNum)] =
-//					mSubItems[i];
-//			--devNum;
-//			flag++;
-////			}
-//		}
-//	}
-//	if (devModuleToUpgrade.size() != 0) {
-	for (i = 1; i <= mSubItems.size(); i++) {
-		string tmp = upFilePath;
-		tmp += m_subItem[i];
-		m_subItem[i] = tmp;
+	mSubItems.clear();
+	for (i = 1; i <= m_subItem.size(); i++) {
 		mSubItems[i] = m_subItem[i];
+		cout << "test amp mapppppppppppppppppppppppppppppppppp::111 "
+				<< mSubItems[i] << endl;
+	}
+	cout << "size::2:::::::" << mSubItems.size() << endl;
+	mSubNum = m_subItem.size();
+	cout << "msubnum::::"<<mSubNum<<endl;
+	for (i = 1; i <= m_devs.size(); i++) {
+		mSubItems[mSubNum + i] = m_devs[i];
+		cout << "test amp mapppppppppppppppppppppppppppppppppp::11 "
+				<< mSubItems[1] << endl;
+	}
+//	cout << "test amp mapppppppppppppppppppppppppppppppppp::22 " << mSubItems[1]
+//			<< endl;
+//	if (devModuleToUpgrade.size() != 0) {
+	cout << "size::3:::::::" << mSubItems.size() << endl;
+	UINT32 itemsNum = mSubItems.size();
+	cout << "jaingui:::::"<<itemsNum<<endl;
+	for (i = 1; i <= itemsNum; i++) {
+		string tmp = upFilePath;
+		tmp += mSubItems[i];
+		mSubItems[i] = tmp;
+		cout << "path item ::::"<<itemsNum<<" " <<mSubItems[i]<<endl;
+//		mSubItems[i] = m_subItem[i];
 	}
 //	}
-	cout << "test amp mapppppppppppppppppppppppppppppppppp::1 " << mSubItems[1]
-			<< endl;
+	cout << "test amp mapppppppppppppppppppppppppppppppppp::33 "
+			<< mSubItems.size() << endl;
 	return true;
 }
 
@@ -408,6 +421,38 @@ INT32 UpgradeDSPSubItem::excuteUpgradeShell(UINT32 num, INT8 *PCIP) {
 			return retError;
 		}
 		memset(buff, 0, 256);
+	}
+	pclose(fstream);
+	FileOperation::deleteFile(UpgradeShellWithPath);
+	return retOk;
+}
+
+bool UpgradeDSPSubItem::excuteDevShell() {
+	FILE *fstream = NULL;
+	char buff[256] = { 0 };
+	string exeCMD = "cd ";
+	exeCMD += upFilePath;
+	exeCMD += " && chmod +x ";
+	exeCMD += UpgradeShell;
+	exeCMD += " && ./";
+	exeCMD += UpgradeShell;
+	if (NULL == (fstream = popen(exeCMD.c_str(), "r"))) {
+		fprintf(stderr, "execute command failed: %s", strerror(errno));
+		INT8 record[msgLen] = { 0 };
+		return retError;
+	}
+	INT8 record[msgLen] = { 0 };
+	while (NULL != fgets(buff, sizeof(buff), fstream)) {
+		printf("buff: %s", buff);
+		//()==0
+		if ((strncmp(buff, SuccessUpShellRespond, strlen(SuccessUpShellRespond))
+				== 0)) {
+			return true;
+		} else if ((strncmp(buff, FailUpShellRespond,
+				strlen(FailUpShellRespond)) == 0)) {
+			pclose(fstream);
+			return false;
+		}
 	}
 	pclose(fstream);
 	FileOperation::deleteFile(UpgradeShellWithPath);

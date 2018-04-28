@@ -16,6 +16,7 @@ enum UPDATE_DEV_COMMAND {
 	CMD_LOCALDEV_TESTMODE = 2,		      //设备进入测试模式
 	CMD_LOCALDEV_GETMASK = 3,			  //获取设备加密信息
 	CMD_DEV_ONLINE = 4,			     	  //设备状态
+	CMD_DEV_REPLY_UPGRADE = 5			  //设备升级进度反馈
 };
 
 //zuofei config file
@@ -85,6 +86,16 @@ typedef struct ARM_REPLAY_GETDEVSTATUS_tag {
 	UINT8 dev_type; // UPDATE_DEV_TYPE
 	UINT8 state; //0：离线 1：在线无需升级 2:在线可升级
 } ARM_REPLAY_GETDEVSTATUS;
+
+
+//------------------------------5.获取设备升级进度-----------------------//
+
+//视频板回复
+typedef struct ARM_REPLAY_GETUPDATEPROGRESS_tag {
+	UPDATE_DEV_Header header;
+	UINT8 dev_type; // UPDATE_DEV_TYPE
+	UINT8 state;
+} ARM_REPLAY_GETUPDATEPROGRESS;
 
 #pragma pack(pop)
 #endif /* PROTOCAL_UPDATEPROGRAM_PROTOCAL_H_ */

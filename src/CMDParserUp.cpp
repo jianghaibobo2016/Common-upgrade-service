@@ -310,29 +310,29 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 
 //	isDevModulesUpgradeEnable(devModuleToUpgrade, devModules, upFileAttr);
 
-/*	if (devModuleToUpgrade.size() == 0
-			&& upFileAttr.getForceStatus() == false) {
-		if (strlen(version) != 0) {
-			INT32 retCompare = compareUpgradeItem(
-					const_cast<INT8*>(upFileAttr.getNewSoftVersion()), version,
-					strlen(version));
-			if (retCompare == retOk) {
-				strcpy(failReason, NONEEDTOUPGRADE);
-				return equalVersion;
-			} else if (retCompare < retOk) {
-				strcpy(failReason, LOWERVERSION);
-				return lowerVersion;
-			} else if (retCompare > retOk) {
-				strcpy(failReason, BeginToUpgrade);
-				return higherVerison;
-			}
-		} else {
-			strcpy(failReason, GETVERSIONFAILED);
-			return errorVersionStatus;
-		}
-	} else {*/
-		strcpy(failReason, BeginToUpgrade);
-		return higherVerison;
+	/*	if (devModuleToUpgrade.size() == 0
+	 && upFileAttr.getForceStatus() == false) {
+	 if (strlen(version) != 0) {
+	 INT32 retCompare = compareUpgradeItem(
+	 const_cast<INT8*>(upFileAttr.getNewSoftVersion()), version,
+	 strlen(version));
+	 if (retCompare == retOk) {
+	 strcpy(failReason, NONEEDTOUPGRADE);
+	 return equalVersion;
+	 } else if (retCompare < retOk) {
+	 strcpy(failReason, LOWERVERSION);
+	 return lowerVersion;
+	 } else if (retCompare > retOk) {
+	 strcpy(failReason, BeginToUpgrade);
+	 return higherVerison;
+	 }
+	 } else {
+	 strcpy(failReason, GETVERSIONFAILED);
+	 return errorVersionStatus;
+	 }
+	 } else {*/
+	strcpy(failReason, BeginToUpgrade);
+	return higherVerison;
 //	}
 
 	return errorVersionStatus;
@@ -348,6 +348,7 @@ INT32 CMDParserUp::isDevModulesUpgradeEnable(
 	for (; num <= devModules.size(); num++) {
 		getDevStatus.header.HeadCmd = 0x0004;
 		getDevStatus.dev_type = devModules[num];
+		cout << "sendto servarappp type :: " <<getDevStatus.dev_type<< endl;
 		HandleUp::localUpHandle<UPDATE_GET_DEVSTATUS>(getDevStatus);
 		INT32 retSend = sendto(netTrans.getSockfd(), &getDevStatus,
 				sizeof(UPDATE_SEND_UPDATEDEV), 0,
@@ -355,10 +356,12 @@ INT32 CMDParserUp::isDevModulesUpgradeEnable(
 		if (retSend <= 0) {
 			cout << "errorsend" << endl;
 			return retError;
+		} else {
+			cout << "sendto serverapp : " << retSend << endl;
 		}
 		Logger::GetInstance().Info("Ask device type %d is online or not!",
 				getDevStatus.dev_type);
-		struct timeval timeout = { 10, 0 }; //3s
+		struct timeval timeout = { 8, 0 }; //10s
 		setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_RCVTIMEO,
 				(const char *) &timeout, sizeof(timeout));
 		INT8 recvBuff[16] = { 0 };
@@ -369,7 +372,12 @@ INT32 CMDParserUp::isDevModulesUpgradeEnable(
 			Logger::GetInstance().Error("Device type %d no recv !",
 					getDevStatus.dev_type);
 			return retError;
-		} else if (retRecv > 0) {
+		} else if (retRecv == 0)
+			cout << "no recv" << endl;
+		else if (retRecv > 0) {
+			for (INT32 i = 0; i < retRecv; i++)
+				printf("recv : %02x\t", recvBuff[i]);
+			cout << "recv len :: "<<retRecv<<endl;
 			ARM_REPLAY_GETDEVSTATUS *devStatus =
 					(ARM_REPLAY_GETDEVSTATUS*) recvBuff;
 			if (devStatus->header.HeadCmd != CMD_DEV_ONLINE) {
@@ -394,6 +402,8 @@ INT32 CMDParserUp::isDevModulesUpgradeEnable(
 					if (devStatus->state == UPGRADE_VALID) {
 						devModuleToUpgrade[validDevModule] =
 								(DEV_MODULES_TYPE) devStatus->dev_type;
+						cout << "need devs type :::: "
+								<< devModuleToUpgrade[validDevModule] << endl;
 						validDevModule++;
 					}
 				}
@@ -404,7 +414,8 @@ INT32 CMDParserUp::isDevModulesUpgradeEnable(
 	map<INT32, DEV_MODULES_TYPE>::iterator iter;
 	for (iter = devModuleToUpgrade.begin(); iter != devModuleToUpgrade.end();
 			iter++) {
-		cout << "up a dev name : "<<iter->first<<" and status : "<<iter->second<<endl;
+		cout << "up a dev name : " << iter->first << " and status : "
+				<< iter->second << endl;
 	}
 	return retOk;
 }

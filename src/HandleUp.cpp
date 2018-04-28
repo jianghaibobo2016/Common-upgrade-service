@@ -169,6 +169,7 @@ INT32 HandleUp::setNetworkHandle(INT8 *recvBuff, INT8 *sendtoBuff,
 				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
 //		}
 	}
+	sysReboot();
 	return retOk;
 }
 
@@ -326,30 +327,30 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 		cout << "replytext : " << replyText << endl;
 
 		//dev module check
-		map<INT32, DEV_MODULES_TYPE> devModules;
-		CrcCheck::getDevModules(upFileAttr.getFileDownloadPath(), devModules);
-
-		CMDParserUp::isDevModulesUpgradeEnable(devModuleToUpgrade, devModules,
-				upFileAttr);
-		if (devModuleToUpgrade.size() == 0) {
-			INT8 version[7] = { 0 };
-			DevSearchTerminal::getSoftwareVersion(ProductVersionName, version,
-					pathVersionFile);
-			if (strlen(version) != 0) {
-				INT32 retCompare = strncmp(
-						const_cast<INT8*>(upFileAttr.getNewSoftVersion()),
-						version, strlen(version));
-				if (retCompare == retOk) {
-					memset(replyText, 0, msgLen);
-					strcpy(replyText, NONEEDTOUPGRADE);
-					retUpStatus = retError;
-				} else if (retCompare < retOk) {
-					memset(replyText, 0, msgLen);
-					strcpy(replyText, LOWERVERSION);
-					retUpStatus = retError;
-				}
-			}
-		}
+//		map<INT32, DEV_MODULES_TYPE> devModules;
+//		CrcCheck::getDevModules(upFileAttr.getFileDownloadPath(), devModules);
+//
+//		CMDParserUp::isDevModulesUpgradeEnable(devModuleToUpgrade, devModules,
+//				upFileAttr);
+//		if (devModuleToUpgrade.size() == 0) {
+//			INT8 version[7] = { 0 };
+//			DevSearchTerminal::getSoftwareVersion(ProductVersionName, version,
+//					pathVersionFile);
+//			if (strlen(version) != 0) {
+//				INT32 retCompare = strncmp(
+//						const_cast<INT8*>(upFileAttr.getNewSoftVersion()),
+//						version, strlen(version));
+//				if (retCompare == retOk) {
+//					memset(replyText, 0, msgLen);
+//					strcpy(replyText, NONEEDTOUPGRADE);
+//					retUpStatus = retError;
+//				} else if (retCompare < retOk) {
+//					memset(replyText, 0, msgLen);
+//					strcpy(replyText, LOWERVERSION);
+//					retUpStatus = retError;
+//				}
+//			}
+//		}
 
 		if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
 				*upgradeReply.get(), strlen(replyText), replyText, retUpStatus,
@@ -494,7 +495,12 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 
 	cout << "up 3 !" << endl;
 	memset(sendtoBuffer, 0, SendBufferSizeMax);
-
+	//get map devs from file head
+	map<INT32, DEV_MODULES_TYPE> devModules;
+	cout << "today test !!!!!!!!!!!!!!!!!!!!!!!!!-------- 2 " << endl;
+	CrcCheck::getDevModules(fileAttrs->getFileDownloadPath(), devModules);
+	cout << "today test !!!!!!!!!!!!!!!!!!!!!!!!!-------- 3 " << devModules[1]
+			<< endl;
 	if (upDSPProduct->parserItemPackage(
 			const_cast<INT8*>(fileAttrs->getNewSoftVersion())) == 0) {
 		retUpStatus = retOk;
@@ -524,8 +530,35 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 			return NULL;
 		}
 	}
+
 	SmartPtr<UpgradeDSPSubItem> subItems(new UpgradeDSPSubItem);
 	//adjust order
+	//dev module check
+//	map<INT32, string> mExtract;
+	cout << "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 1 "
+			<< endl;
+	if (FileOperation::extractTarFile(newTarPackage, subItems->mSubItems)
+			== true) {
+	}
+
+	for (UINT32 i = 1; i <= devModules.size(); i++) {
+		if (devModules[i] == DEV_AMPLIFIER) {
+			cout
+					<< "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 1.1 "
+					<< endl;
+			executeDevModuleUp(AMPLIFIER, subItems->mSubItems);
+		} else if (devModules[i] == DEV_PAGER) {
+			cout
+					<< "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 1.2 "
+					<< endl;
+			executeDevModuleUp(PAGER, subItems->mSubItems);
+		}
+	}
+//
+	CMDParserUp::isDevModulesUpgradeEnable(
+			upgradeArgs->handle->devModuleToUpgrade, devModules,
+			*fileAttrs.get());
+
 	//set function dev module?
 	if (subItems->getSubItems(upgradeArgs->handle->devModuleToUpgrade)
 			!= true) {
@@ -621,16 +654,19 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 				} else {
 					/////////process
 					INT32 retUpAmp = HandleUp::upTerminalDevs(
-							subItems->getUpDevType());
+							subItems->getUpDevType(), sockfd, sendaddr,
+							setNet.get());
 					if (retUpAmp == retOk) {
 						percentUp += (30 / itemsNum);
 						sprintf(replyText, "Upgrading %u%%.", percentUp);
-						cout << "up Amplifier ok" << endl;
+						cout << "up devs ok type :" << subItems->getUpDevType()
+								<< endl;
 						retUpStatus = retOk;
 					} else if (retUpAmp == retError) {
 						retUpStatus = retError;
 						subItems->setEachItemUpResult(false);
-						sprintf(replyText, "Upgrade Amplifier failed");
+						sprintf(replyText, "Upgrade devs failed type : %d",
+								(INT32) subItems->getUpDevType());
 					}
 				}
 				if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
@@ -812,14 +848,15 @@ INT32 HandleUp::devRequestFile(DEV_Request_FileProtocal & request,
 	return retOk;
 }
 
-INT32 HandleUp::upTerminalDevs(UPDATE_DEV_TYPE type) {
+INT32 HandleUp::upTerminalDevs(UPDATE_DEV_TYPE type, INT32 &sockfd,
+		sockaddr_in &addr, SetNetworkTerminal *setNet) {
 	LocalUDPTrans netTrans;
 	UPDATE_SEND_UPDATEDEV devUp;
 	devUp.header.HeadCmd = CMD_LOCALDEV_UPGRADE;
 	devUp.dev_type = type;
 	INT8 recvBuff[16] = { 0 };
 	localUpHandle<UPDATE_SEND_UPDATEDEV>(devUp);
-
+	sleep(10);
 	INT32 retSend = sendto(netTrans.getSockfd(), &devUp,
 			sizeof(UPDATE_SEND_UPDATEDEV), 0,
 			(struct sockaddr*) netTrans.getAddr(), *netTrans.getAddrLen());
@@ -833,34 +870,113 @@ INT32 HandleUp::upTerminalDevs(UPDATE_DEV_TYPE type) {
 		timeout.tv_sec = 60;
 		timeout.tv_usec = 0;
 	} else if (type == UPDATE_DEV_PAGER) {
-		timeout.tv_sec = 600;
+		timeout.tv_sec = 60;
 		timeout.tv_usec = 0;
 	}
-//	setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_SNDTIMEO,
-//			(const char *) &timeout, sizeof(timeout));
+	SmartPtr<DEV_Request_UpgradeReply> upgradeReply(
+			new DEV_Request_UpgradeReply);
+	upgradeReply->header.HeadCmd = CMD_DEV_UPGRADE_REPLY;
+	INT8 sendtoBuffer[SendBufferSizeMax] = { 0 };
+	INT8 replyText[msgLen] = { 0 };
+	INT32 retUpStatus = retOk;
 	setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_RCVTIMEO,
 			(const char *) &timeout, sizeof(timeout));
-	INT32 retRecv = recvfrom(netTrans.getSockfd(), recvBuff, sizeof(recvBuff),
-			0, (struct sockaddr*) netTrans.getAddr(), netTrans.getAddrLen());
-	if (retRecv == -1) {
-		Logger::GetInstance().Error("Upgrade device type %d no recv !",
-				devUp.dev_type);
-		cout << "recv error" << endl;
-		return retError;
-	} else if (retRecv > 0) {
-		ARM_REPLAYUPDATE_UPDATEDEV *upReply =
-				(ARM_REPLAYUPDATE_UPDATEDEV*) recvBuff;
-		cout << "recv ret : " << retRecv << endl;
-		if (upReply->header.HeadCmd == CMD_LOCALDEV_UPGRADE) {
-			if (upReply->state == 1 || upReply->state == 2) {
-				return retOk;
-			} else if (upReply->state == 0 || upReply->state == 3) {
-				return retError;
-			} else {
-				return retError;
-			}
-		} else
+	while (1) {
+		INT32 retRecv = recvfrom(netTrans.getSockfd(), recvBuff,
+				sizeof(recvBuff), 0, (struct sockaddr*) netTrans.getAddr(),
+				netTrans.getAddrLen());
+		if (retRecv == -1) {
+			Logger::GetInstance().Error("Upgrade device type %d no recv !",
+					devUp.dev_type);
+			cout << "recv error" << endl;
 			return retError;
+		} else if (retRecv > 0) {
+			if (retRecv == sizeof(ARM_REPLAYUPDATE_UPDATEDEV)) {
+				ARM_REPLAYUPDATE_UPDATEDEV *upReply =
+						(ARM_REPLAYUPDATE_UPDATEDEV*) recvBuff;
+				cout << "recv ret : " << retRecv << endl;
+				for (INT32 i=0;i<retRecv;i++){
+					printf("recv result :: %02x\t", recvBuff[i]);
+				}
+				if (upReply->header.HeadCmd == CMD_LOCALDEV_UPGRADE) {
+					if (upReply->state == 1 || upReply->state == 2) {
+						cout << "get up dev  " << upReply->state
+								<< " up success" << endl;
+						return retOk;
+					} else if (upReply->state == 0 || upReply->state == 3) {
+						cout << "get up dev  " << upReply->state << " up failed"
+								<< endl;
+						return retError;
+					} else {
+						return retError;
+					}
+				} else
+					return retError;
+			} else if (retRecv == sizeof(ARM_REPLAY_GETUPDATEPROGRESS)) {
+				ARM_REPLAY_GETUPDATEPROGRESS *devReplyInfo =
+						(ARM_REPLAY_GETUPDATEPROGRESS *) recvBuff;
+				cout << "recv ret : " << retRecv << endl;
+				INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
+				if (devReplyInfo->header.HeadCmd == CMD_DEV_REPLY_UPGRADE) {
+					memset(sendtoBuffer, 0, SendBufferSizeMax);
+					memset(replyText, 0, msgLen);
+					sprintf(replyText, "Upgrade module %d, process : %d%%",
+							(INT32) devReplyInfo->dev_type,
+							(INT32) devReplyInfo->state);
+
+					if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
+							*upgradeReply.get(), strlen(replyText), replyText,
+							retUpStatus, setNet) == retOk) {
+					}
+					INT32 retsendto = sendto(sockfd, (INT8 *) sendtoBuffer,
+							sizeof(PC_DEV_Header)
+									+ upgradeReply->header.DataLen, 0,
+							(struct sockaddr *) &addr, tmp_server_addr_len);
+					cout << "retsendot ::::" << retsendto << endl;
+				}
+			}
+
+		}
+
+	}
+	return retOk;
+}
+
+INT32 HandleUp::executeDevModuleUp(const INT8 *module,
+		map<INT32, string> &mExtract) {
+	cout << "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 1 "
+			<< endl;
+	INT8 devModuleFilePath[fileDownloadPathSize] = { 0 };
+	cout << "sizeiiiiiiiiiiiiiiiiii::::" << mExtract.size() << endl;
+	for (UINT32 j = 1; j <= mExtract.size(); j++) {
+		memset(devModuleFilePath, 0, fileDownloadPathSize);
+		cout << "mextractjjjjjj:::" << mExtract[j] << endl;
+		if (mExtract[j].find(module) != string::npos) {
+			cout << "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 4 "
+					<< mExtract[j] << endl;
+			string path = upFilePath;
+			path += mExtract[j];
+			memcpy(devModuleFilePath, path.c_str(), path.size());
+			INT32 retParser = CrcCheck::parser_Package(devModuleFilePath, NULL,
+			NULL,
+			NULL);
+			if (retParser != retOk) {
+				cout
+						<< "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 5 "
+						<< endl;
+			}
+			map<INT32, string> m_subItem;
+			if (FileOperation::extractTarFile(newTarPackage, m_subItem)
+					!= true) {
+				cout << "up 7.2" << endl;
+			} else {
+				cout << "up 7.3" << endl;
+				if (!FileOperation::isExistFile(UpgradeShellWithPath)) {
+				}
+				if (UpgradeDSPSubItem::excuteDevShell() == true)
+					cout << "up 7.5" << endl;
+			}
+		}
 	}
 	return retOk;
 }
@@ -905,6 +1021,9 @@ INT32 HandleUp::getMaskInfo(UINT16 *mask) {
 	}
 	cout << "retsend : " << retSend << endl;
 	INT8 recvBuff[16] = { 0 };
+	struct timeval timeout = { 10, 0 }; //3s
+	setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_RCVTIMEO,
+			(const char *) &timeout, sizeof(timeout));
 	INT32 retRecv = recvfrom(netTrans.getSockfd(), recvBuff, sizeof(recvBuff),
 			0, (struct sockaddr*) netTrans.getAddr(), netTrans.getAddrLen());
 	if (retRecv == -1) {

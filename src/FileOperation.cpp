@@ -99,6 +99,7 @@ bool FileOperation::alterFileName(string filename, string newname) {
 
 	return true;
 }
+
 bool FileOperation::extractTarFile(string fileName,
 		map<INT32, string> &subItems) {
 	if (isExistFile(fileName) != true) {
