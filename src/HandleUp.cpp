@@ -211,6 +211,7 @@ void HandleUp::devUpgradePCRequestCMDHandle(sockaddr_in &recvAddr,
 	INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
 	SmartPtr<DEV_Reply_DevUpgrade> devReply(new DEV_Reply_DevUpgrade);
 	/*set inUpgrading*/
+
 	INT32 retHandle = upgradePCrequestHandle(recvBuff, sendtoBuffer,
 			*devReply.get(), upFileAttr, setNetworkTerminal);
 	INT32 retSendto = sendto(sockfd, sendtoBuffer,
@@ -326,31 +327,6 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 		}
 		cout << "replytext : " << replyText << endl;
 
-		//dev module check
-//		map<INT32, DEV_MODULES_TYPE> devModules;
-//		CrcCheck::getDevModules(upFileAttr.getFileDownloadPath(), devModules);
-//
-//		CMDParserUp::isDevModulesUpgradeEnable(devModuleToUpgrade, devModules,
-//				upFileAttr);
-//		if (devModuleToUpgrade.size() == 0) {
-//			INT8 version[7] = { 0 };
-//			DevSearchTerminal::getSoftwareVersion(ProductVersionName, version,
-//					pathVersionFile);
-//			if (strlen(version) != 0) {
-//				INT32 retCompare = strncmp(
-//						const_cast<INT8*>(upFileAttr.getNewSoftVersion()),
-//						version, strlen(version));
-//				if (retCompare == retOk) {
-//					memset(replyText, 0, msgLen);
-//					strcpy(replyText, NONEEDTOUPGRADE);
-//					retUpStatus = retError;
-//				} else if (retCompare < retOk) {
-//					memset(replyText, 0, msgLen);
-//					strcpy(replyText, LOWERVERSION);
-//					retUpStatus = retError;
-//				}
-//			}
-//		}
 
 		if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
 				*upgradeReply.get(), strlen(replyText), replyText, retUpStatus,
@@ -469,10 +445,15 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 	INT8 sendtoBuffer[SendBufferSizeMax] = { 0 };
 	INT32 retUpStatus = retOk;
 
+//	if (fileAttrs->getForceStatus() == true)
+//		subItems->setForceUpgrade(true);
 	upgradeReply->header.HeadCmd = 0x0005;
 	SmartPtr<UpgradeDSP> upDSPProduct(
 			new UpgradeDSP(
 					const_cast<INT8*>(fileAttrs->getFileDownloadPath())));
+
+	if (fileAttrs->getForceStatus() == true)
+		upDSPProduct->setForceUpgrade(true);
 	if (upDSPProduct->parserFileName() == retOk) {
 		cout << "up 1 !" << endl;
 	} else {
@@ -757,7 +738,7 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 		retUpStatus = retError;
 		memset(replyText, 0, msgLen);
 		memset(sendtoBuffer, 0, SendBufferSizeMax);
-		sprintf(replyText, "Upgrade failed for some modules!");
+		sprintf(replyText, PRODUCTUPFAILED);
 	}
 
 	upgradeArgs->upFileAttr->clearMemberData();
@@ -773,9 +754,7 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 	fileTrans->clearFileTrans();
 	sync();
 	sleep(3);
-//	HandleUp::sysReboot();
-//		return NULL;
-//	}
+	HandleUp::sysReboot();
 
 	return NULL;
 }

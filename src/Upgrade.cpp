@@ -85,6 +85,8 @@ upgradeFileStatus UpgradeDSP::getVersion() {
 	while (fileWithoutPath[i] != '\0') {
 		newVersion[i] = fileWithoutPath[i];
 		i++;
+		if (i >= 6)
+			break;
 	}
 	newVersion[i] = '\0';
 	fileWithoutPath -= strlen(TerminalDevType) + 1;
@@ -121,6 +123,8 @@ INT32 UpgradeDSP::parserFileName() {
 		strcpy(upgraderecord, "Upgrade file name error !");
 		return retError;
 	}
+	if (getForceStatus() != true)
+		cout << "not force upgrade !!!!!!!!!!!!!!!"<<endl;
 	if ((upStatus = getVersion()) != higherVerison
 			&& getForceStatus() != true) {
 		cout << __FUNCTION__ << "() upstatus : " << upStatus << endl;
@@ -295,7 +299,7 @@ bool UpgradeDSPSubItem::adjustOrder(
 	}
 	cout << "size::2:::::::" << mSubItems.size() << endl;
 	mSubNum = m_subItem.size();
-	cout << "msubnum::::"<<mSubNum<<endl;
+	cout << "msubnum::::" << mSubNum << endl;
 	for (i = 1; i <= m_devs.size(); i++) {
 		mSubItems[mSubNum + i] = m_devs[i];
 		cout << "test amp mapppppppppppppppppppppppppppppppppp::11 "
@@ -306,12 +310,12 @@ bool UpgradeDSPSubItem::adjustOrder(
 //	if (devModuleToUpgrade.size() != 0) {
 	cout << "size::3:::::::" << mSubItems.size() << endl;
 	UINT32 itemsNum = mSubItems.size();
-	cout << "jaingui:::::"<<itemsNum<<endl;
+	cout << "jaingui:::::" << itemsNum << endl;
 	for (i = 1; i <= itemsNum; i++) {
 		string tmp = upFilePath;
 		tmp += mSubItems[i];
 		mSubItems[i] = tmp;
-		cout << "path item ::::"<<itemsNum<<" " <<mSubItems[i]<<endl;
+		cout << "path item ::::" << itemsNum << " " << mSubItems[i] << endl;
 //		mSubItems[i] = m_subItem[i];
 	}
 //	}

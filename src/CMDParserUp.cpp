@@ -188,6 +188,7 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 						PCREQUESTGATEWAY) == true) {
 					COPYGATEWAY
 					;
+					cout << "ip input : "<<netConfigTrans.ipT<<" netmask input : "<<netConfigTrans.submaskT<<" gateway : "<<netConfigTrans.gatewayT<<endl;
 					if (setNetworkTerminal->setNetworkConfig(netConfigTrans.ipT,
 							netConfigTrans.submaskT, netConfigTrans.gatewayT,
 							NULL, INIFILE) != true) {
@@ -276,14 +277,19 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 	INT8 version[7] = { 0 };
 	DevSearchTerminal::getSoftwareVersion(ProductVersionName, version,
 			pathVersionFile);
+	cout << "recv after version : "<<pcUpgradeCMD + strlen(upFileAttr.getNewSoftVersion())<<endl;
 	/*WEB request to upgrade CMD judgement*/
 	if (compareUpgradeItem(
 			pcUpgradeCMD + strlen(upFileAttr.getNewSoftVersion()), FORCEUPGRADE,
 			strlen(FORCEUPGRADE)) == 0) {
+//		strcat(fileDownloadName, "_");
+		strcat(fileDownloadName, FORCEUPGRADE);
+		upFileAttr.setFileDownloadPath(fileDownloadName, strlen(fileDownloadName));
 		if (!FileOperation::isExistFile(upFileAttr.getFileDownloadPath())) {
 			strcpy(failReason, UPFILENOTEXIST);
 			return errorVersionStatus;
 		}
+		cout << "force.........................................1 "<<endl;
 		upFileAttr.setWebUpMethod(true);
 		upFileAttr.setForceUpgrade(true);
 	} else if (compareUpgradeItem(

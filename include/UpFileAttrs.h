@@ -4,6 +4,8 @@
 #include "RCSP.h"
 #include "FileTrans.h"
 #include "UpgradeServiceConfig.h"
+#include <iostream>
+using namespace std;
 class UpFileAttrs {
 public:
 
@@ -66,6 +68,7 @@ public:
 		fileTransRecord = fileTrans;
 	}
 	void setForceUpgrade(const bool force) {
+		cout << "force upgrade !"<<endl;
 		forceUpgrade = force;
 	}
 	bool clearMemberData();

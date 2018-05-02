@@ -6,10 +6,14 @@
 /*switch type*/
 #define DSP9903 1
 #define DSP9906 0
-#define DSP9908 0
 /*switch type*/
+//enum TERMINAL_DEV_TYPE{
+//	TERMINAL_DEV_DSP9903 = 1,
+//	TERMINAL_DEV_DSP9906 = 2
+//};
 /*type switch setting*/
 #if (DSP9903)
+//static const TERMINAL_DEV_TYPE Terminal_Dev_DSP = TERMINAL_DEV_DSP9903;
 static const INT8 *TerminalDevType = "DSP9903";
 static const INT8 *StringFind = "DSP9903_";
 static const INT8 *INIFILE = "/dsppa/SET_NET/DSP9903_NET_CONF.ini";
@@ -32,6 +36,7 @@ enum DEV_MODULES_TYPE {
 /*Devs type*/
 #endif
 #if (DSP9906)
+//static const TERMINAL_DEV_TYPE Terminal_Dev_DSP = TERMINAL_DEV_DSP9906;
 static const INT8 *TerminalDevType = "DSP9906";
 static const INT8 *StringFind = "DSP9906_";
 static const INT8 *INIFILE = "/dsppa/SET_NET/DSP9906_NET_CONF.ini";
@@ -143,10 +148,11 @@ static const INT32 subNum = 9;
 static const INT8 *WEBREQUEST = "WEBTERMINAL";
 
 /*Force to upgrade*/
-static const INT8 *FORCEUPGRADE = "FORCE";
+static const INT8 *FORCEUPGRADE = "_FORCE";
 
 static const INT8 *UPFILESYSTEM = "Upgrade filesystem!";
 static const INT8 *BeginToUpgrade = "Begin to upgrade !";
+static const INT8 *PRODUCTUPFAILED = "Upgrade failed for some modules!";
 /* upgrade */
 
 #endif /* UPGRADESERVICECONFIG_H */

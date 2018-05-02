@@ -6,7 +6,8 @@ using namespace std;
 
 UpFileAttrs::UpFileAttrs() :
 		fileDownloadPath(), newSoftVersion(), newSoftFileSize(0), upFileMD5code(), webUpMethod(
-				false), inUpgrading(false), fileTransRecord(),forceUpgrade(false){
+				false), inUpgrading(false), fileTransRecord(), forceUpgrade(
+				false) {
 }
 
 UpFileAttrs::~UpFileAttrs() {
@@ -23,22 +24,25 @@ SmartPtr<UpFileAttrs> UpFileAttrs::createFileAttrs() {
 	return upFileAttrs;
 }
 
-UpFileAttrs::UpFileAttrs(const UpFileAttrs & tmpFileAttr){
+UpFileAttrs::UpFileAttrs(const UpFileAttrs & tmpFileAttr) {
 	fileDownloadPath = new char[fileDownloadPathSize];
-	memcpy(fileDownloadPath, tmpFileAttr.fileDownloadPath,strlen(tmpFileAttr.fileDownloadPath));
+	memcpy(fileDownloadPath, tmpFileAttr.fileDownloadPath,
+			strlen(tmpFileAttr.fileDownloadPath));
 	newSoftVersion = new char[newSoftVersionSize];
-	memcpy(newSoftVersion, tmpFileAttr.newSoftVersion,strlen(tmpFileAttr.newSoftVersion));
+	memcpy(newSoftVersion, tmpFileAttr.newSoftVersion,
+			strlen(tmpFileAttr.newSoftVersion));
 	newSoftFileSize = tmpFileAttr.newSoftFileSize;
 	upFileMD5code = new char[upgradeFileMd5Size];
-	memcpy(upFileMD5code, tmpFileAttr.upFileMD5code,strlen(tmpFileAttr.upFileMD5code));
+	memcpy(upFileMD5code, tmpFileAttr.upFileMD5code,
+			strlen(tmpFileAttr.upFileMD5code));
 	webUpMethod = tmpFileAttr.webUpMethod;
 	inUpgrading = tmpFileAttr.inUpgrading;
 	fileTransRecord = tmpFileAttr.fileTransRecord;
 	forceUpgrade = tmpFileAttr.forceUpgrade;
 }
 
-UpFileAttrs &UpFileAttrs::operator=(const UpFileAttrs &fileAttr){
-	if (this != &fileAttr){
+UpFileAttrs &UpFileAttrs::operator=(const UpFileAttrs &fileAttr) {
+	if (this != &fileAttr) {
 		setFileDownloadPath(fileAttr.getFileDownloadPath());
 		setNewSoftVersion(fileAttr.getNewSoftVersion());
 		setNewFileSize(fileAttr.getNewSoftFileSize());
@@ -52,6 +56,7 @@ UpFileAttrs &UpFileAttrs::operator=(const UpFileAttrs &fileAttr){
 }
 
 void UpFileAttrs::setFileDownloadPath(const INT8 *path, INT32 length) {
+	memset(fileDownloadPath, 0, fileDownloadPathSize);
 	memcpy(fileDownloadPath, path, length);
 }
 void UpFileAttrs::setNewSoftVersion(const INT8 *version, INT32 length) {

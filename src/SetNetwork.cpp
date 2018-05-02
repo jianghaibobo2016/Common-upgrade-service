@@ -274,6 +274,8 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 				return false;
 			}
 		} else if (subnet != NULL && gateway != NULL) {
+
+			cout << "111111111ip input : "<<ipaddr<<" netmask input : "<<subnet<<" gateway : "<<gateway<<endl;
 			if (checkNetConfig.checkGateway(ipaddr, subnet, gateway) != true) {
 				Logger::GetInstance().Error(
 						"%s() : Ip netmask gateyway input is incorrect !",
@@ -612,16 +614,19 @@ CheckNetConfig &CheckNetConfig::GetInstance() {
 }
 bool CheckNetConfig::checkIP(const INT8* ipaddr, const INT32 subnetFlag) {
 	const INT8* ptrIP = ipaddr;
+	cout << "ptrIP: "<<ptrIP<<endl;
 	const INT8* dot = ".";
 	INT8** section;
 	section = new INT8 *[4];
-	for (INT32 i = 0; i < 4; i++)
+	for (INT32 i = 0; i < 4; i++){
 		section[i] = new INT8[3];
+		memset(section[i], 0, 3);
+	}
 
 	// INT8*
 	INT32 dotIndex = 0, chIndex = 0, ipLen = strlen(ptrIP);
 	if (NULL == ipaddr) {
-		Logger::GetInstance().Error("None input!");
+		Logger::GetInstance().Error("None input1!");
 		delete[] section;
 		return false;
 	}
@@ -630,7 +635,7 @@ bool CheckNetConfig::checkIP(const INT8* ipaddr, const INT32 subnetFlag) {
 	do {
 
 		if (ptrIP[0] == ' ') {
-			Logger::GetInstance().Error("Error input!");
+			Logger::GetInstance().Error("Error input2!");
 			delete[] section;
 			return false;
 		}
@@ -639,7 +644,7 @@ bool CheckNetConfig::checkIP(const INT8* ipaddr, const INT32 subnetFlag) {
 
 			if (isdigit(ptrIP[0])) {
 				if (dotIndex > 3 || chIndex > 2) {
-					Logger::GetInstance().Error("Error input!");
+					Logger::GetInstance().Error("Error input3!");
 					delete[] section;
 					return false;
 				}
@@ -651,7 +656,7 @@ bool CheckNetConfig::checkIP(const INT8* ipaddr, const INT32 subnetFlag) {
 			} else if (ptrIP[0] == '\0')
 				break;
 			else {
-				Logger::GetInstance().Error("Error input!");
+				Logger::GetInstance().Error("Error input4!");
 				delete[] section;
 				return false;
 			}
@@ -663,7 +668,7 @@ bool CheckNetConfig::checkIP(const INT8* ipaddr, const INT32 subnetFlag) {
 	} while (ipLen > 0);
 
 	if (dotIndex != 3) {
-		Logger::GetInstance().Error("Error input!");
+		Logger::GetInstance().Error("Error input5!");
 		delete[] section;
 		return false;
 	}
@@ -673,14 +678,17 @@ bool CheckNetConfig::checkIP(const INT8* ipaddr, const INT32 subnetFlag) {
 		if (subnetFlag == SUBNETFLAG) {
 			if (atoi(section[dotIndex]) > 255 || atoi(section[dotIndex]) < 0
 					|| strlen(section[dotIndex]) == 0) {
-				Logger::GetInstance().Error("Error input!");
+				Logger::GetInstance().Error("Error input6!");
 				delete[] section;
 				return false;
 			}
 		} else {
+//			section[dotIndex] = '\0';
+			cout << "check 11111: "<<section[dotIndex]<<"xiaoyu0"<<atoi(section[dotIndex])<<"len:"<<strlen(section[dotIndex])<<endl;
+			cout << "check : "<<atoi(section[dotIndex])<<"xiaoyu0"<<atoi(section[dotIndex])<<"len:"<<strlen(section[dotIndex])<<endl;
 			if (atoi(section[dotIndex]) >= 255 || atoi(section[dotIndex]) < 0
 					|| strlen(section[dotIndex]) == 0) {
-				Logger::GetInstance().Error("Error input!");
+				Logger::GetInstance().Error("Error input7!");
 				delete[] section;
 				return false;
 			}
