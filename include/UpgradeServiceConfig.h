@@ -22,7 +22,7 @@ static const INT8 *AmplifierUpgrade = "DSP9903_Amplifier_";
 static const INT8 *PagerUpgrade = "DSP9903_Pager_";
 static const INT8 *MainRootfsUpgrade = "DSP9903_MROOTFS_";
 /*log path setting*/
-static const INT8 *logPath="/nand/log/UpgardeService_9903";
+static const INT8 *logPath="/nand/log/UpgradeService_9903";
 /*log path setting*/
 /*mask.bin setting*/
 static const bool getMask =true;
@@ -52,6 +52,7 @@ static const bool getMask = false;
 /*mask.bin setting*/
 /*Devs type*/
 enum DEV_MODULES_TYPE {
+	DEV_AMPLIFIER = 1,			 //功放板
 	INVALID_TYPE
 };
 /*Devs type*/
@@ -145,7 +146,8 @@ static const INT8 *WebVersionName = "web_version";
 static const INT8 *NandVersionName = "nand_version";
 static const INT32 subNum = 9;
 /*WEB request */
-static const INT8 *WEBREQUEST = "WEBTERMINAL";
+static const INT8 *WEBREQUEST = "WEB";
+static const INT8 *PCREQUEST = "PC";
 
 /*Force to upgrade*/
 static const INT8 *FORCEUPGRADE = "_FORCE";

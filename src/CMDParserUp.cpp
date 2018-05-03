@@ -188,7 +188,9 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 						PCREQUESTGATEWAY) == true) {
 					COPYGATEWAY
 					;
-					cout << "ip input : "<<netConfigTrans.ipT<<" netmask input : "<<netConfigTrans.submaskT<<" gateway : "<<netConfigTrans.gatewayT<<endl;
+					cout << "ip input : " << netConfigTrans.ipT
+							<< " netmask input : " << netConfigTrans.submaskT
+							<< " gateway : " << netConfigTrans.gatewayT << endl;
 					if (setNetworkTerminal->setNetworkConfig(netConfigTrans.ipT,
 							netConfigTrans.submaskT, netConfigTrans.gatewayT,
 							NULL, INIFILE) != true) {
@@ -258,18 +260,18 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 		UpFileAttrs &upFileAttr, INT8 *failReason,
 		map<INT32, DEV_MODULES_TYPE> &devModuleToUpgrade) {
-	INT8 *pcUpgradeCMD = (INT8 *) buffer;
-	pcUpgradeCMD += sizeof(PC_DEV_Header);
+	INT8 *pcRequestBuffer = (INT8 *) buffer;
+	pcRequestBuffer += sizeof(PC_DEV_Header);
 	INT8 hardVersion[8] = { 0 };
 	DevSearchTerminal::getSoftwareVersion("hardware_version", hardVersion,
 			pathVersionFile);
-	if (compareUpgradeItem(pcUpgradeCMD, hardVersion, strlen(hardVersion))
+	if (compareUpgradeItem(pcRequestBuffer, hardVersion, strlen(hardVersion))
 			!= true) {
 
 	}
-	pcUpgradeCMD += hardVersionSize;
+	pcRequestBuffer += hardVersionSize;
 	/* new software version */
-	upFileAttr.setNewSoftVersion(pcUpgradeCMD, 6);
+	upFileAttr.setNewSoftVersion(pcRequestBuffer, 6);
 	INT8 fileDownloadName[fileDownloadPathSize] = { 0 };
 	memcpy(fileDownloadName, upFileDownload, strlen(upFileDownload));
 	strcat(fileDownloadName, upFileAttr.getNewSoftVersion());
@@ -277,24 +279,45 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 	INT8 version[7] = { 0 };
 	DevSearchTerminal::getSoftwareVersion(ProductVersionName, version,
 			pathVersionFile);
-	cout << "recv after version : "<<pcUpgradeCMD + strlen(upFileAttr.getNewSoftVersion())<<endl;
+	cout << "recv after version : "
+			<< pcRequestBuffer + strlen(upFileAttr.getNewSoftVersion()) << endl;
 	/*WEB request to upgrade CMD judgement*/
 	if (compareUpgradeItem(
-			pcUpgradeCMD + strlen(upFileAttr.getNewSoftVersion()), FORCEUPGRADE,
-			strlen(FORCEUPGRADE)) == 0) {
+			pcRequestBuffer + strlen(upFileAttr.getNewSoftVersion()),
+			FORCEUPGRADE, strlen(FORCEUPGRADE)) == 0) {
 //		strcat(fileDownloadName, "_");
 		strcat(fileDownloadName, FORCEUPGRADE);
-		upFileAttr.setFileDownloadPath(fileDownloadName, strlen(fileDownloadName));
-		if (!FileOperation::isExistFile(upFileAttr.getFileDownloadPath())) {
-			strcpy(failReason, UPFILENOTEXIST);
-			return errorVersionStatus;
-		}
-		cout << "force.........................................1 "<<endl;
-		upFileAttr.setWebUpMethod(true);
+		upFileAttr.setFileDownloadPath(fileDownloadName,
+				strlen(fileDownloadName));
+
+		cout << "force.........................................1 " << endl;
+//		upFileAttr.setWebUpMethod(true);
 		upFileAttr.setForceUpgrade(true);
+		if (compareUpgradeItem(
+				pcRequestBuffer + strlen(upFileAttr.getNewSoftVersion())
+						+ strlen(FORCEUPGRADE), PCREQUEST, strlen(PCREQUEST))
+				== 0) {
+			pcRequestBuffer += newSoftVersionSize;
+			INT32 fileSize = 0;
+			memcpy(&fileSize, pcRequestBuffer, sizeof(UINT32));
+			upFileAttr.setNewSoftFileSize(fileSize);
+
+			pcRequestBuffer += sizeof(UINT32);
+			upFileAttr.setFileMD5Code(pcRequestBuffer, upgradeFileMd5Size);
+		} else if (compareUpgradeItem(
+				pcRequestBuffer + strlen(upFileAttr.getNewSoftVersion())
+						+ strlen(FORCEUPGRADE), WEBREQUEST, strlen(WEBREQUEST))
+				== 0) {
+			if (!FileOperation::isExistFile(upFileAttr.getFileDownloadPath())) {
+				strcpy(failReason, UPFILENOTEXIST);
+				return errorVersionStatus;
+			}
+			upFileAttr.setWebUpMethod(true);
+
+		}
 	} else if (compareUpgradeItem(
-			pcUpgradeCMD + strlen(upFileAttr.getNewSoftVersion()), WEBREQUEST,
-			strlen(WEBREQUEST)) == 0) {
+			pcRequestBuffer + strlen(upFileAttr.getNewSoftVersion()),
+			WEBREQUEST, strlen(WEBREQUEST)) == 0) {
 		if (!FileOperation::isExistFile(upFileAttr.getFileDownloadPath())) {
 			strcpy(failReason, UPFILENOTEXIST);
 			return errorVersionStatus;
@@ -302,13 +325,14 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 		upFileAttr.setWebUpMethod(true);
 
 	} else {
-		pcUpgradeCMD += newSoftVersionSize;
+		pcRequestBuffer += newSoftVersionSize;
 		INT32 fileSize = 0;
-		memcpy(&fileSize, pcUpgradeCMD, sizeof(UINT32));
+		memcpy(&fileSize, pcRequestBuffer, sizeof(UINT32));
 		upFileAttr.setNewSoftFileSize(fileSize);
 
-		pcUpgradeCMD += sizeof(UINT32);
-		upFileAttr.setFileMD5Code(pcUpgradeCMD, upgradeFileMd5Size);
+		pcRequestBuffer += sizeof(UINT32);
+		upFileAttr.setFileMD5Code(pcRequestBuffer, upgradeFileMd5Size);
+
 	}
 //check 9903?
 //	map<INT32, DEV_MODULES_TYPE> devModules;
@@ -354,7 +378,7 @@ INT32 CMDParserUp::isDevModulesUpgradeEnable(
 	for (; num <= devModules.size(); num++) {
 		getDevStatus.header.HeadCmd = 0x0004;
 		getDevStatus.dev_type = devModules[num];
-		cout << "sendto servarappp type :: " <<getDevStatus.dev_type<< endl;
+		cout << "sendto servarappp type :: " << getDevStatus.dev_type << endl;
 		HandleUp::localUpHandle<UPDATE_GET_DEVSTATUS>(getDevStatus);
 		INT32 retSend = sendto(netTrans.getSockfd(), &getDevStatus,
 				sizeof(UPDATE_SEND_UPDATEDEV), 0,
@@ -383,7 +407,7 @@ INT32 CMDParserUp::isDevModulesUpgradeEnable(
 		else if (retRecv > 0) {
 			for (INT32 i = 0; i < retRecv; i++)
 				printf("recv : %02x\t", recvBuff[i]);
-			cout << "recv len :: "<<retRecv<<endl;
+			cout << "recv len :: " << retRecv << endl;
 			ARM_REPLAY_GETDEVSTATUS *devStatus =
 					(ARM_REPLAY_GETDEVSTATUS*) recvBuff;
 			if (devStatus->header.HeadCmd != CMD_DEV_ONLINE) {

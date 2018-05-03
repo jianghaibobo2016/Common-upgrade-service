@@ -271,6 +271,7 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 		SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd,
 		UpFileAttrs &upFileAttr, FileTrans &fileTrans,
 		DEV_Request_FileProtocal *request) {
+
 	INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
 	SmartPtr<DEV_Request_UpgradeReply> upgradeReply(
 			new DEV_Request_UpgradeReply);
@@ -326,7 +327,6 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 			Logger::GetInstance().Info("File MD5 check finished !");
 		}
 		cout << "replytext : " << replyText << endl;
-
 
 		if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
 				*upgradeReply.get(), strlen(replyText), replyText, retUpStatus,
@@ -452,9 +452,12 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 			new UpgradeDSP(
 					const_cast<INT8*>(fileAttrs->getFileDownloadPath())));
 
+	cout << "get new version :: 33 " << upDSPProduct->getNewVersion() << endl;
 	if (fileAttrs->getForceStatus() == true)
 		upDSPProduct->setForceUpgrade(true);
 	if (upDSPProduct->parserFileName() == retOk) {
+		cout << "get new version :: 44 " << upDSPProduct->getNewVersion()
+				<< endl;
 		cout << "up 1 !" << endl;
 	} else {
 		memset(sendtoBuffer, 0, SendBufferSizeMax);
@@ -482,8 +485,11 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 	CrcCheck::getDevModules(fileAttrs->getFileDownloadPath(), devModules);
 	cout << "today test !!!!!!!!!!!!!!!!!!!!!!!!!-------- 3 " << devModules[1]
 			<< endl;
+	cout << "get new version :: 22 " << upDSPProduct->getNewVersion() << endl;
 	if (upDSPProduct->parserItemPackage(
 			const_cast<INT8*>(fileAttrs->getNewSoftVersion())) == 0) {
+		cout << "get new version :: 55 " << upDSPProduct->getNewVersion()
+				<< endl;
 		retUpStatus = retOk;
 		upDSPProduct->setUpgraderecord("Upgrading 65%.");
 		cout << "up 2 !" << endl;
@@ -497,7 +503,7 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 				(struct sockaddr *) &sendaddr, tmp_server_addr_len);
 	} else {
 		retUpStatus = retError;
-		upDSPProduct->setUpgraderecord("Upgrade file error !");
+		upDSPProduct->setUpgraderecord("Upgrade file name error !");
 		if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
 				*upgradeReply.get(), strlen(upDSPProduct->getUpgraderecord()),
 				upDSPProduct->getUpgraderecord(), retUpStatus, setNet.get())
@@ -567,6 +573,7 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 	cout << "item num : " << itemsNum << endl;
 	UINT32 percentUp = 65;
 	for (UINT32 i = 1; i <= itemsNum; i++) {
+
 		cout << "up 7 !" << endl;
 		const_cast<UpgradeDSP *>(&subItems->getUpObj())->clearObj();
 		cout << "up 7.5 clear" << endl;
@@ -574,6 +581,8 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 			subItems->setForceUpgrade(true);
 		INT32 retParser = subItems->parserSubItemsFileName(i);
 		if (retParser == retOk) {
+			Logger::GetInstance().Info("Upgrade item : %s",
+					const_cast<UpgradeDSP *>(&subItems->getUpObj())->getMemberItemName());
 			cout << "up 5 !" << endl;
 		} /*else if (retParser == 1)
 		 continue;*/
@@ -614,6 +623,7 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 					cout << "up 7.4" << endl;
 					retUpStatus = retError;
 					sprintf(replyText, "Upgrade file error !");
+					continue;
 				}
 				cout << "up 7.5" << endl;
 			}
@@ -699,6 +709,7 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 		}
 	}	//end of for()
 
+	cout << "get new version :: 11 " << upDSPProduct->getNewVersion() << endl;
 	if (subItems->getEachItemUpResult() == true) {
 		upDSPProduct->setUpResult(true);
 		cout << "all true" << endl;
@@ -845,10 +856,10 @@ INT32 HandleUp::upTerminalDevs(UPDATE_DEV_TYPE type, INT32 &sockfd,
 	}
 	Logger::GetInstance().Info("Will upgrade device type %d !", devUp.dev_type);
 	struct timeval timeout /*= { 300, 0 }*/; //3s
-	if (type == UPDATE_DEV_AMP) {
+	if (type == UPDATE_DEV_AMP_TYPE) {
 		timeout.tv_sec = 60;
 		timeout.tv_usec = 0;
-	} else if (type == UPDATE_DEV_PAGER) {
+	} else if (type == UPDATE_DEV_PAGER_TYPE) {
 		timeout.tv_sec = 60;
 		timeout.tv_usec = 0;
 	}
@@ -874,7 +885,7 @@ INT32 HandleUp::upTerminalDevs(UPDATE_DEV_TYPE type, INT32 &sockfd,
 				ARM_REPLAYUPDATE_UPDATEDEV *upReply =
 						(ARM_REPLAYUPDATE_UPDATEDEV*) recvBuff;
 				cout << "recv ret : " << retRecv << endl;
-				for (INT32 i=0;i<retRecv;i++){
+				for (INT32 i = 0; i < retRecv; i++) {
 					printf("recv result :: %02x\t", recvBuff[i]);
 				}
 				if (upReply->header.HeadCmd == CMD_LOCALDEV_UPGRADE) {

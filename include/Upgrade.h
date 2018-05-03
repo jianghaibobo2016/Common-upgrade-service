@@ -67,8 +67,9 @@ public:
 		memset(upgraderecord, 0, msgLen);
 		memcpy(upgraderecord, record, strlen(record));
 	}
-	void setItemName(INT8 *name) {
-		itemName = name;
+	void setItemName(const INT8 *name) {
+		memset(itemName, 0, 16);
+		memcpy(itemName, name, strlen(name));
 	}
 	void setUpResult(bool result) {
 		upResult = result;
@@ -136,7 +137,7 @@ public:
 	}
 	void setEachItemUpResult(bool result) {
 		if (result == false)
-			cout << "setEachItemUpResult(false)"<<endl;
+			cout << "setEachItemUpResult(false)" << endl;
 		eachItemUpStatus = result;
 	}
 	void setUpSystem(bool upSys) {

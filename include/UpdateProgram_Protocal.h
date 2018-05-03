@@ -21,8 +21,8 @@ enum UPDATE_DEV_COMMAND {
 
 //zuofei config file
 enum UPDATE_DEV_TYPE {
-	UPDATE_DEV_AMP = 1,			 //功放板
-	UPDATE_DEV_PAGER = 2,		 //寻呼器
+	UPDATE_DEV_AMP_TYPE = 1,			 //功放板
+	UPDATE_DEV_PAGER_TYPE = 2,		 //寻呼器
 	ERROR_TYPE
 };
 

@@ -59,6 +59,7 @@ public:
 		memcpy(upFileMD5code, code, strlen(code));
 	}
 	void setWebUpMethod(const bool method) {
+		cout <<"set web up .................."<<endl;
 		webUpMethod = method;
 	}
 	void setInUpgradeStatus(const bool status) {

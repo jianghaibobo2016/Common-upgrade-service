@@ -76,6 +76,7 @@ public:
 		return inUpgrade;
 	}
 	void setInUpgrade(bool status) {
+		cout << "in upgrade 111111111111111111111"<<endl;
 		inUpgrade = status;
 	}
 
