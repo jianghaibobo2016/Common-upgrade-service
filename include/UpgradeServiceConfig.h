@@ -152,7 +152,7 @@ static const INT8 *PCREQUEST = "PC";
 /*Force to upgrade*/
 static const INT8 *FORCEUPGRADE = "_FORCE";
 
-static const INT8 *UPFILESYSTEM = "Upgrade filesystem!";
+static const INT8 *UPFILESYSTEM = "Upgrade system....";
 static const INT8 *BeginToUpgrade = "Begin to upgrade !";
 static const INT8 *PRODUCTUPFAILED = "Upgrade failed for some modules!";
 /* upgrade */

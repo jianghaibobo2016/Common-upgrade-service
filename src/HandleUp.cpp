@@ -169,6 +169,7 @@ INT32 HandleUp::setNetworkHandle(INT8 *recvBuff, INT8 *sendtoBuff,
 				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
 //		}
 	}
+	sleep(2);
 	sysReboot();
 	return retOk;
 }
@@ -534,12 +535,15 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 					<< "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 1.1 "
 					<< endl;
 			executeDevModuleUp(AMPLIFIER, subItems->mSubItems);
-		} else if (devModules[i] == DEV_PAGER) {
+		}
+#if (DSP9903)
+		else if (devModules[i] == DEV_PAGER) {
 			cout
-					<< "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 1.2 "
-					<< endl;
+			<< "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 1.2 "
+			<< endl;
 			executeDevModuleUp(PAGER, subItems->mSubItems);
 		}
+#endif
 	}
 //
 	CMDParserUp::isDevModulesUpgradeEnable(
@@ -725,26 +729,11 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 				if (fileAttrs->getWebUpMethod())
 					memcpy(replyText, UPFILESYSTEM, strlen(UPFILESYSTEM));
 				else
-					sprintf(replyText, "Upgrade system....");
+					sprintf(replyText, UPFILESYSTEM);
 			} else {
 				sprintf(replyText, "Upgrade successed !");
 			}
 		}
-//		upgradeArgs->upFileAttr->clearMemberData();
-//		if (HandleUp::devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
-//				*upgradeReply.get(), strlen(replyText), replyText, retUpStatus,
-//				setNet.get()) == retOk) {
-//		}
-//		sendto(sockfd, (INT8 *) sendtoBuffer,
-//				sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
-//				(struct sockaddr *) &sendaddr, tmp_server_addr_len);
-//		upgradeArgs->handle->setInUpgrade(false);
-//
-//		fileTrans->clearFileTrans();
-//		sync();
-//		sleep(3);
-//		HandleUp::sysReboot();
-//		return NULL;
 	} else {
 		retUpStatus = retError;
 		memset(replyText, 0, msgLen);
@@ -765,7 +754,7 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 	fileTrans->clearFileTrans();
 	sync();
 	sleep(3);
-	HandleUp::sysReboot();
+//	HandleUp::sysReboot();
 
 	return NULL;
 }

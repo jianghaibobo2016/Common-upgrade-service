@@ -96,7 +96,7 @@ INT32 UDPNetTrans::socketSelect() {
 			}/*end case 2*/
 				break;
 			case CMD_DEV_UPGRADE: {
-				for (INT32 i = 0;i<ret_recv;i++){
+				for (INT32 i = 0; i < ret_recv; i++) {
 //					printf("get web up cmd: :\n");
 //					printf("%02x\t", buffer[i]);
 				}
@@ -122,13 +122,13 @@ INT32 UDPNetTrans::socketSelect() {
 			}/*end case 7*/
 				break;
 			case CMD_DEV_GETMASK: {
-				Logger::GetInstance().Info(
-						"Get request of  mask code command from PC : %s !",
-						inet_ntoa(recvAddr.sin_addr));
-				cout
-						<< "=====================dev search end================================"
-						<< endl;
 				if (getMask == true) {
+					Logger::GetInstance().Info(
+							"Get request of  mask code command from PC : %s !",
+							inet_ntoa(recvAddr.sin_addr));
+					cout
+							<< "=====================dev search end================================"
+							<< endl;
 					upHandle->devGetMaskCMDHandle(recvAddr, &netSet, sockfd);
 				}
 			}/*end case 8*/
