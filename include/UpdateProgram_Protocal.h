@@ -8,6 +8,7 @@
 #ifndef PROTOCAL_UPDATEPROGRAM_PROTOCAL_H_
 #define PROTOCAL_UPDATEPROGRAM_PROTOCAL_H_
 
+#include "UpgradeServiceConfig.h"
 #pragma pack(push)
 #pragma pack(1)
 
@@ -19,13 +20,22 @@ enum UPDATE_DEV_COMMAND {
 	CMD_DEV_REPLY_UPGRADE = 5			  //设备升级进度反馈
 };
 
+#if (DSP9903)
 //zuofei config file
 enum UPDATE_DEV_TYPE {
 	UPDATE_DEV_AMP_TYPE = 1,			 //功放板
 	UPDATE_DEV_PAGER_TYPE = 2,		 //寻呼器
 	ERROR_TYPE
 };
+#endif
 
+#if (DSP9906)
+//zuofei config file
+enum UPDATE_DEV_TYPE {
+	UPDATE_DEV_AMP_TYPE = 1,			 //功放板
+	ERROR_TYPE
+};
+#endif
 /************************************1. Package defines***********************/
 //传输包结构:
 //Tag 0x0101FBFC

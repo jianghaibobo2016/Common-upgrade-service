@@ -334,36 +334,8 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 		upFileAttr.setFileMD5Code(pcRequestBuffer, upgradeFileMd5Size);
 
 	}
-//check 9903?
-//	map<INT32, DEV_MODULES_TYPE> devModules;
-//	CrcCheck::getDevModules(upFileAttr.getFileDownloadPath(), devModules);
-
-//	isDevModulesUpgradeEnable(devModuleToUpgrade, devModules, upFileAttr);
-
-	/*	if (devModuleToUpgrade.size() == 0
-	 && upFileAttr.getForceStatus() == false) {
-	 if (strlen(version) != 0) {
-	 INT32 retCompare = compareUpgradeItem(
-	 const_cast<INT8*>(upFileAttr.getNewSoftVersion()), version,
-	 strlen(version));
-	 if (retCompare == retOk) {
-	 strcpy(failReason, NONEEDTOUPGRADE);
-	 return equalVersion;
-	 } else if (retCompare < retOk) {
-	 strcpy(failReason, LOWERVERSION);
-	 return lowerVersion;
-	 } else if (retCompare > retOk) {
-	 strcpy(failReason, BeginToUpgrade);
-	 return higherVerison;
-	 }
-	 } else {
-	 strcpy(failReason, GETVERSIONFAILED);
-	 return errorVersionStatus;
-	 }
-	 } else {*/
 	strcpy(failReason, BeginToUpgrade);
 	return higherVerison;
-//	}
 
 	return errorVersionStatus;
 }

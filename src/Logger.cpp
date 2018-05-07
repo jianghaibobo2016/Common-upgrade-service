@@ -165,7 +165,7 @@ Logger::~Logger()
         {                                                                                 \
             WriterMutexLock lock(&mutex);                                                 \
             PRINT_ARGS_TO_BUFFER(format, _gBuffer)                                        \
-            std::cout << "[" #lv "]" << _gBuffer << endl; \
+            std::cout << "[" << GetCurTime().c_str() << "][" #lv "]" << _gBuffer << endl; \
             logFile << "[" << GetCurTime().c_str() << "][" #lv "]" << _gBuffer << endl;   \
             logFile.flush();                                                              \
         }                                                                                 \

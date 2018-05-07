@@ -131,6 +131,9 @@ INT32 UpgradeDSP::parserFileName() {
 		cout << "not force upgrade !!!!!!!!!!!!!!!" << endl;
 	if ((upStatus = getVersion()) != higherVerison
 			&& getForceStatus() != true) {
+		if (FileOperation::isExistFile(upgradeFile)) {
+			FileOperation::deleteFile(upgradeFile);
+		}
 		cout << __FUNCTION__ << "() upstatus : " << upStatus << endl;
 		return retError;
 	} else
@@ -335,7 +338,9 @@ INT32 UpgradeDSPSubItem::parserSubItemsFileName(UINT32 num) {
 			PagerUpgrade, strlen(PagerUpgrade)) == 0) {
 		cout << "up pager !!!!!!!!!!!!!!!!!!!!!!2" << endl;
 		this->setUpTerminalDevs(true);
+#if (DSP9903)
 		this->setUpDevType(UPDATE_DEV_PAGER_TYPE);
+#endif
 		aUpSubItem->setItemName(PAGER);
 	}
 
@@ -386,6 +391,10 @@ INT32 UpgradeDSPSubItem::upgradeItem(UINT32 num) {
 INT32 UpgradeDSPSubItem::excuteUpgradeShell(UINT32 num, INT8 *PCIP) {
 	FILE *fstream = NULL;
 	char buff[256] = { 0 };
+	UINT32 iPosBuff = 0;
+	char module[3] = { 0 };
+	char upStatus[3] = { 0 };
+	bool upSuccessed = false;
 	string exeCMD = "cd ";
 	exeCMD += upFilePath;
 	exeCMD += " && chmod +x ";
@@ -409,24 +418,38 @@ INT32 UpgradeDSPSubItem::excuteUpgradeShell(UINT32 num, INT8 *PCIP) {
 	while (NULL != fgets(buff, sizeof(buff), fstream)) {
 		printf("buff: %s", buff);
 		//()==0
-		if ((strncmp(buff, SuccessUpShellRespond, strlen(SuccessUpShellRespond))
-				== 0)) {
-			memset(record, 0, msgLen);
-			sprintf(record, "Upgrade item : %s successed !",
-					aUpSubItem->getMemberItemName());
-			aUpSubItem->setUpResult(true);
-		} else if ((strncmp(buff, FailUpShellRespond,
-				strlen(FailUpShellRespond)) == 0)) {
-			memset(record, 0, msgLen);
-			sprintf(record, "Upgrade item : %s failed !",
-					aUpSubItem->getMemberItemName());
-			aUpSubItem->setUpgraderecord(record);
-			aUpSubItem->setUpResult(false);
-			pclose(fstream);
-			return retError;
-		}
-		memset(buff, 0, 256);
+		if ((strncmp(buff, UpShellRespondTag_1, 2)) == 0) {
+			iPosBuff += 2;
+			memcpy(module, &buff[iPosBuff], 2);
+			iPosBuff += 2;
+			if ((strncmp(&buff[iPosBuff], UpShellRespondTag_3_Success, 2))
+					== 0) {
+				cout << "trueeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee00000 "
+						<< buff[iPosBuff] << endl;
+				upSuccessed = true;
+			} else {
+				memcpy(upStatus, &buff[iPosBuff], 2);
+				upSuccessed = false;
+			}
+			iPosBuff = 0;
+		} else
+			continue;
 	}
+	if (upSuccessed == true) {
+		memset(record, 0, msgLen);
+		sprintf(record, "Upgrade item : %s--%s successed !", module,
+				aUpSubItem->getMemberItemName());
+		aUpSubItem->setUpResult(true);
+	} else if (upSuccessed == false) {
+		memset(record, 0, msgLen);
+		sprintf(record, "Upgrade item : %s--%s failed for %s !", module,
+				aUpSubItem->getMemberItemName(), upStatus);
+		aUpSubItem->setUpgraderecord(record);
+		aUpSubItem->setUpResult(false);
+		pclose(fstream);
+		return retError;
+	}
+	memset(buff, 0, 256);
 	pclose(fstream);
 	FileOperation::deleteFile(UpgradeShellWithPath);
 	return retOk;

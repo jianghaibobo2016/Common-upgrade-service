@@ -96,10 +96,10 @@ INT32 UDPNetTrans::socketSelect() {
 			}/*end case 2*/
 				break;
 			case CMD_DEV_UPGRADE: {
-				for (INT32 i = 0; i < ret_recv; i++) {
+//				for (INT32 i = 0; i < ret_recv; i++) {
 //					printf("get web up cmd: :\n");
 //					printf("%02x\t", buffer[i]);
-				}
+//				}
 				upHandle->devUpgradePCRequestCMDHandle(recvAddr, buffer,
 						&netSet, sockfd, *upFileAttrs.get(), fileTrans,
 						request.get());

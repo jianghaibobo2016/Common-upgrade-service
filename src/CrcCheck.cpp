@@ -65,6 +65,10 @@ INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 		cout << "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 34 "
 				<< endl;
 	} else if (strncmp(pack_head->m_version + strlen(TerminalDevType) + 1,
+			UpgradeItemName, strlen(UpgradeItemName)) == 0){
+
+	}
+	else if (strncmp(pack_head->m_version + strlen(TerminalDevType) + 1,
 			ProductItemName, strlen(ProductItemName)) == 0) {
 		cout << "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 35 "
 				<< endl;

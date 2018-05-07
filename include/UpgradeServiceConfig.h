@@ -4,8 +4,8 @@
 #include "GlobDefine.h"
 // UpgradeServiceConfig.h
 /*switch type*/
-#define DSP9903 1
-#define DSP9906 0
+#define DSP9903 0
+#define DSP9906 1
 /*switch type*/
 //enum TERMINAL_DEV_TYPE{
 //	TERMINAL_DEV_DSP9903 = 1,
@@ -97,6 +97,7 @@ static const std::string pathXml = "/nand/ServerAPP/video_conf.xml";
 static const INT8 *pathVersionFile = "/dsppa/HSversion";
 static const INT8 *DependItemVersionName = "upgrade_version";
 static const INT8 *ProductItemName = "PRODUCT";
+static const INT8 *UpgradeItemName = "UPGRADE";
 static const INT8 *upFilePath = "/nand/Update_File/";
 
 static const INT8* newTarPackage = "/nand/Update_File/upgradefiletar.tar";
@@ -133,6 +134,8 @@ static const INT8 *upSysRespond = "Upgrade system successed !";
 static const INT8 *UpgradeShell = "upgrade.sh";
 static const INT8 *UpgradeShellWithPath = "/nand/Update_File/upgrade.sh";
 static const INT8 *SuccessUpShellRespond = "Upgrade successfully this time !";
+static const INT8 *UpShellRespondTag_1 = "0F";
+static const INT8 *UpShellRespondTag_3_Success = "00";
 static const INT8 *FailUpShellRespond = "Fail to upgrade this time !";
 static const INT8 *ProductVersionName = "product_version";
 static const INT8 *UbootVersionName = "uboot_version";

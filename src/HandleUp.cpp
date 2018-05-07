@@ -788,6 +788,9 @@ INT32 HandleUp::upgradePCrequestHandle(INT8 * recvBuff, INT8 * sendtoBuff,
 	} else if (retUpStatus == lowerVersion) {
 		status = retError;
 	} else if (retUpStatus == equalVersion) {
+		if (FileOperation::isExistFile (upFileAttr.getFileDownloadPath())) {
+			FileOperation::deleteFile(upFileAttr.getFileDownloadPath());
+		}
 		status = retError;
 	} else if (retUpStatus == errorVersionStatus) {
 		status = retError;
@@ -848,10 +851,13 @@ INT32 HandleUp::upTerminalDevs(UPDATE_DEV_TYPE type, INT32 &sockfd,
 	if (type == UPDATE_DEV_AMP_TYPE) {
 		timeout.tv_sec = 60;
 		timeout.tv_usec = 0;
-	} else if (type == UPDATE_DEV_PAGER_TYPE) {
+	}
+#if (DSP9903)
+	else if (type == UPDATE_DEV_PAGER_TYPE) {
 		timeout.tv_sec = 60;
 		timeout.tv_usec = 0;
 	}
+#endif
 	SmartPtr<DEV_Request_UpgradeReply> upgradeReply(
 			new DEV_Request_UpgradeReply);
 	upgradeReply->header.HeadCmd = CMD_DEV_UPGRADE_REPLY;
