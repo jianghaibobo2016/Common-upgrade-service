@@ -1,3 +1,9 @@
+/*
+ * CrcCheck.cpp
+ *
+ *  Created on: 2018年4月16日
+ *      Author: JHB
+ */
 #include <string.h>
 #include <iostream>
 #include <stdio.h>
@@ -15,8 +21,6 @@ CrcCheck::CrcCheck() {
 
 INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 		INT8 *itemName, INT8 *dependVersion) {
-	cout << "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 2 "
-			<< endl;
 	if (filename == NULL) {
 		return retError;
 	}
@@ -36,8 +40,6 @@ INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 		printf("ERROR : Can not open file : %s !\n", filename);
 		return retError;
 	}
-	cout << "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 31 "
-			<< endl;
 	n_read = fread(buff, 1, packhead_len, src_fd);
 	memcpy(pack_head.get(), buff, packhead_len);
 	if ((strncmp(pack_head->head, HEAD, 8)) != 0) {
@@ -46,12 +48,8 @@ INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 		return retError;
 	} else
 		;
-	cout << "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 32  "
-			<< strlen(pack_head->dependVersion) << endl;
 	/*Judge the depend version*/
 	if (strlen(pack_head->dependVersion) != 0) {
-		cout << "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 33  "
-				<< strlen(pack_head->dependVersion) << endl;
 		INT8 depLocalVer[7] = { 0 };
 		UpgradeDSP::getVersionByItemName(itemName, depLocalVer);
 		if (strncmp(pack_head->dependVersion, depLocalVer, strlen(depLocalVer))
@@ -62,36 +60,25 @@ INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 					__FUNCTION__, itemName, pack_head->dependVersion);
 			return retError;
 		}
-		cout << "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 34 "
-				<< endl;
 	} else if (strncmp(pack_head->m_version + strlen(TerminalDevType) + 1,
-			UpgradeItemName, strlen(UpgradeItemName)) == 0){
+			UpgradeItemName, strlen(UpgradeItemName)) == 0) {
 
-	}
-	else if (strncmp(pack_head->m_version + strlen(TerminalDevType) + 1,
+	} else if (strncmp(pack_head->m_version + strlen(TerminalDevType) + 1,
 			ProductItemName, strlen(ProductItemName)) == 0) {
-		cout << "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 35 "
-				<< endl;
 		fclose(src_fd);
 		Logger::GetInstance().Fatal(
 				"%s(): Upgrade item %s need a depend version !", __FUNCTION__,
 				itemName);
 		return retError;
 	}
-	cout << "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 36 "
-			<< endl;
 	/*Judge the depend version*/
 	INT8 tmpVersion[32] = { 0 };
 	if (newVersion != NULL) {
-		cout << "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 37 "
-				<< endl;
 		memcpy(tmpVersion, pack_head->m_version, strlen(pack_head->m_version));
 		memcpy(newVersion,
 				tmpVersion + strlen(TerminalDevType) + 2 + strlen(itemName), 6);
 	}
 	FILE *dst_fd = fopen(newTarPackage, "wb+");
-	cout << "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 38 "
-			<< endl;
 	while (1) {
 		bzero(buff, BUFFER_SIZE);
 		n_read = fread(buff, 1, BUFFER_SIZE, src_fd);
@@ -155,7 +142,6 @@ INT32 CrcCheck::getDevModules(const INT8* filename,
 		return retError;
 	} else
 		fclose(src_fd);
-	cout << "today test !!!!!!!!!!!!!!!!!!!!!!!!!-------- 4 " << endl;
 	INT32 nums = 0;
 	for (; nums < TerminalDevsMaxNum; nums++) {
 		if (strlen(pack_head->TerminalDevs[nums]) != 0) {
@@ -164,22 +150,19 @@ INT32 CrcCheck::getDevModules(const INT8* filename,
 			INT32 retCMP = strncmp(pack_head->TerminalDevs[nums], AMPLIFIER,
 					strlen(AMPLIFIER));
 			if (retCMP == 0) {
-				cout << "today test !!!!!!!!!!!!!!!!!!!!!!!!!-------- 5 "
-						<< endl;
 
 				devModules[nums + 1] = DEV_AMPLIFIER;
 			}
 #if (DSP9903)
-			else if (strncmp(pack_head->TerminalDevs[nums], PAGER, strlen(PAGER)) == 0)
-			devModules[nums + 1] = DEV_PAGER;
+			else if (strncmp(pack_head->TerminalDevs[nums], PAGER,
+					strlen(PAGER)) == 0)
+				devModules[nums + 1] = DEV_PAGER;
 #endif
 			else
 				devModules[nums + 1] = INVALID_TYPE;
 		} else
 			break;
 	}
-	cout << "today test !!!!!!!!!!!!!!!!!!!!!!!!!-------- 6 " << devModules[1]
-			<< endl;
 	return retOk;
 }
 

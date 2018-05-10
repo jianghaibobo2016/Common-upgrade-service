@@ -1,3 +1,9 @@
+/*
+ * DevSearch.h
+ *
+ *  Created on: 2018年4月16日
+ *      Author: JHB
+ */
 #ifndef DEVSEARCH_H
 #define DEVSEARCH_H
 
@@ -7,50 +13,55 @@
 #include "UpgradeServiceConfig.h"
 #include "Mutex.h"
 
-
-class DevSearch
-{
+class DevSearch {
 public:
-    DevSearch(){}
-    virtual ~DevSearch(){}
-    virtual DEV_Reply_GetDevMsg *getDevMsg(const string &pathXML, const INT8 *pathVersionFile) = 0;
+	DevSearch() {
+	}
+	virtual ~DevSearch() {
+	}
+	virtual DEV_Reply_GetDevMsg *getDevMsg(const string &pathXML,
+			const INT8 *pathVersionFile) = 0;
 };
 
-class DevSearchTerminal : public DevSearch
-{
+class DevSearchTerminal: public DevSearch {
 	static Mutex mutex;
 public:
-    DevSearchTerminal(SetNetworkTerminal *setNetworkTerminal);
-    virtual ~DevSearchTerminal();
+	DevSearchTerminal(SetNetworkTerminal *setNetworkTerminal);
+	virtual ~DevSearchTerminal();
 
-    DEV_Reply_GetDevMsg *getDevMsg(const string &pathXML, const INT8 *pathVersionFile);
-    static bool getSoftwareVersion(const INT8* item, INT8* version, const INT8* pathVersionFile);
+	DEV_Reply_GetDevMsg *getDevMsg(const string &pathXML,
+			const INT8 *pathVersionFile);
+	static bool getSoftwareVersion(const INT8* item, INT8* version,
+			const INT8* pathVersionFile);
 
-    DEV_Reply_GetDevMsg *devReplyMsg;
-    //modify to private !
-    SetNetworkTerminal *setNetworkTerminal;
+	DEV_Reply_GetDevMsg *devReplyMsg;
+	//modify to private !
+	SetNetworkTerminal *setNetworkTerminal;
 private:
 
 };
 
-
-class XMLParser
-{
+class XMLParser {
 public:
-    XMLParser(const string &path);
-    ~XMLParser(){}
+	XMLParser(const string &path);
+	~XMLParser() {
+	}
 
-    const string path;
+	const string path;
 
-    bool xmlInit();
-    const string getString(const char *section, const char *strKey, const string &strDefualtValue);
-    const int getInt(const char* section, const char* strKey, const int defualtvalue);
-    const unsigned short getUShort(const char* section, const char* strKey, const unsigned short defualtvalue);
-    void updateServerNetConfig(const char *section, const char *strKey, const char *fmt, ...);
+	bool xmlInit();
+	const string getString(const char *section, const char *strKey,
+			const string &strDefualtValue);
+	const int getInt(const char* section, const char* strKey,
+			const int defualtvalue);
+	const unsigned short getUShort(const char* section, const char* strKey,
+			const unsigned short defualtvalue);
+	void updateServerNetConfig(const char *section, const char *strKey,
+			const char *fmt, ...);
 
-  private:
-    string _strcurpath;
-    XMLNode _top;
-    bool _bChanged;
+private:
+	string _strcurpath;
+	XMLNode _top;
+	bool _bChanged;
 };
 #endif /* DEVSEARCH_H */

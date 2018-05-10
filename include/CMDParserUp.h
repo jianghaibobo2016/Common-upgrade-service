@@ -1,10 +1,18 @@
+/*
+ * CMDParser.h
+ *
+ *  Created on: 2018年4月16日
+ *      Author: JHB
+ */
 #ifndef CMDPARSERUP_H
 #define CMDPARSERUP_H
+
 #include <SetNetworkWithServer.h>
 #include "GlobDefine.h"
 #include "PCTransProtocal.h"
 #include "Upgrade.h"
 #include "UpFileAttrs.h"
+
 class CMDParserUp {
 public:
 	CMDParserUp();
@@ -30,14 +38,12 @@ private:
 
 	INT32 settingNum;
 
-
 	static bool campareNetSetMatch(INT8 *nameLen, INT8 *name,
 			const INT8 *reName);
 	static inline INT32 compareUpgradeItem(INT8 *ptr, const INT8 *item,
 			INT32 len) {
 		return strncmp(ptr, item, strlen(item));
 	}
-
 	static INT32 writeMaskFile(vector<UINT16> date);
 
 };

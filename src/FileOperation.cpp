@@ -1,8 +1,8 @@
 /*
  * FileOperation.cpp
  *
- *  Created on: Mar 25, 2018
- *      Author: jhb
+ *  Created on: 2018年4月16日
+ *      Author: JHB
  */
 
 #include "FileOperation.h"
@@ -14,24 +14,11 @@
 #include <dirent.h>  // delete dir rmdir
 #include <errno.h>
 
-// #include <io.h>
-//
 FileOperation::FileOperation() {
-	// 给m_strPath赋初值
-	// string path = _pgmptr; // exe文件所在目录，带*.exe
-	// m_strPath = path.substr(0, path.find_last_of('\\') + 1);
-	// m_strPath += dir;
-
-	// if (!IsExisteDirectory(m_strPath))
-	// {
-	//     string str = "md \"" + m_strPath + "\"";
-	//     system(str.c_str());
-	// }
 }
 
 FileOperation::~FileOperation(void) {
 }
-
 //#include <sys/types.h>
 //#include <sys/stat.h>
 //int mkdir(const char *pathname, mode_t mode);
@@ -60,14 +47,6 @@ FileOperation::~FileOperation(void) {
 //S_IXOTH
 //00001权限，代表其他用户拥有执行的权限
 bool FileOperation::createFile(string filename) {
-	// string path = m_strPath + '\\' + filename;
-	// fstream file;
-	// file.open(path, ios::out);
-	// if (!file)
-	// {
-	//     return false;
-	// }
-	// file.close();
 
 	return true;
 }
@@ -88,14 +67,6 @@ bool FileOperation::deleteFile(string fileName) {
 }
 
 bool FileOperation::alterFileName(string filename, string newname) {
-	// string path = m_strPath + '\\' + filename;
-	// newname = m_strPath + '\\' + newname;
-	// // int rename(char *oldname, char *newname);
-	// // 更改文件名,成功返回0，否则返回-1
-	// if (-1 == rename(path.c_str(), newname.c_str()))
-	// {
-	//     return false;
-	// }
 
 	return true;
 }

@@ -1,3 +1,9 @@
+/*
+ * NetConfigTransWithServer.h
+ *
+ *  Created on: Mar 30, 2018
+ *      Author: jhb
+ */
 #ifndef SETNETWORK_H
 #define SETNETWORK_H
 #include "SetNetwork.h"

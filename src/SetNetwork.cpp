@@ -247,10 +247,14 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 					__FUNCTION__);
 			return false;
 		}
-		cout << "mac::get net config :::::"<<this->m_netWorkConfig.macAddr<<endl;
 	}
 	IniConfigFile iniConfFile;
 	/*  */
+
+	Logger::GetInstance().Error(
+			"Get net setting request:\nIP:\t%s\nNETMASK:\t%s\nGATEWAY:\t%s\nMAC:\t%s\n",
+			ipaddr, subnet, gateway, macaddr);
+	sync();
 	if (macaddr == NULL) {
 		if (subnet == NULL) {
 			if (checkNetConfig.checkIP(ipaddr, 0) != true) {
@@ -275,7 +279,6 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 			}
 		} else if (subnet != NULL && gateway != NULL) {
 
-			cout << "111111111ip input : "<<ipaddr<<" netmask input : "<<subnet<<" gateway : "<<gateway<<endl;
 			if (checkNetConfig.checkGateway(ipaddr, subnet, gateway) != true) {
 				Logger::GetInstance().Error(
 						"%s() : Ip netmask gateyway input is incorrect !",
@@ -304,8 +307,8 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 			return false;
 	} else {
 		if (strlen(macaddr) != 12) {
-			Logger::GetInstance().Error(
-					"%s() :Mac input is incorrect !", __FUNCTION__);
+			Logger::GetInstance().Error("%s() :Mac input is incorrect !",
+					__FUNCTION__);
 		}
 		//modify macCheck::20aabbcc..--->> 20:aa:bb:cc...
 		INT8 macCheck[18] = { 0 };
@@ -614,11 +617,11 @@ CheckNetConfig &CheckNetConfig::GetInstance() {
 }
 bool CheckNetConfig::checkIP(const INT8* ipaddr, const INT32 subnetFlag) {
 	const INT8* ptrIP = ipaddr;
-	cout << "ptrIP: "<<ptrIP<<endl;
+	cout << "ptrIP: " << ptrIP << endl;
 	const INT8* dot = ".";
 	INT8** section;
 	section = new INT8 *[4];
-	for (INT32 i = 0; i < 4; i++){
+	for (INT32 i = 0; i < 4; i++) {
 		section[i] = new INT8[3];
 		memset(section[i], 0, 3);
 	}
@@ -684,8 +687,12 @@ bool CheckNetConfig::checkIP(const INT8* ipaddr, const INT32 subnetFlag) {
 			}
 		} else {
 //			section[dotIndex] = '\0';
-			cout << "check 11111: "<<section[dotIndex]<<"xiaoyu0"<<atoi(section[dotIndex])<<"len:"<<strlen(section[dotIndex])<<endl;
-			cout << "check : "<<atoi(section[dotIndex])<<"xiaoyu0"<<atoi(section[dotIndex])<<"len:"<<strlen(section[dotIndex])<<endl;
+			cout << "check 11111: " << section[dotIndex] << "xiaoyu0"
+					<< atoi(section[dotIndex]) << "len:"
+					<< strlen(section[dotIndex]) << endl;
+			cout << "check : " << atoi(section[dotIndex]) << "xiaoyu0"
+					<< atoi(section[dotIndex]) << "len:"
+					<< strlen(section[dotIndex]) << endl;
 			if (atoi(section[dotIndex]) >= 255 || atoi(section[dotIndex]) < 0
 					|| strlen(section[dotIndex]) == 0) {
 				Logger::GetInstance().Error("Error input7!");

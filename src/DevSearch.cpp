@@ -55,7 +55,6 @@ DEV_Reply_GetDevMsg *DevSearchTerminal::getDevMsg(const string &pathXML,
 		const INT8 *pathVersionFile) {
 	if (setNetworkTerminal->getNetworkConfig() != true) {
 		Logger::GetInstance().Error("Get network config failed !");
-
 		return NULL;
 	}
 	INT8 mac[13] = { 0 };

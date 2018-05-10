@@ -1,3 +1,9 @@
+/*
+ * HandleUp.cpp
+ *
+ *  Created on: Mar 23, 2018
+ *      Author: jhb
+ */
 #include "HandleUp.h"
 #include "UpgradeServiceConfig.h"
 #include "CMDParserUp.h"
@@ -161,13 +167,9 @@ INT32 HandleUp::setNetworkHandle(INT8 *recvBuff, INT8 *sendtoBuff,
 			memcpy(sendtoBuff + sizeof(DEV_Reply_ParameterSetting), failReason,
 					reasonLen);
 		}
-//		if (devReplyHandle<DEV_Reply_ParameterSetting>(sendtoBuff,
-//				devReplySetPara, reasonLen, failReason, retSetNet,
-//				setNetworkTerminal) == retOk) {
 		sendto(sockfd, sendtoBuff,
 				sizeof(PC_DEV_Header) + devReplySetPara.header.DataLen, 0,
 				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
-//		}
 	}
 	sleep(2);
 	sysReboot();
@@ -282,7 +284,6 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 	INT32 retWrite = writeFileFromPC<PC_Reply_FileProtocal>(recvBuff,
 			upFileAttr.getFileDownloadPath());
 	if (retWrite == retError) {
-		////////////reason
 		setInUpgrade(false);
 		return;
 	}
@@ -421,9 +422,12 @@ void HandleUp::devGetVersionCMDHandle(INT32 &sockfd, sockaddr_in recvAddr) {
 	devVersion->header.DataLen = sizeof(devVersion->version);
 	DevSearchTerminal::getSoftwareVersion("product_version",
 			devVersion->version, pathVersionFile);
+	cout << "Get Software version : " << devVersion->version << endl;
 	INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
-	sendto(sockfd, (INT8 *) devVersion.get(), sizeof(DEV_VersionNum), 0,
-			(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+	INT32 retSend = sendto(sockfd, (INT8 *) devVersion.get(),
+			sizeof(DEV_VersionNum), 0, (struct sockaddr *) &recvAddr,
+			tmp_server_addr_len);
+	cout << "version send to " << retSend << endl;
 }
 
 void *HandleUp::UpgradeThreadFun(void *args) {
@@ -446,8 +450,6 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 	INT8 sendtoBuffer[SendBufferSizeMax] = { 0 };
 	INT32 retUpStatus = retOk;
 
-//	if (fileAttrs->getForceStatus() == true)
-//		subItems->setForceUpgrade(true);
 	upgradeReply->header.HeadCmd = 0x0005;
 	SmartPtr<UpgradeDSP> upDSPProduct(
 			new UpgradeDSP(
@@ -482,15 +484,9 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 	memset(sendtoBuffer, 0, SendBufferSizeMax);
 	//get map devs from file head
 	map<INT32, DEV_MODULES_TYPE> devModules;
-	cout << "today test !!!!!!!!!!!!!!!!!!!!!!!!!-------- 2 " << endl;
 	CrcCheck::getDevModules(fileAttrs->getFileDownloadPath(), devModules);
-	cout << "today test !!!!!!!!!!!!!!!!!!!!!!!!!-------- 3 " << devModules[1]
-			<< endl;
-	cout << "get new version :: 22 " << upDSPProduct->getNewVersion() << endl;
 	if (upDSPProduct->parserItemPackage(
 			const_cast<INT8*>(fileAttrs->getNewSoftVersion())) == 0) {
-		cout << "get new version :: 55 " << upDSPProduct->getNewVersion()
-				<< endl;
 		retUpStatus = retOk;
 		upDSPProduct->setUpgraderecord("Upgrading 65%.");
 		cout << "up 2 !" << endl;
@@ -523,24 +519,16 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 	//adjust order
 	//dev module check
 //	map<INT32, string> mExtract;
-	cout << "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 1 "
-			<< endl;
 	if (FileOperation::extractTarFile(newTarPackage, subItems->mSubItems)
 			== true) {
 	}
 
 	for (UINT32 i = 1; i <= devModules.size(); i++) {
 		if (devModules[i] == DEV_AMPLIFIER) {
-			cout
-					<< "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 1.1 "
-					<< endl;
 			executeDevModuleUp(AMPLIFIER, subItems->mSubItems);
 		}
 #if (DSP9903)
 		else if (devModules[i] == DEV_PAGER) {
-			cout
-			<< "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 1.2 "
-			<< endl;
 			executeDevModuleUp(PAGER, subItems->mSubItems);
 		}
 #endif
@@ -673,8 +661,6 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 						(struct sockaddr *) &sendaddr, tmp_server_addr_len);
 				cout << "retsendot ::::" << retsendto << endl;
 				if (retUpStatus == retError) {
-//					upgradeArgs->handle->setInUpgrade(false);
-//					break;
 					continue;
 				}
 				cout << "ok" << endl;
@@ -707,8 +693,6 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 			sendto(sockfd, (INT8 *) sendtoBuffer,
 					sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
 					(struct sockaddr *) &sendaddr, tmp_server_addr_len);
-//			upgradeArgs->handle->setInUpgrade(false);
-//			break;
 			continue;
 		}
 	}	//end of for()
@@ -754,7 +738,7 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 	fileTrans->clearFileTrans();
 	sync();
 	sleep(3);
-//	HandleUp::sysReboot();
+	HandleUp::sysReboot();
 
 	return NULL;
 }
@@ -788,7 +772,7 @@ INT32 HandleUp::upgradePCrequestHandle(INT8 * recvBuff, INT8 * sendtoBuff,
 	} else if (retUpStatus == lowerVersion) {
 		status = retError;
 	} else if (retUpStatus == equalVersion) {
-		if (FileOperation::isExistFile (upFileAttr.getFileDownloadPath())) {
+		if (FileOperation::isExistFile(upFileAttr.getFileDownloadPath())) {
 			FileOperation::deleteFile(upFileAttr.getFileDownloadPath());
 		}
 		status = retError;
@@ -929,10 +913,7 @@ INT32 HandleUp::upTerminalDevs(UPDATE_DEV_TYPE type, INT32 &sockfd,
 
 INT32 HandleUp::executeDevModuleUp(const INT8 *module,
 		map<INT32, string> &mExtract) {
-	cout << "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 1 "
-			<< endl;
 	INT8 devModuleFilePath[fileDownloadPathSize] = { 0 };
-	cout << "sizeiiiiiiiiiiiiiiiiii::::" << mExtract.size() << endl;
 	for (UINT32 j = 1; j <= mExtract.size(); j++) {
 		memset(devModuleFilePath, 0, fileDownloadPathSize);
 		cout << "mextractjjjjjj:::" << mExtract[j] << endl;
@@ -946,9 +927,6 @@ INT32 HandleUp::executeDevModuleUp(const INT8 *module,
 			NULL,
 			NULL);
 			if (retParser != retOk) {
-				cout
-						<< "today test seg  fault !!!!!!!!!!!!!!!!!!!!!!!!!-------- 5 "
-						<< endl;
 			}
 			map<INT32, string> m_subItem;
 			if (FileOperation::extractTarFile(newTarPackage, m_subItem)
@@ -984,6 +962,7 @@ INT32 HandleUp::upMainRootfsRespond(INT32 m_socket, SetNetworkTerminal &net) {
 	INT32 retSend = sendto(m_socket, sendtoBuff,
 			sizeof(PC_DEV_Header) + devReply->header.DataLen, 0,
 			(struct sockaddr*) &addr, addrlen);
+	cout << "sendto pc upgrade system success ...num : " << retSend << endl;
 	return retSend;
 }
 

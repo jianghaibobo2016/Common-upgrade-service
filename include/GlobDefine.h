@@ -1,4 +1,9 @@
-
+/*
+ * GlobDefine.h
+ *
+ *  Created on: Mar 23, 2018
+ *      Author: jhb
+ */
 #ifndef _GLOBDEFINE_H
 #define _GLOBDEFINE_H
 

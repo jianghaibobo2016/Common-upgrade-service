@@ -1,3 +1,9 @@
+/*
+ * HandleUp.h
+ *
+ *  Created on: Mar 23, 2018
+ *      Author: jhb
+ */
 #ifndef HANDLEUP_H
 #define HANDLEUP_H
 #include "DevSearch.h"
@@ -76,7 +82,6 @@ public:
 		return inUpgrade;
 	}
 	void setInUpgrade(bool status) {
-		cout << "in upgrade 111111111111111111111"<<endl;
 		inUpgrade = status;
 	}
 

@@ -1,3 +1,9 @@
+/*
+ * CMDParser.cpp
+ *
+ *  Created on: 2018年4月16日
+ *      Author: JHB
+ */
 #include "CMDParserUp.h"
 #include "UpgradeServiceConfig.h"
 #include "GlobalProfile.h"
@@ -47,7 +53,6 @@ CMDParserUp::~CMDParserUp() {
 UINT16 CMDParserUp::parserPCRequestHead(void *buffer, INT32 recvLen) {
 	PC_DEV_Header *pcHead = (PC_DEV_Header *) buffer;
 
-//	Logger::GetInstance().Info("Recv CMD %d with tag %X from PC !", pcHead->HeadCmd, pcHead->HeadTag);
 	printf("Recv CMD %d with tag %X from PC !\n", pcHead->HeadCmd,
 			pcHead->HeadTag);
 	if (pcHead->HeadTag != PROTOCAL_PC_DEV_HEAD) {
@@ -84,7 +89,6 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 		UINT16 port = 0;
 		GlobalProfile setServerConf;
 		switch (parameterNum) {
-		/* 03 495000 0E 3137322E31362E31302E31333300 */
 		case 0x01:
 			if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
 					PCREQUESTMAC) == true) {
@@ -188,9 +192,6 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 						PCREQUESTGATEWAY) == true) {
 					COPYGATEWAY
 					;
-					cout << "ip input : " << netConfigTrans.ipT
-							<< " netmask input : " << netConfigTrans.submaskT
-							<< " gateway : " << netConfigTrans.gatewayT << endl;
 					if (setNetworkTerminal->setNetworkConfig(netConfigTrans.ipT,
 							netConfigTrans.submaskT, netConfigTrans.gatewayT,
 							NULL, INIFILE) != true) {
@@ -210,29 +211,7 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 					return retError;
 				}
 				//useless
-			} /*else if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
-			 PCREQUESTSERVERIP) == true) {
-			 COPYSERVERIP
-			 ;
-			 OFFSETPTR
-			 ;
-			 if (campareNetSetMatch(&pcSettingNet[0], pcSettingNet + 1,
-			 PCREQUESTSERVERPORT) == true) {
-			 COPYSERVERPORT
-			 ;
-			 if (setNetworkTerminal->setNetworkConfig(netConfigTrans.ipT,
-			 NULL, NULL, NULL, INIFILE) != true) {
-			 strcpy(&failReason, "Set IP failed !");
-			 return retError;
-			 }
-			 sscanf(netConfigTrans.serverPortT, "%hu", &port);
-			 setServerConf.SetTCPCommServerIP(netConfigTrans.serverIPT,
-			 port);
-			 } else {
-			 strcpy(&failReason, "Match setting failed !");
-			 return retError;
-			 }
-			 }*/else {
+			} else {
 				retContent[PCREQUESTIP] = "Match setting failed !";
 				retContent[PCREQUESTSUBMASK] = "Match setting failed !";
 				retContent[PCREQUESTGATEWAY] = "Match setting failed !";
@@ -240,7 +219,6 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 			}
 			break;
 		default:
-//			strcpy(&failReason, "Number of settings error !");
 			return retError;
 			break;
 		}
@@ -279,19 +257,14 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 	INT8 version[7] = { 0 };
 	DevSearchTerminal::getSoftwareVersion(ProductVersionName, version,
 			pathVersionFile);
-	cout << "recv after version : "
-			<< pcRequestBuffer + strlen(upFileAttr.getNewSoftVersion()) << endl;
 	/*WEB request to upgrade CMD judgement*/
 	if (compareUpgradeItem(
 			pcRequestBuffer + strlen(upFileAttr.getNewSoftVersion()),
 			FORCEUPGRADE, strlen(FORCEUPGRADE)) == 0) {
-//		strcat(fileDownloadName, "_");
 		strcat(fileDownloadName, FORCEUPGRADE);
 		upFileAttr.setFileDownloadPath(fileDownloadName,
 				strlen(fileDownloadName));
 
-		cout << "force.........................................1 " << endl;
-//		upFileAttr.setWebUpMethod(true);
 		upFileAttr.setForceUpgrade(true);
 		if (compareUpgradeItem(
 				pcRequestBuffer + strlen(upFileAttr.getNewSoftVersion())
@@ -359,7 +332,6 @@ INT32 CMDParserUp::isDevModulesUpgradeEnable(
 			cout << "errorsend" << endl;
 			return retError;
 		} else {
-			cout << "sendto serverapp : " << retSend << endl;
 		}
 		Logger::GetInstance().Info("Ask device type %d is online or not!",
 				getDevStatus.dev_type);
@@ -379,7 +351,6 @@ INT32 CMDParserUp::isDevModulesUpgradeEnable(
 		else if (retRecv > 0) {
 			for (INT32 i = 0; i < retRecv; i++)
 				printf("recv : %02x\t", recvBuff[i]);
-			cout << "recv len :: " << retRecv << endl;
 			ARM_REPLAY_GETDEVSTATUS *devStatus =
 					(ARM_REPLAY_GETDEVSTATUS*) recvBuff;
 			if (devStatus->header.HeadCmd != CMD_DEV_ONLINE) {

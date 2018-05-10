@@ -1,10 +1,9 @@
 /*
  * FileOperation.h
  *
- *  Created on: Mar 25, 2018
- *      Author: jhb
+ *  Created on: 2018年4月16日
+ *      Author: JHB
  */
-
 #ifndef FILEOPERATION_H_
 #define FILEOPERATION_H_
 
@@ -15,7 +14,6 @@ using namespace std;
 
 class FileOperation {
 public:
-	// 构造函数，dir为文件夹名称：标注、书签、试题、模型及动画、media、界面等
 	FileOperation();
 	~FileOperation(void);
 
@@ -32,6 +30,5 @@ protected:
 	bool isExisteDirectory(string path);
 	string m_strPath;
 private:
-	// 工作目录
 };
 #endif /* FILEOPERATION_H_ */
