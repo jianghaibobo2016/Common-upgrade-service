@@ -46,12 +46,14 @@ public:
 	// INT32 netSocketInit();
 	void socketBind(unsigned short localPort);
 
+	void static printBufferByHex(const INT8 *note, void *buff, UINT32 len);
+
 protected:
 	enum SocketDomain {
 		INTERNET = PF_INET, UNIX = PF_LOCAL, UNIXAF = AF_INET
 	};
 	enum SocketType {
-		STREAM = SOCK_STREAM, DATAGRAM = SOCK_DGRAM// | SOCK_NONBLOCK //
+		STREAM = SOCK_STREAM, DATAGRAM = SOCK_DGRAM // | SOCK_NONBLOCK //
 	};
 
 	NetTrans(int domain, int type, int protocol);

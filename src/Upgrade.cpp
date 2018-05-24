@@ -118,13 +118,14 @@ INT32 UpgradeDSP::parserFileName() {
 	/*DPS9903*/
 	memset(upgraderecord, 0, msgLen);
 	fileWithoutPath = upgradeFile + strlen(upFilePath);
+	cout << "fileWithoutpaht:: " << fileWithoutPath << endl;
 	if (compareUpgradeItem(fileWithoutPath, TerminalDevType) != 0) {
-		strcpy(upgraderecord, "Upgrade file name error !");
+		strcpy(upgraderecord, "Upgrade file name error1 !");
 		return retError;
 	}
 	/* get NAND*//*compare item*/
 	if (getItemName() != retOk) {
-		strcpy(upgraderecord, "Upgrade file name error !");
+		strcpy(upgraderecord, "Upgrade file name error 2!");
 		return retError;
 	}
 	if (getForceStatus() != true)
@@ -258,7 +259,7 @@ bool UpgradeDSPSubItem::adjustOrder(
 			m_dev_type[i] = AMPLIFIER;
 #if (DSP9903)
 		else if (devModuleToUpgrade[i] == DEV_PAGER)
-		m_dev_type[i] = PAGER;
+			m_dev_type[i] = PAGER;
 #endif
 		else {
 			return false;
@@ -437,8 +438,10 @@ INT32 UpgradeDSPSubItem::excuteUpgradeShell(UINT32 num, INT8 *PCIP) {
 	}
 	if (upSuccessed == true) {
 		memset(record, 0, msgLen);
-		sprintf(record, "Upgrade item : %s--%s successed !", module,
+		Logger::GetInstance().Info("Upgrade item : %s--%s successed !", module,
 				aUpSubItem->getMemberItemName());
+//		sprintf(record, "Upgrade item : %s--%s successed !", module,
+//				aUpSubItem->getMemberItemName());
 		aUpSubItem->setUpResult(true);
 	} else if (upSuccessed == false) {
 		memset(record, 0, msgLen);

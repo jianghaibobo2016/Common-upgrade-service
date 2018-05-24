@@ -22,6 +22,7 @@ CrcCheck::CrcCheck() {
 INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 		INT8 *itemName, INT8 *dependVersion) {
 	if (filename == NULL) {
+		Logger::GetInstance().Fatal("Filename input is NULL");
 		return retError;
 	}
 	SmartPtr<PACK_HEAD> pack_head(new PACK_HEAD);
@@ -36,14 +37,14 @@ INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 	bzero(buff, BUFFER_SIZE);
 	FILE *src_fd = fopen(filename, "rb");
 	if (src_fd == NULL) {
-		printf("errr: %s\n", strerror(errno));
-		printf("ERROR : Can not open file : %s !\n", filename);
+		printf("Errr reason : %s\n", strerror(errno));
+		Logger::GetInstance().Error("Can not open file : %s !", filename);
 		return retError;
 	}
 	n_read = fread(buff, 1, packhead_len, src_fd);
 	memcpy(pack_head.get(), buff, packhead_len);
 	if ((strncmp(pack_head->head, HEAD, 8)) != 0) {
-		printf("ERROR : File's head is not right !\n");
+		Logger::GetInstance().Error(" File's head is not right !");
 		fclose(src_fd);
 		return retError;
 	} else
@@ -88,13 +89,14 @@ INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 				crc = crc32(crc, buff, n_write);
 				count_write += n_write;
 			} else {
-				printf("ERROR : Write into buff from file failed !\n");
+				Logger::GetInstance().Error(
+						"Write into buff from file failed !");
 				fclose(src_fd);
 				fclose(dst_fd);
 				return retError;
 			}
 		} else if (n_read < 0) {
-			printf("ERROR : Read from file failed !\n");
+			Logger::GetInstance().Error("Read from file failed !");
 			fclose(src_fd);
 			fclose(dst_fd);
 			return retError;
@@ -103,7 +105,7 @@ INT32 CrcCheck::parser_Package(const INT8 *filename, INT8 *newVersion,
 	}
 
 	if (crc != pack_head->crcCode) {
-		printf("ERROR : Crc32 check failed !\n");
+		Logger::GetInstance().Error("Crc32 check failed !");
 		fclose(src_fd);
 		fclose(dst_fd);
 		return retError;

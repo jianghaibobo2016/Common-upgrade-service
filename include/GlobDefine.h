@@ -30,6 +30,14 @@ const INT32 retError = -1;
 #define FILE_LINE (LOG(DEBUG) << "check")
 #endif
 
+#ifdef FILE_FUNC_LINE_
+#undef FILE_FUNC_LINE_
+#endif
+#ifndef FILE_FUNC_LINE_
+#define FILE_FUNC_LINE_ __FILE__,__FUNCTION__,__LINE__
+#endif
+
+
 #ifdef VALID
 #undef VALID
 #endif

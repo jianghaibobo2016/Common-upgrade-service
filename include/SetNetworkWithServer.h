@@ -13,11 +13,102 @@ public:
 	NetConfigTransWithServer();
 	~NetConfigTransWithServer();
 
-	INT8 *serverIPT;
-	INT8 *serverPortT;
+	const INT8 *getServerIPT() const {
+		return serverIPT;
+	}
+	const INT8 *getCommunicationPort() const {
+		return CommunicationPort;
+	}
+	const UINT16 getRecordingPort() const {
+		return RecordingPort;
+	}
+	const INT8 *getName() const {
+		return Name;
+	}
 
+	bool setServerIPT(const INT8*ip) {
+		if (strlen(ip) > 18) {
+			return false;
+		}
+		memset(serverIPT, 0, 18);
+		memcpy(serverIPT, ip, strlen(ip));
+		flag += 4;
+		return true;
+	}
+
+	bool setCommunicationPort(const INT8*port) {
+		if (strlen(port) > 5) {
+			return false;
+		}
+		memset(CommunicationPort, 0, 5);
+		memcpy(CommunicationPort, port, strlen(port));
+		flag += 5;
+		return true;
+	}
+
+	bool setRecordingPort(const UINT16 port) {
+		RecordingPort = port;
+		flag += 6;
+		return true;
+	}
+	bool setName(const INT8*name) {
+		if (strlen(name) > 60) {
+			return false;
+		}
+		memset(Name, 0, 60);
+		memcpy(Name, name, strlen(name));
+		flag += 7;
+		return true;
+	}
+
+private:
+
+	INT8 *serverIPT;
+	INT8 *CommunicationPort;
+	UINT16 RecordingPort;
+	INT8 *Name;
+
+};
+
+class InitSetConf {
+public:
+	InitSetConf();
+	~InitSetConf();
+
+	const INT8 *getMAC() const {
+		return MAC;
+	}
+	const INT8* getMASK() const {
+		return MASK;
+	}
+	const INT32 getFlag() const {
+		return flag;
+	}
+	bool setMAC(const INT8 *mac) {
+		if (strlen(mac) > 13) {
+			return false;
+		}
+		memset(MAC, 0, 13);
+		memcpy(MAC, mac, strlen(mac));
+		flag += 1;
+		return true;
+	}
+
+	bool setMASK(const INT8 *mask) {
+		if (strlen(mask) > 16) {
+			return false;
+		}
+		memset(MASK, 0, 16);
+		memcpy(MASK, mask, strlen(mask));
+		flag += 2;
+		return true;
+	}
+
+private:
 	INT8 *MAC;
 	INT8 *MASK;
+
+	INT32 flag;
 };
 
 class SetNetworkTerminal: public SetNetwork {

@@ -39,7 +39,7 @@ SetNetworkTerminal::SetNetworkTerminal(
 
 SetNetworkTerminal &SetNetworkTerminal::operator=(
 		const SetNetworkTerminal &setNet) {
-	if (this != &setNet){
+	if (this != &setNet) {
 		SetNetwork::operator =(setNet);
 		setPCIP(setNet.getPCIP());
 	}
@@ -58,15 +58,26 @@ bool SetNetworkTerminal::setServerNetConfig(const string &ip,
 	return true;
 }
 NetConfigTransWithServer::NetConfigTransWithServer() :
-		NetConfigTrans() {
+		NetConfigTrans(), RecordingPort(0) {
 	serverIPT = new INT8[18];
-	serverPortT = new INT8[5];
-	MAC = new INT8[13];
-	MASK = new INT8[16];
+	CommunicationPort = new INT8[5];
+	Name = new INT8[60];
 }
 NetConfigTransWithServer::~NetConfigTransWithServer() {
 	delete[] serverIPT;
-	delete[] serverPortT;
+	delete[] CommunicationPort;
+	delete[] Name;
+
+}
+
+InitSetConf::InitSetConf() :
+		flag(0) {
+	MAC = new INT8[13];
+	MASK = new INT8[16];
+}
+
+InitSetConf::~InitSetConf() {
 	delete[] MAC;
 	delete[] MASK;
 }
+

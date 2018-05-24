@@ -58,6 +58,7 @@ HandleUp& HandleUp::getInstance() {
 void HandleUp::devSearchCMDHandle(sockaddr_in recvAddr,
 		SetNetworkTerminal *setNetworkTerminal, UpFileAttrs &upFileAttr,
 		INT32 sockfd) {
+	INT32 retSend = 0;
 	INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
 	DevSearchTerminal devSearchTerminal(setNetworkTerminal);
 	SmartPtr<DEV_Reply_GetDevMsg> tmpReMsg(new DEV_Reply_GetDevMsg);
@@ -75,13 +76,14 @@ void HandleUp::devSearchCMDHandle(sockaddr_in recvAddr,
 	cout << "DevGateway  " << inet_ntoa(sin.sin_addr) << endl;
 	sin.sin_addr.s_addr = tmpReMsg->DevServerIP;
 	cout << "DevServerIP  " << inet_ntoa(sin.sin_addr) << endl;
-	cout << "DevServerPort  " << tmpReMsg->DevServerPort << endl;
+	cout << "DevServerPort  " << tmpReMsg->CommunicationPort << endl;
 	cout << "DevMACAddress  " << tmpReMsg->DevMACAddress << endl;
 	cout << "DevID  " << tmpReMsg->DevID << endl;
 	cout << "DevType  " << tmpReMsg->DevType << endl;
 	cout << "HardVersion  " << tmpReMsg->HardVersion << endl;
 	cout << "SoftVersion  " << tmpReMsg->SoftVersion << endl;
 	cout << "DevName  " << tmpReMsg->DevName << endl;
+	cout << "Recording port : " << tmpReMsg->RecordingPort << endl;
 	sendto(sockfd, tmpReMsg.get(), sizeof(DEV_Reply_GetDevMsg), 0,
 			(struct sockaddr *) &recvAddr, tmp_server_addr_len);
 	printf("found clint IP is:%s\n", inet_ntoa(recvAddr.sin_addr));
@@ -171,6 +173,8 @@ INT32 HandleUp::setNetworkHandle(INT8 *recvBuff, INT8 *sendtoBuff,
 				sizeof(PC_DEV_Header) + devReplySetPara.header.DataLen, 0,
 				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
 	}
+	Logger::GetInstance().Info(
+			"===System will reboot after 2 secs for configing network.===");
 	sleep(2);
 	sysReboot();
 	return retOk;
@@ -352,7 +356,8 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 		pthread_t tid;
 		if (pthread_create(&tid, NULL, UpgradeThreadFun,
 				(void *) transArgs.get()) == 0) {
-			printf("Create upgrade thread successfully!........\n");
+			Logger::GetInstance().Info(
+					"Create upgrade handle thread successfully!");
 		} else {
 			setInUpgrade(false);
 		}
@@ -381,14 +386,16 @@ void HandleUp::devGetMaskCMDHandle(sockaddr_in &recvAddr,
 		INT32 sendtoret = sendto(sockfd, (INT8*) maskInfo.get(),
 				sizeof(DEV_Request_MaskInfo), 0, (struct sockaddr *) &recvAddr,
 				tmp_server_addr_len);
-		if (sendtoret > 0)
+		if (sendtoret > 0) {
+			Logger::GetInstance().Info("Send mask error !");
 			return;
-		else {
+		} else {
 			return;
 		}
+	} else if (retGet == retError) {
+		Logger::GetInstance().Error("Can not get mask !");
 	}
 }
-
 void HandleUp::devTestModeCntCMDHandle(INT8 *recvBuff) {
 	PC_Run_TestMode *devTestMode = (PC_Run_TestMode*) recvBuff;
 	if (devTestMode->Control == 0 || devTestMode->Control == 1) {
@@ -455,7 +462,6 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 			new UpgradeDSP(
 					const_cast<INT8*>(fileAttrs->getFileDownloadPath())));
 
-	cout << "get new version :: 33 " << upDSPProduct->getNewVersion() << endl;
 	if (fileAttrs->getForceStatus() == true)
 		upDSPProduct->setForceUpgrade(true);
 	if (upDSPProduct->parserFileName() == retOk) {
@@ -534,9 +540,29 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 #endif
 	}
 //
-	CMDParserUp::isDevModulesUpgradeEnable(
+	INT32 retIsEnable = CMDParserUp::isDevModulesUpgradeEnable(
 			upgradeArgs->handle->devModuleToUpgrade, devModules,
 			*fileAttrs.get());
+
+	if (retIsEnable == retError) {
+		memset(replyText, 0, msgLen);
+		memset(sendtoBuffer, 0, SendBufferSizeMax);
+		retUpStatus = retError;
+		/////////////////////////////////////////////////////////////////////////////////
+		sprintf(replyText, "Get dev modules upgrade enable failed !");
+		if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
+				*upgradeReply.get(), strlen(replyText), replyText, retUpStatus,
+				setNet.get()) == retOk) {
+		}
+		sendto(sockfd, (INT8 *) sendtoBuffer,
+				sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
+				(struct sockaddr *) &sendaddr, tmp_server_addr_len);
+		if (retUpStatus == retError) {
+//			upgradeArgs->handle->setInUpgrade(false);
+			subItems->setEachItemUpResult(false);
+		}
+
+	}
 
 	//set function dev module?
 	if (subItems->getSubItems(upgradeArgs->handle->devModuleToUpgrade)
@@ -667,11 +693,14 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 			} else {
 				retUpStatus = retError;
 				subItems->setEachItemUpResult(false);
-				sprintf(replyText, "Modify item : %s version file failed !",
-						subItems->getExtractItem()[i].c_str());
+//				sprintf(replyText, "Modify item : %s version file failed !",
+//						subItems->getExtractItem()[i].c_str());
 				if (HandleUp::devReplyHandle<DEV_Request_UpgradeReply>(
-						sendtoBuffer, *upgradeReply.get(), strlen(replyText),
-						replyText, retUpStatus, setNet.get()) == retOk) {
+						sendtoBuffer, *upgradeReply.get(),
+						strlen(
+								const_cast<UpgradeDSP *>(&subItems->getUpObj())->getUpgraderecord()),
+						const_cast<UpgradeDSP *>(&subItems->getUpObj())->getUpgraderecord(),
+						retUpStatus, setNet.get()) == retOk) {
 				}
 				sendto(sockfd, (INT8 *) sendtoBuffer,
 						sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
@@ -713,7 +742,7 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 				if (fileAttrs->getWebUpMethod())
 					memcpy(replyText, UPFILESYSTEM, strlen(UPFILESYSTEM));
 				else
-					sprintf(replyText, UPFILESYSTEM);
+					memcpy(replyText, UPFILESYSTEM, strlen(UPFILESYSTEM));
 			} else {
 				sprintf(replyText, "Upgrade successed !");
 			}
@@ -722,7 +751,11 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 		retUpStatus = retError;
 		memset(replyText, 0, msgLen);
 		memset(sendtoBuffer, 0, SendBufferSizeMax);
-		sprintf(replyText, PRODUCTUPFAILED);
+		if (subItems->getUpSystem() != true)
+			memcpy(replyText, PRODUCTUPFAILED, strlen(PRODUCTUPFAILED));
+		else
+			memcpy(replyText, PRODUCTUPFAILED_UPSYS,
+					strlen(PRODUCTUPFAILED_UPSYS));
 	}
 
 	upgradeArgs->upFileAttr->clearMemberData();
@@ -736,6 +769,8 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 	upgradeArgs->handle->setInUpgrade(false);
 
 	fileTrans->clearFileTrans();
+	Logger::GetInstance().Info(
+			"===System will reboot after 3 secs for upgrading system===.");
 	sync();
 	sleep(3);
 	HandleUp::sysReboot();
@@ -970,6 +1005,44 @@ void HandleUp::sysReboot() {
 	reboot(RB_AUTOBOOT);
 }
 
+INT32 HandleUp::getLoaclMaskFile(UINT16 *mask) {
+	FILE *fd = fopen(MASKPATH, "r");
+	if (NULL == fd) {
+		Logger::GetInstance().Info("Open Mask file : %s failed for %s !",
+				MASKPATH, strerror(errno));
+		for (INT32 i = 0; i < 4; i++) {
+			mask[i] = 0;
+		}
+		return retError;
+	}
+	struct stat stat_buf;
+	stat(MASKPATH, &stat_buf);
+	if (stat_buf.st_size != 8) {
+		Logger::GetInstance().Error("Mask file %s size error : %d", MASKPATH,
+				stat_buf.st_size);
+		fclose(fd);
+		for (INT32 i = 0; i < 4; i++) {
+			mask[i] = 0;
+		}
+		return retError;
+	}
+	UINT8 maskFile[8] = { 0 };
+	INT32 retRead = fread(maskFile, sizeof(UINT8), 8, fd);
+	if (retRead != 8) {
+		Logger::GetInstance().Error("Read mask file error");
+		fclose(fd);
+		for (INT32 i = 0; i < 4; i++) {
+			mask[i] = 0;
+		}
+		return retError;
+	}
+
+	for (INT32 i = 0; i < 4; i++) {
+		mask[i] = ~(maskFile[i * 2] | maskFile[i * 2 + 1]) + 1;
+	}
+	fclose(fd);
+	return retOk;
+}
 INT32 HandleUp::getMaskInfo(UINT16 *mask) {
 	LocalUDPTrans netTrans;
 	UPDATE_GET_MASK getMask;
@@ -985,7 +1058,7 @@ INT32 HandleUp::getMaskInfo(UINT16 *mask) {
 	}
 	cout << "retsend : " << retSend << endl;
 	INT8 recvBuff[16] = { 0 };
-	struct timeval timeout = { 10, 0 }; //3s
+	struct timeval timeout = { 3, 0 }; //3s
 	setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_RCVTIMEO,
 			(const char *) &timeout, sizeof(timeout));
 	INT32 retRecv = recvfrom(netTrans.getSockfd(), recvBuff, sizeof(recvBuff),
@@ -993,6 +1066,9 @@ INT32 HandleUp::getMaskInfo(UINT16 *mask) {
 	if (retRecv == -1) {
 		/////////////////////////////////////////////enter error!
 		cout << "recv error" << endl;
+		for (UINT32 i = 0; i < 4; i++) {
+			mask[i] = 0;
+		}
 		return retError;
 	} else if (retRecv > 0) {
 		cout << "recv ret : " << retRecv << " recv buff : " << recvBuff << endl;

@@ -1,6 +1,7 @@
+#include <stdarg.h>
 #include "Logger.h"
 #include "DevSearch.h"
-#include <stdarg.h>
+#include "HandleUp.h"
 
 using namespace FrameWork;
 
@@ -16,7 +17,8 @@ DevSearchTerminal::~DevSearchTerminal() {
 }
 bool DevSearchTerminal::getSoftwareVersion(const INT8 *item, INT8 *version,
 		const INT8* pathVersionFile) {
-	cout << "This lock of auto lock of func :  "<<__FUNCTION__<<"()"<<endl;
+	cout << "This lock of auto lock of func :  " << __FUNCTION__ << "()"
+			<< endl;
 	AutoLock autoLock(&mutex);
 
 	INT32 get = retOk;
@@ -50,7 +52,6 @@ bool DevSearchTerminal::getSoftwareVersion(const INT8 *item, INT8 *version,
 		return false;
 }
 
-
 DEV_Reply_GetDevMsg *DevSearchTerminal::getDevMsg(const string &pathXML,
 		const INT8 *pathVersionFile) {
 	if (setNetworkTerminal->getNetworkConfig() != true) {
@@ -67,6 +68,8 @@ DEV_Reply_GetDevMsg *DevSearchTerminal::getDevMsg(const string &pathXML,
 	string serverIP = xmlParser.getString("TCPServer", "ServerIP",
 			"172.16.0.228");
 	UINT16 serverPort = xmlParser.getInt("TCPServer", "ServerPort", 7001);
+	UINT16 RecordingPort = xmlParser.getInt("RecordServer", "RecordServerport",
+			7101);
 	string devName = xmlParser.getString("TerminalInfo", "TerminalName",
 			"Terminal");
 	INT8 version[7] = { 0 };
@@ -75,7 +78,7 @@ DEV_Reply_GetDevMsg *DevSearchTerminal::getDevMsg(const string &pathXML,
 	//
 	devReplyMsg->header.HeadTag = 0x0101FBFC;
 	devReplyMsg->header.HeadCmd = 0x0001;
-	devReplyMsg->header.DataLen = 0x00BF;
+	devReplyMsg->header.DataLen = 0x00C9;
 	devReplyMsg->DevIP = inet_addr(
 			setNetworkTerminal->getNetConfStruct().ipAddr.c_str());
 	devReplyMsg->DevMask = inet_addr(
@@ -83,7 +86,7 @@ DEV_Reply_GetDevMsg *DevSearchTerminal::getDevMsg(const string &pathXML,
 	devReplyMsg->DevGateway = inet_addr(
 			setNetworkTerminal->getNetConfStruct().gatewayAddr.c_str());
 	devReplyMsg->DevServerIP = inet_addr(serverIP.c_str());
-	devReplyMsg->DevServerPort = serverPort;
+	devReplyMsg->CommunicationPort = serverPort;
 	strcpy(devReplyMsg->DevMACAddress, mac);
 	strncpy(devReplyMsg->DevType, TerminalDevType, strlen(TerminalDevType));
 	strncpy(devReplyMsg->DevID, TerminalDevTypeID, strlen(TerminalDevTypeID));
@@ -94,6 +97,9 @@ DEV_Reply_GetDevMsg *DevSearchTerminal::getDevMsg(const string &pathXML,
 	strcpy(devReplyMsg->HardVersion, hardVersion);
 	strcpy(devReplyMsg->SoftVersion, version);
 	strcpy(devReplyMsg->DevName, devName.c_str());
+	devReplyMsg->RecordingPort = RecordingPort;
+
+	HandleUp::getLoaclMaskFile(devReplyMsg->Mask);
 
 	return devReplyMsg;
 }
@@ -150,7 +156,7 @@ const unsigned short XMLParser::getUShort(const char *section,
 
 void XMLParser::updateServerNetConfig(const char *section, const char *strKey,
 		const char *fmt, ...) {
-	// _bChanged = true;
+// _bChanged = true;
 	char strValue[2048];
 	va_list vl;
 	va_start(vl, fmt);

@@ -3,17 +3,20 @@
 #include <iostream>
 #include "GlobDefine.h"
 // UpgradeServiceConfig.h
+
 /*switch type*/
-#define DSP9903 0
-#define DSP9906 1
+#define DSP9903 1
+#define DSP9906 0
 /*switch type*/
-//enum TERMINAL_DEV_TYPE{
-//	TERMINAL_DEV_DSP9903 = 1,
-//	TERMINAL_DEV_DSP9906 = 2
-//};
 /*type switch setting*/
 #if (DSP9903)
+/*upgrade soft version*/
+static const INT8 *UpgradeSoftVersion = "V01.11.03";
+/*03: adding that system will up rootfs and reboot with failed upgrading some modules.
+ * */
+/*upgrade soft version*/
 //static const TERMINAL_DEV_TYPE Terminal_Dev_DSP = TERMINAL_DEV_DSP9903;
+static const INT8 *TerminalDevTypeID = "0065";
 static const INT8 *TerminalDevType = "DSP9903";
 static const INT8 *StringFind = "DSP9903_";
 static const INT8 *INIFILE = "/dsppa/SET_NET/DSP9903_NET_CONF.ini";
@@ -22,10 +25,10 @@ static const INT8 *AmplifierUpgrade = "DSP9903_Amplifier_";
 static const INT8 *PagerUpgrade = "DSP9903_Pager_";
 static const INT8 *MainRootfsUpgrade = "DSP9903_MROOTFS_";
 /*log path setting*/
-static const INT8 *logPath="/nand/log/UpgradeService_9903";
+static const INT8 *logPath = "/nand/log/UpgradeService_9903";
 /*log path setting*/
 /*mask.bin setting*/
-static const bool getMask =true;
+static const bool getMask = true;
 /*mask.bin setting*/
 /*Devs type*/
 enum DEV_MODULES_TYPE {
@@ -36,7 +39,11 @@ enum DEV_MODULES_TYPE {
 /*Devs type*/
 #endif
 #if (DSP9906)
+/*upgrade soft version*/
+static const INT8 *UpgradeSoftVersion = "V01.03.01";
+/*upgrade soft version*/
 //static const TERMINAL_DEV_TYPE Terminal_Dev_DSP = TERMINAL_DEV_DSP9906;
+static const INT8 *TerminalDevTypeID = "0066";
 static const INT8 *TerminalDevType = "DSP9906";
 static const INT8 *StringFind = "DSP9906_";
 static const INT8 *INIFILE = "/dsppa/SET_NET/DSP9906_NET_CONF.ini";
@@ -60,8 +67,8 @@ enum DEV_MODULES_TYPE {
 /*type switch setting*/
 
 /*devs type define*/
-static const INT8 *AMPLIFIER="Amplifier";
-static const INT8 *PAGER="Pager";
+static const INT8 *AMPLIFIER = "Amplifier";
+static const INT8 *PAGER = "Pager";
 /*devs type define*/
 
 /*net port*/
@@ -91,7 +98,7 @@ static const INT32 FileTransLen = 1024 * 32;
 static const INT32 SendBufferSizeMax = 1400;
 /*file trans config*/
 
-static const INT8 *TerminalDevTypeID = "0065";
+//static const INT8 *TerminalDevTypeID = "0065";
 static const INT8 *TerminalHardVersion = "V01.00";
 static const std::string pathXml = "/nand/ServerAPP/video_conf.xml";
 static const INT8 *pathVersionFile = "/dsppa/HSversion";
@@ -116,7 +123,9 @@ static const INT8 *PCREQUESTIP = "IP";
 static const INT8 *PCREQUESTSUBMASK = "SubMask";
 static const INT8 *PCREQUESTGATEWAY = "GateWay";
 static const INT8 *PCREQUESTSERVERIP = "ServerIP";
-static const INT8 *PCREQUESTSERVERPORT = "ServerPort";
+static const INT8 *PCREQUESTCOMMUNICATIONPORT = "CommunicationPort";
+static const INT8 *PCREQUESTRCORDINGPORT = "RecordingPort";
+static const INT8 *PCREQUESTNAME = "Name";
 static const INT8 *PCREQUESTMAC = "Mac";
 static const INT8 *PCREQUESTMASK = "Mask";
 static const INT8 *MASKPATH = "/usr/share/mask.bin";
@@ -158,6 +167,8 @@ static const INT8 *FORCEUPGRADE = "_FORCE";
 static const INT8 *UPFILESYSTEM = "Upgrade system....";
 static const INT8 *BeginToUpgrade = "Begin to upgrade !";
 static const INT8 *PRODUCTUPFAILED = "Upgrade failed for some modules!";
+static const INT8 *PRODUCTUPFAILED_UPSYS =
+		"Upgrade failed for some modules! Begin to upgrade system !";
 /* upgrade */
 
 #endif /* UPGRADESERVICECONFIG_H */

@@ -34,6 +34,7 @@ enum PC_DEV_COMMAND{
 	CMD_DEV_TESTMODE	= 7,		      //设备进入测试模式
 	CMD_DEV_GETMASK     = 8,			  //获取设备加密信息
 	CMD_DEV_REQUESTVERSION     = 9	      //获取版本号
+
 };
 /************************************1. Package defines***********************/
 //传输包结构:
@@ -56,18 +57,20 @@ typedef struct PC_Request_GetDevMsg_tag{
 }PC_Request_GetDevMsg;
 //设备端返回
 typedef struct DEV_Reply_GetDevMsg_tag{
-	PC_DEV_Header header;
+	PC_DEV_Header header;     //len : 0x00A1 //2018.05.23 modify
 	UINT32 DevIP;            //设备IP //网路字节顺序(下同)
 	UINT32 DevMask;    		 //设备子网掩码
 	UINT32 DevGateway;		 //设备网关
 	UINT32 DevServerIP;      //设备服务器IP
-	UINT16 DevServerPort;    //设备服务器端口
+	UINT16 CommunicationPort;    //设备服务器端口 //2018.05.23 modify CommunicationPort
 	char DevMACAddress[13];  //设备MAC地址 //ASCII字符大写，包含结束符
 	char DevID[40];          //设备ID(前四个字符为设备类型)
 	char DevType[20];        //设备型号
 	char HardVersion[20];    //硬件版本
 	char SoftVersion[20];    //软件版本
 	char DevName[60];  	 	 //设备名称;
+	UINT16 RecordingPort;   //2B（网路字节顺序)//无该设置则为0 //2018.05.23 add
+	UINT16 Mask[4];			//无该设置则为FFFFFFFF  0000 for exception //2018.05.23 add
 }DEV_Reply_GetDevMsg;
 /////14items
 //-------------------------------------------------------------------//
@@ -77,6 +80,7 @@ typedef struct DEV_Reply_GetDevMsg_tag{
 //PC端发送
 typedef struct PC_Request_ParameterSetting_tag{
 	PC_DEV_Header header;
+	char DevID[40];          //设备ID(前四个字符为设备类型) //2018.05.23 add
 	UINT8 ParameterNum; //add 1B
 	//unsigned char NameLen;
 	//char* name;
@@ -173,6 +177,7 @@ typedef struct PC_Run_TestMode_tag{
 	UINT8 Control;//0:停止 1：开始
 }PC_Run_TestMode;
 
+
 //------------------------------8.获取设备加密信息-------------------------//
 //PC发送
 typedef struct PC_Get_MaskInfo_tag{
@@ -186,6 +191,7 @@ typedef struct DEV_Request_MaskInfo_tag{
 	INT8 DevID[40]; //设备ID(前四个字符为设备类型)//add
 	UINT16 m_mask[4];//传送加密方式：~m_mask[0]+1,先取反后加一
 }DEV_Request_MaskInfo;
+
 
 //------------------------------9. 获取终端版本号------------------------//
 typedef struct DEV_Request_VersionNum_tag{

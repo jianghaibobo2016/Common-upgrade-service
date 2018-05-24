@@ -53,10 +53,54 @@ public:
 	NetConfigTrans();
 	~NetConfigTrans();
 
-//private:
+	const INT8 *getIPT() const {
+		return ipT;
+	}
+	const INT8 *getSubmaskT() const {
+		return submaskT;
+	}
+	const INT8 *getGatewayT() const {
+		return gatewayT;
+	}
+
+	const INT32 getFlag() const {
+		return flag;
+	}
+
+	bool setIPT(const INT8 *ip) {
+		if (strlen(ip) > 18) {
+			return false;
+		}
+		memset(ipT, 0, 18);
+		memcpy(ipT, ip, strlen(ip));
+		flag += 1;
+		return true;
+	}
+	bool setSubmaskT(const INT8 *submask) {
+		if (strlen(submask) > 18) {
+			return false;
+		}
+		memset(submaskT, 0, 18);
+		memcpy(submaskT, submask, strlen(submask));
+		flag += 2;
+		return true;
+	}
+	bool setgatewayT(const INT8 *gateway) {
+		if (strlen(gateway) > 18) {
+			return false;
+		}
+		memset(gatewayT, 0, 18);
+		memcpy(gatewayT, gateway, strlen(gateway));
+		flag += 3;
+		return true;
+	}
+
+	INT32 flag;
+private:
 	INT8 *ipT;
 	INT8 *submaskT;
 	INT8 *gatewayT;
+
 };
 
 /*Get and set net configuration main class*/

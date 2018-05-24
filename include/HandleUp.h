@@ -87,6 +87,7 @@ public:
 
 	template<typename T>
 	static INT32 localUpHandle(T &);
+	static INT32 getLoaclMaskFile(UINT16 *mask);
 private:
 
 	static bool inUpgrade;

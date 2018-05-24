@@ -17,7 +17,8 @@ enum UPDATE_DEV_COMMAND {
 	CMD_LOCALDEV_TESTMODE = 2,		      //设备进入测试模式
 	CMD_LOCALDEV_GETMASK = 3,			  //获取设备加密信息
 	CMD_DEV_ONLINE = 4,			     	  //设备状态
-	CMD_DEV_REPLY_UPGRADE = 5			  //设备升级进度反馈
+	CMD_DEV_REPLY_UPGRADE = 5,			  //设备升级进度反馈
+	CMD_SET_TERMINAL_CONFIG = 6			//设置终端配置－－服务器地址；服务器通信端口；服务器录播端口；设备名字
 };
 
 #if (DSP9903)
@@ -46,7 +47,7 @@ enum UPDATE_DEV_TYPE {
 typedef struct UPDATE_DEV_Header_tag {
 	UINT32 HeadTag;
 	UINT16 HeadCmd;
-	UINT16 DataLen;
+	UINT16 DataLen;//Length of data of Struct
 } UPDATE_DEV_Header;
 
 //------------------------------1.设备升级-------------------------//
@@ -97,7 +98,6 @@ typedef struct ARM_REPLAY_GETDEVSTATUS_tag {
 	UINT8 state; //0：离线 1：在线无需升级 2:在线可升级
 } ARM_REPLAY_GETDEVSTATUS;
 
-
 //------------------------------5.获取设备升级进度-----------------------//
 
 //视频板回复
@@ -106,6 +106,26 @@ typedef struct ARM_REPLAY_GETUPDATEPROGRESS_tag {
 	UINT8 dev_type; // UPDATE_DEV_TYPE
 	UINT8 state;
 } ARM_REPLAY_GETUPDATEPROGRESS;
+
+//------------------------------6.设置终端配置 -----------------------//
+
+//升级程序
+typedef struct UPGRADE_REQUEST_SET_CONFIG_tag {
+	UPDATE_DEV_Header header;
+	UINT32 ServerIP; //inet_addr
+	UINT16 CommunicationPort;
+#if (DSP9903)
+	UINT16 RecordingPort; // DSP9903 ONLY
+#endif
+	INT8 DevName[60];
+} UP_PROG_SET_CONF;
+
+//服务程序回复
+typedef struct SERVER_PROG_REPLY_SET_CONFIG_tag {
+	UPDATE_DEV_Header header;
+	UINT8 result; // fail : 0 ; success : 1
+} SERVER_REPLY_SET_CONF;
+
 
 #pragma pack(pop)
 #endif /* PROTOCAL_UPDATEPROGRAM_PROTOCAL_H_ */

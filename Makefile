@@ -24,7 +24,7 @@ EXTRA_SRC =
 EXCLUDE_FILES =
 
 SUFFIX       = c cpp cc cxx
-TARGET       := ./bin/UpgradeService_9906
+TARGET       := ./bin/UpgradeService_9903
 #TARGET_TYPE  :=
 TARGET_TYPE  := app
 #TARGET_TYPE  :=

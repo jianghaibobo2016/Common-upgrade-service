@@ -29,6 +29,8 @@ INT32 UDPNetTrans::socketRunThread() {
 	if (pthread_create(&tid, NULL, pthreadStart, (void *) this) == 0) {
 		gettimeofday(&tv, NULL);
 		Logger::GetInstance().Info("System time is %d", (INT32) tv.tv_sec);
+		Logger::GetInstance().Info("The upgrade soft version is %s.",
+				UpgradeSoftVersion);
 		printf("Create UDP thread successfully!........\n");
 	} else
 		;
@@ -86,8 +88,13 @@ INT32 UDPNetTrans::socketSelect() {
 				Logger::GetInstance().Info(
 						"Get dev search command from PC : %s !",
 						inet_ntoa(recvAddr.sin_addr));
+				NetTrans::printBufferByHex("recv dev : ", buffer,
+						strlen(buffer));
 				upHandle->devSearchCMDHandle(recvAddr, &netSet,
 						*upFileAttrs.get(), sockfd);
+				cout
+						<< "=====================dev search end================================"
+						<< endl;
 			}/*end case 1*/
 				break;
 			case CMD_DEV_PARAMETER_SETTING: {
@@ -96,10 +103,6 @@ INT32 UDPNetTrans::socketSelect() {
 			}/*end case 2*/
 				break;
 			case CMD_DEV_UPGRADE: {
-//				for (INT32 i = 0; i < ret_recv; i++) {
-//					printf("get web up cmd: :\n");
-//					printf("%02x\t", buffer[i]);
-//				}
 				upHandle->devUpgradePCRequestCMDHandle(recvAddr, buffer,
 						&netSet, sockfd, *upFileAttrs.get(), fileTrans,
 						request.get());
@@ -122,15 +125,7 @@ INT32 UDPNetTrans::socketSelect() {
 			}/*end case 7*/
 				break;
 			case CMD_DEV_GETMASK: {
-				if (getMask == true) {
-					Logger::GetInstance().Info(
-							"Get request of  mask code command from PC : %s !",
-							inet_ntoa(recvAddr.sin_addr));
-					cout
-							<< "=====================dev search end================================"
-							<< endl;
-					upHandle->devGetMaskCMDHandle(recvAddr, &netSet, sockfd);
-				}
+				upHandle->devGetMaskCMDHandle(recvAddr, &netSet, sockfd);
 			}/*end case 8*/
 				break;
 			case CMD_DEV_REQUESTVERSION: {

@@ -1026,7 +1026,8 @@ bool SetNetwork::cSplitString(const string strKey, const string strChar,
 	}
 }
 
-NetConfigTrans::NetConfigTrans() {
+NetConfigTrans::NetConfigTrans() :
+		flag(0) {
 	ipT = new INT8[18];
 	submaskT = new INT8[18];
 	gatewayT = new INT8[18];
