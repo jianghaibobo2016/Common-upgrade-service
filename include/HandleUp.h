@@ -11,6 +11,7 @@
 #include "FileTrans.h"
 #include "UpdateProgram_Protocal.h"
 #include "Mutex.h"
+#include "UDPNetTrans.h"
 #pragma pack(push)
 #pragma pack(1)
 
@@ -18,6 +19,7 @@ class HandleUp {
 	static Mutex mutex;
 public:
 	HandleUp();
+	HandleUp(UDPNetTrans &udpNet);
 	~HandleUp();
 
 	HandleUp(const HandleUp &handle);
@@ -51,7 +53,7 @@ public:
 
 	static INT32 devSearchHandle(DEV_Reply_GetDevMsg &, DevSearchTerminal *);
 
-	static INT32 setNetworkHandle(INT8 *recvBuff, INT8 *sendtoBuff,
+	INT32 setNetworkHandle(INT8 *recvBuff,
 			DEV_Reply_ParameterSetting &,
 			SetNetworkTerminal *setNetworkTerminal, INT32 sockfd,
 			sockaddr_in recvAdd);
@@ -88,6 +90,7 @@ public:
 	template<typename T>
 	static INT32 localUpHandle(T &);
 	static INT32 getLoaclMaskFile(UINT16 *mask);
+	UDPNetTrans _udpNet;
 private:
 
 	static bool inUpgrade;
@@ -102,6 +105,7 @@ private:
 
 };
 class UDPNetTrans;
+
 typedef struct FileTransArgs_S_ {
 	sockaddr_in recvAddr;
 	SetNetworkTerminal *setNetworkTerminal;
@@ -109,6 +113,7 @@ typedef struct FileTransArgs_S_ {
 	UpFileAttrs *upFileAttr;
 	FileTrans *fileTrans;
 	HandleUp *handle;
+	UDPNetTrans *udpNet;
 } FileTransArgs;
 #pragma pack(pop)
 #include "HandleUp.hpp"

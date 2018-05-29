@@ -5,6 +5,7 @@
 #include <exception>
 #include "GlobDefine.h"
 #include "Uncopyable.h"
+#include "Timer.h"
 
 //! Signals a problem with the execution of a socket call
 class SocketException: public std::exception {
@@ -36,17 +37,20 @@ private:
 	std::string m_message;
 	int m_errorcode;
 };
-class NetTrans: private Uncopyable {
+
+class NetTrans: /*private Uncopyable,*/public Timer {
 public:
 
 	~NetTrans();
 	INT32 getSockfd() {
 		return m_socket;
 	}
-	// INT32 netSocketInit();
 	void socketBind(unsigned short localPort);
 
 	void static printBufferByHex(const INT8 *note, void *buff, UINT32 len);
+
+//	virtual void OnTimer(void) {
+//	}
 
 protected:
 	enum SocketDomain {
@@ -57,6 +61,8 @@ protected:
 	};
 
 	NetTrans(int domain, int type, int protocol);
+	NetTrans(const NetTrans &netTrans);
+//	NetTrans &operator=(const NetTrans &netT);
 
 	// socket descriptor
 	INT32 m_socket;

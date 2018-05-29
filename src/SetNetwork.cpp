@@ -77,12 +77,14 @@ SetNetwork::SetNetwork() :
 		m_netWorkConfig(), IFNAME(NULL), networkStatus(errorStatus), initSet(
 				false)/*,mutex(PTHREAD_MUTEX_INITIALIZER)*/{
 	IFNAME = new INT8[8];
+	memset(IFNAME, 0, 8);
 }
 //???
 SetNetwork::SetNetwork(const SetNetwork& setNet) :
 		networkStatus(errorStatus) {
 	m_netWorkConfig = setNet.m_netWorkConfig;
 	IFNAME = new INT8[10];
+	memset(IFNAME, 0, 8);
 	if (IFNAME != NULL)
 		strcpy(IFNAME, setNet.IFNAME);
 	initSet = setNet.initSet;

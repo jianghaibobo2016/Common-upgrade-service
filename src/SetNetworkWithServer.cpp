@@ -62,6 +62,9 @@ NetConfigTransWithServer::NetConfigTransWithServer() :
 	serverIPT = new INT8[18];
 	CommunicationPort = new INT8[5];
 	Name = new INT8[60];
+	memset(serverIPT, 0, 18);
+	memset(CommunicationPort, 0, 5);
+	memset(Name, 0, 60);
 }
 NetConfigTransWithServer::~NetConfigTransWithServer() {
 	delete[] serverIPT;
@@ -73,7 +76,9 @@ NetConfigTransWithServer::~NetConfigTransWithServer() {
 InitSetConf::InitSetConf() :
 		flag(0) {
 	MAC = new INT8[13];
-	MASK = new INT8[16];
+	MASK = new INT8[8];
+	memset(MAC, 0, 13);
+	memset(MASK, 0, 8);
 }
 
 InitSetConf::~InitSetConf() {

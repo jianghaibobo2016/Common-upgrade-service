@@ -17,26 +17,40 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include "CrcCheck.h"
+
 #include <iomanip> //hex dec cout
+
+#include <sys/time.h>
+#include "Timer.h"
+
 using namespace FrameWork;
 
 HandleUp::HandleUp() :
-		devModuleToUpgrade() {
+		_udpNet(NULL), devModuleToUpgrade() {
 }
+
+HandleUp::HandleUp(UDPNetTrans &udpNet) :
+		_udpNet(udpNet), devModuleToUpgrade() {
+}
+
 HandleUp::~HandleUp() {
 }
 
-HandleUp::HandleUp(const HandleUp &handle) {
+HandleUp::HandleUp(const HandleUp &handle) :
+		_udpNet(handle._udpNet) {
+//	_udpNet = handle._udpNet;
 	inUpgrade = handle.inUpgrade;
 	devModuleToUpgrade = handle.devModuleToUpgrade;
 }
-HandleUp &HandleUp::operator=(const HandleUp &handle) {
-	if (this != &handle) {
-		inUpgrade = handle.inUpgrade;
-		devModuleToUpgrade = handle.devModuleToUpgrade;
-	}
-	return *this;
-}
+//
+//HandleUp &HandleUp::operator=(const HandleUp &handle) {
+//	if (this != &handle) {
+//		_udpNet(handle._udpNet);
+//		inUpgrade = handle.inUpgrade;
+//		devModuleToUpgrade = handle.devModuleToUpgrade;
+//	}
+//	return *this;
+//}
 
 Mutex HandleUp::mutex;
 bool HandleUp::inUpgrade = false;
@@ -44,6 +58,13 @@ bool HandleUp::inUpgrade = false;
 HandleUp& HandleUp::getInstance() {
 	static HandleUp handle;
 	return handle;
+}
+
+void myprint(void) {
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	cout << tv.tv_sec << endl;
+//    return NULL;
 }
 
 /******************************************************************************
@@ -83,9 +104,12 @@ void HandleUp::devSearchCMDHandle(sockaddr_in recvAddr,
 	cout << "HardVersion  " << tmpReMsg->HardVersion << endl;
 	cout << "SoftVersion  " << tmpReMsg->SoftVersion << endl;
 	cout << "DevName  " << tmpReMsg->DevName << endl;
+#if (DSP9903)
 	cout << "Recording port : " << tmpReMsg->RecordingPort << endl;
-	sendto(sockfd, tmpReMsg.get(), sizeof(DEV_Reply_GetDevMsg), 0,
-			(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+#endif
+	cout << "mask ;:::::" << tmpReMsg->Mask[0] << " " << tmpReMsg->Mask[2]
+			<< endl;
+	_udpNet.UDPSendMsg(tmpReMsg.get(), sizeof(DEV_Reply_GetDevMsg));
 	printf("found clint IP is:%s\n", inet_ntoa(recvAddr.sin_addr));
 	if (getInUpgrade() == true) {
 		INT32 retUpStatus = retOk;
@@ -98,9 +122,9 @@ void HandleUp::devSearchCMDHandle(sockaddr_in recvAddr,
 		if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
 				*upgradeReply.get(), strlen(replyText), replyText, retUpStatus,
 				setNetworkTerminal) == retOk) {
-			sendto(sockfd, (INT8*) sendtoBuffer,
-					sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
-					(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+
+			_udpNet.UDPSendMsg(sendtoBuffer,
+					sizeof(PC_DEV_Header) + upgradeReply->header.DataLen);
 		}
 	}
 }
@@ -114,18 +138,23 @@ void HandleUp::devSearchCMDHandle(sockaddr_in recvAddr,
  * Revision History :
  *   04/01/2018  JHB    Created.
  *****************************************************************************/
-INT32 HandleUp::setNetworkHandle(INT8 *recvBuff, INT8 *sendtoBuff,
+INT32 HandleUp::setNetworkHandle(INT8 *recvBuff,
 		DEV_Reply_ParameterSetting &devReplySetPara,
 		SetNetworkTerminal *setNetworkTerminal, INT32 sockfd,
 		sockaddr_in recvAddr) {
+	INT8 sendtoBuff[SendBufferSizeMax] = { 0 };
 	INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
 	INT8 failReason[128] = { 0 };
 	map<string, string> retContent;
-	INT8 retSetNet = 0;
+	INT32 retSetNet = 0;
 	retSetNet = CMDParserUp::parserPCSetNetCMD(recvBuff, setNetworkTerminal,
 			retContent);
-	devReplySetPara.header.HeadCmd = 0x0002;
+	cout << "test 12 and retsennet : " << retSetNet << endl;
+	if (retSetNet == INVALID)
+		return INVALID;
 
+	devReplySetPara.header.HeadCmd = 0x0002;
+#if 0
 	map<string, string>::iterator iter;
 	for (iter = retContent.begin(); iter != retContent.end(); iter++) {
 		memset(failReason, 0, 128);
@@ -139,44 +168,57 @@ INT32 HandleUp::setNetworkHandle(INT8 *recvBuff, INT8 *sendtoBuff,
 		memcpy(failReason + 3 + strlen(iter->first.c_str()),
 				iter->second.c_str(), strlen(iter->second.c_str()));
 		failReason[strlen(iter->first.c_str()) + 3
-				+ strlen(iter->second.c_str())] = '\0';
+		+ strlen(iter->second.c_str())] = '\0';
 		UINT32 reasonLen = strlen(iter->first.c_str()) + 4
-				+ strlen(iter->second.c_str());
-		{
-			AutoLock autoLock(&mutex);
-			cout << "Text to send : " << failReason << endl;
-			devReplySetPara.header.HeadTag = PROTOCAL_PC_DEV_HEAD;
-			INT8 mac[13] = { 0 };
-			string strMac = SetNetworkTerminal::castMacToChar13(mac,
-					setNetworkTerminal->getNetConfStruct().macAddr);
-			memcpy(mac, strMac.c_str(), strlen(strMac.c_str()));
-			mac[12] = '\0';
-			strncpy(devReplySetPara.DevID, TerminalDevTypeID,
-					strlen(TerminalDevTypeID));
-			strcpy(devReplySetPara.DevID + strlen(TerminalDevTypeID), mac);
-			if (retSetNet == retOk) {
-				devReplySetPara.Result = 1;
-			} else if (retSetNet == retError) {
-				devReplySetPara.Result = 0;
-			} else {
-				cout << "This devReply unlock " << endl;
-				return retError;
-			}
-			devReplySetPara.header.DataLen = sizeof(devReplySetPara.DevID)
-					+ sizeof(devReplySetPara.Result) + reasonLen;
-			memcpy(sendtoBuff, &devReplySetPara,
-					sizeof(DEV_Reply_ParameterSetting));
-			memcpy(sendtoBuff + sizeof(DEV_Reply_ParameterSetting), failReason,
-					reasonLen);
+		+ strlen(iter->second.c_str());
+		AutoLock autoLock(&mutex);
+		cout << "Text to send : " << failReason << endl;
+		devReplySetPara.header.HeadTag = PROTOCAL_PC_DEV_HEAD;
+		INT8 mac[13] = {0};
+		string strMac = SetNetworkTerminal::castMacToChar13(mac,
+				setNetworkTerminal->getNetConfStruct().macAddr);
+		memcpy(mac, strMac.c_str(), strlen(strMac.c_str()));
+		mac[12] = '\0';
+		strncpy(devReplySetPara.DevID, TerminalDevTypeID,
+				strlen(TerminalDevTypeID));
+		strcpy(devReplySetPara.DevID + strlen(TerminalDevTypeID), mac);
+		if (retSetNet == retOk) {
+			devReplySetPara.Result = 1;
+		} else if (retSetNet == retError) {
+			devReplySetPara.Result = 0;
+		} else {
+			cout << "This devReply unlock " << endl;
+			return retError;
 		}
-		sendto(sockfd, sendtoBuff,
-				sizeof(PC_DEV_Header) + devReplySetPara.header.DataLen, 0,
-				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+		devReplySetPara.header.DataLen = sizeof(devReplySetPara.DevID)
+		+ sizeof(devReplySetPara.Result) + reasonLen;
+		memcpy(sendtoBuff, &devReplySetPara,
+				sizeof(DEV_Reply_ParameterSetting));
+		memcpy(sendtoBuff + sizeof(DEV_Reply_ParameterSetting), failReason,
+				reasonLen);
 	}
+#endif
+	if (retSetNet == retOk) {
+		memcpy(failReason, MODIFYRESPOND_SUCCESS,
+				strlen(MODIFYRESPOND_SUCCESS));
+	} else if (retSetNet == retError) {
+		memcpy(failReason, MODIFYRESPOND_FAIL, strlen(MODIFYRESPOND_FAIL));
+	} else {
+		memcpy(failReason, MODIFYRESPOND_FAIL, strlen(MODIFYRESPOND_FAIL));
+	}
+	if (devReplyHandle<DEV_Reply_ParameterSetting>(sendtoBuff, devReplySetPara,
+			strlen(failReason), failReason, retSetNet, setNetworkTerminal)
+			== retOk) {
+	}
+	_udpNet.UDPSendMsg(sendtoBuff,
+			sizeof(PC_DEV_Header) + devReplySetPara.header.DataLen);
+//	sendto(sockfd, sendtoBuff,
+//			sizeof(PC_DEV_Header) + devReplySetPara.header.DataLen, 0,
+//			(struct sockaddr *) &recvAddr, tmp_server_addr_len);
 	Logger::GetInstance().Info(
 			"===System will reboot after 2 secs for configing network.===");
 	sleep(2);
-	sysReboot();
+//	sysReboot();
 	return retOk;
 }
 
@@ -193,10 +235,10 @@ void HandleUp::devParamSetCMDHandle(sockaddr_in recvAddr, INT8 *recvBuff,
 		SetNetworkTerminal *setNetworkTerminal, INT32 sockfd) {
 	SmartPtr<DEV_Reply_ParameterSetting> devReplyParaSetting(
 			new DEV_Reply_ParameterSetting);
-	INT8 sendtoBuffer[SendBufferSizeMax] = { 0 };
+
 	INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
-	setNetworkHandle(recvBuff, sendtoBuffer, *devReplyParaSetting.get(),
-			setNetworkTerminal, sockfd, recvAddr);
+	setNetworkHandle(recvBuff, *devReplyParaSetting.get(), setNetworkTerminal,
+			sockfd, recvAddr);
 }
 
 /******************************************************************************
@@ -221,12 +263,17 @@ void HandleUp::devUpgradePCRequestCMDHandle(sockaddr_in &recvAddr,
 
 	INT32 retHandle = upgradePCrequestHandle(recvBuff, sendtoBuffer,
 			*devReply.get(), upFileAttr, setNetworkTerminal);
-	INT32 retSendto = sendto(sockfd, sendtoBuffer,
-			sizeof(PC_DEV_Header) + devReply->header.DataLen, 0,
-			(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+
+	_udpNet.UDPSendMsg(sendtoBuffer,
+			sizeof(PC_DEV_Header) + devReply->header.DataLen);
+
+//	INT32 retSendto = sendto(sockfd, sendtoBuffer,
+//			sizeof(PC_DEV_Header) + devReply->header.DataLen, 0,
+//			(struct sockaddr *) &recvAddr, tmp_server_addr_len);
 	if (retHandle != retOk) {
 		return;
 	}
+
 	if (upFileAttr.getWebUpMethod() == true) {
 
 		SmartPtr<FileTransArgs> transArgs(new FileTransArgs);
@@ -236,6 +283,7 @@ void HandleUp::devUpgradePCRequestCMDHandle(sockaddr_in &recvAddr,
 		transArgs->upFileAttr = &upFileAttr;
 		transArgs->fileTrans = &fileTrans;
 		transArgs->handle = this;
+		transArgs->udpNet = _udpNet;
 		pthread_t tid;
 		INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
 		if (pthread_create(&tid, NULL, UpgradeThreadFun,
@@ -266,9 +314,11 @@ void HandleUp::devUpgradePCRequestCMDHandle(sockaddr_in &recvAddr,
 #endif
 	memset(request, 0, sizeof(DEV_Request_FileProtocal));
 	if (devRequestFileInit(*request, upFileAttr, fileTrans) == retOk) {
-		sendto(sockfd, (INT8*) request,
-				sizeof(PC_DEV_Header) + request->header.DataLen, 0,
-				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+		_udpNet.UDPSendMsg(request,
+				sizeof(PC_DEV_Header) + request->header.DataLen);
+//		sendto(sockfd, (INT8*) request,
+//				sizeof(PC_DEV_Header) + request->header.DataLen, 0,
+//				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
 	} /*end send if*/
 	ofstream f(upFileAttr.getFileDownloadPath(), ios::trunc);
 	f.close();
@@ -386,7 +436,7 @@ void HandleUp::devGetMaskCMDHandle(sockaddr_in &recvAddr,
 		INT32 sendtoret = sendto(sockfd, (INT8*) maskInfo.get(),
 				sizeof(DEV_Request_MaskInfo), 0, (struct sockaddr *) &recvAddr,
 				tmp_server_addr_len);
-		if (sendtoret > 0) {
+		if (sendtoret <= 0) {
 			Logger::GetInstance().Info("Send mask error !");
 			return;
 		} else {
@@ -1056,22 +1106,23 @@ INT32 HandleUp::getMaskInfo(UINT16 *mask) {
 		cout << "errorsend" << endl;
 		return retError;
 	}
-	cout << "retsend : " << retSend << endl;
+	Logger::GetInstance().Info("Send size : %d .", retSend);
 	INT8 recvBuff[16] = { 0 };
-	struct timeval timeout = { 3, 0 }; //3s
+	struct timeval timeout = { 2, 0 }; //2s
 	setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_RCVTIMEO,
 			(const char *) &timeout, sizeof(timeout));
 	INT32 retRecv = recvfrom(netTrans.getSockfd(), recvBuff, sizeof(recvBuff),
 			0, (struct sockaddr*) netTrans.getAddr(), netTrans.getAddrLen());
 	if (retRecv == -1) {
 		/////////////////////////////////////////////enter error!
-		cout << "recv error" << endl;
+		Logger::GetInstance().Error("Recv Error");
 		for (UINT32 i = 0; i < 4; i++) {
 			mask[i] = 0;
 		}
 		return retError;
 	} else if (retRecv > 0) {
-		cout << "recv ret : " << retRecv << " recv buff : " << recvBuff << endl;
+		cout << "recv ret : " << retRecv << endl;
+		NetTrans::printBufferByHex("Recv buff : ", recvBuff, retRecv);
 		ARM_REPLAYUPDATE_GETMASK *devReply =
 				(ARM_REPLAYUPDATE_GETMASK*) recvBuff;
 		if (devReply->header.HeadCmd == CMD_LOCALDEV_GETMASK) {

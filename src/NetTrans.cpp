@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include "Logger.h"
 #include "NetTrans.h"
+#include "UpgradeServiceConfig.h"
 using namespace std;
 using namespace FrameWork;
 SocketException::SocketException(const std::string &message,
@@ -18,10 +19,24 @@ SocketException::SocketException(const std::string &message,
 }
 
 NetTrans::NetTrans(int domain, int type, int protocol) :
-		port(0) {
+		Timer(100000), port(0) {
 	if ((m_socket = ::socket(domain, type, protocol)) < 0)
 		throw SocketException("Socket creation failed (socket)");
 }
+
+NetTrans::NetTrans(const NetTrans &netTrans) :
+		Timer(netTrans.getTick()) {
+	m_socket = netTrans.m_socket;
+	port = netTrans.port;
+}
+
+//NetTrans &NetTrans::operator=(const NetTrans &netT) {
+//	setTick(netT.getTick());
+//	m_socket = netT.m_socket;
+//	port = netT.port;
+//	return *this;
+//}
+
 NetTrans::~NetTrans() {
 	cout << "Close socket!" << endl;
 	close(m_socket);
@@ -44,13 +59,25 @@ void NetTrans::socketBind(UINT16 localPort) {
 				"Set of local address and port failed (sctp_bindx)");
 		perror("bind error");
 	}
+
+	struct ip_mreq mreq;
+	/*加入多播组*/
+	mreq.imr_multiaddr.s_addr = inet_addr(MultiCastAddr); /*多播地址*/
+	mreq.imr_interface.s_addr = htonl(INADDR_ANY); /*网络接口为默认*/
+
+	INT32 err = setsockopt(m_socket, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq,
+			sizeof(mreq));
+	if (err < 0) {
+		perror("setsockopt():IP_ADD_MEMBERSHIP");
+	}
+
 }
 
 void NetTrans::printBufferByHex(const INT8 *note, void *buff, UINT32 len) {
 	printf("%s\n", note);
 	INT32 iPos = 0;
 	for (UINT32 iPos = 0; iPos < len; iPos++) {
-		printf("%02x ", ((UINT8 *)buff)[iPos]);
+		printf("%02x ", ((UINT8 *) buff)[iPos]);
 	}
 	printf("\n");
 }

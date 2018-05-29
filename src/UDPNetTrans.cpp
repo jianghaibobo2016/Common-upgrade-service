@@ -14,13 +14,42 @@ using namespace std;
 using namespace FrameWork;
 UDPNetTrans::UDPNetTrans(SetNetworkTerminal *setNetworkTerminal) :
 		NetTrans(UNIXAF, DATAGRAM, 0), setNetworkTerminal(setNetworkTerminal), UDPStatus(
-				false) {
+				false), _bufferLen(0), _sendSockAddr() {
 	buffer = new INT8[BufferSizeMax];
-
+	_sendMsgBuff = new INT8[SendBuffMaxSize];
+	memset(buffer, 0, BufferSizeMax);
+	memset(_sendMsgBuff, 0, SendBuffMaxSize);
+	memset(&_sendSockAddr, 0, sizeof(struct sockaddr_in));
 }
+
 UDPNetTrans::~UDPNetTrans() {
 	delete[] buffer;
 	UDPStatus = true;
+	delete[] _sendMsgBuff;
+}
+
+UDPNetTrans::UDPNetTrans(const UDPNetTrans &udpNet) :
+		NetTrans(udpNet), setNetworkTerminal(udpNet.setNetworkTerminal), UDPStatus(
+				udpNet.UDPStatus), _bufferLen(udpNet._bufferLen) {
+	buffer = new INT8[BufferSizeMax];
+	memcpy(buffer, udpNet.buffer, strlen(udpNet.buffer));
+	_sendMsgBuff = new INT8[SendBuffMaxSize];
+	memcpy(_sendMsgBuff, udpNet._sendMsgBuff, udpNet._bufferLen);
+	memset(&_sendSockAddr, 0, sizeof(struct sockaddr_in));
+	memcpy(&_sendSockAddr, &udpNet._sendSockAddr, sizeof(struct sockaddr_in));
+}
+
+UDPNetTrans &UDPNetTrans::operator=(const UDPNetTrans &udpNet) :
+		NetTrans(udpNet), setNetworkTerminal(udpNet.setNetworkTerminal), UDPStatus(
+				udpNet.UDPStatus), _bufferLen(udpNet._bufferLen) {
+
+	buffer = new INT8[BufferSizeMax];
+	memcpy(buffer, udpNet.buffer, strlen(udpNet.buffer));
+	_sendMsgBuff = new INT8[SendBuffMaxSize];
+	memcpy(_sendMsgBuff, udpNet._sendMsgBuff, udpNet._bufferLen);
+	memset(&_sendSockAddr, 0, sizeof(struct sockaddr_in));
+	memcpy(&_sendSockAddr, &udpNet._sendSockAddr, sizeof(struct sockaddr_in));
+	return *this;
 }
 
 INT32 UDPNetTrans::socketRunThread() {
@@ -55,7 +84,7 @@ INT32 UDPNetTrans::socketSelect() {
 	FileTrans fileTrans;
 	SmartPtr<UpFileAttrs> upFileAttrs = UpFileAttrs::createFileAttrs();
 	SmartPtr<DEV_Request_FileProtocal> request(new DEV_Request_FileProtocal);
-	SmartPtr<HandleUp> upHandle(new HandleUp);
+	SmartPtr<HandleUp> upHandle(new HandleUp(*this));
 	struct sockaddr_in recvAddr;
 	SetNetworkTerminal netSet(*setNetworkTerminal);
 
@@ -78,6 +107,13 @@ INT32 UDPNetTrans::socketSelect() {
 			if (ret_recv <= 0) {
 				break;
 			}
+
+			upHandle->_udpNet.setSockAddr(recvSendAddr);
+			UINT32 id = upHandle->_udpNet.addEvent(5, 2, callBackFunc,
+					&upHandle->_udpNet, true);
+//			cout << "time id : " << id << "time id in Node "
+//					<< eventQueue.getTopNode()->id << endl;
+			upHandle->_udpNet.asyncStart();
 			memcpy(&recvAddr, &recvSendAddr, sizeof(recvSendAddr));
 			INT32 sockfd = m_socket;
 			switch (CMDParserUp::parserPCRequestHead(buffer, ret_recv)) {
@@ -98,6 +134,7 @@ INT32 UDPNetTrans::socketSelect() {
 			}/*end case 1*/
 				break;
 			case CMD_DEV_PARAMETER_SETTING: {
+				cout << "test 10 " << endl;
 				upHandle->devParamSetCMDHandle(recvAddr, buffer, &netSet,
 						sockfd);
 			}/*end case 2*/
@@ -132,7 +169,9 @@ INT32 UDPNetTrans::socketSelect() {
 				upHandle->devGetVersionCMDHandle(sockfd, recvAddr);
 			}/*end case 9*/
 				break;
-			default:
+			default: {
+				Logger::GetInstance().Error("CMD unknow !");
+			}
 				break;
 			}
 
@@ -142,3 +181,38 @@ INT32 UDPNetTrans::socketSelect() {
 	return retOk;
 }
 
+void UDPNetTrans::callBackFunc(void*args) {
+	UDPNetTrans *udpT = (UDPNetTrans*) args;
+	udpT->indirectFunc();
+}
+
+void UDPNetTrans::indirectFunc(void) {
+	if (eventQueue.getTopNode()->id == 5) {
+		INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
+		if (strlen(_sendMsgBuff) != 0) {
+			INT32 retSend = sendto(m_socket, _sendMsgBuff, _bufferLen, 0,
+					(struct sockaddr *) &_sendSockAddr, tmp_server_addr_len);
+			cout << "Send data length : " << retSend << endl;
+			if (retSend < 0) {
+				Logger::GetInstance().Error("Send failed !");
+				NetTrans::printBufferByHex("Buff : ", _sendMsgBuff, _bufferLen);
+			}
+		}
+		struct timeval tv;
+		gettimeofday(&tv, NULL);
+//			cout << tv.tv_sec << " s and us : "<<tv.tv_usec<< endl;
+		memset(_sendMsgBuff, 0, _bufferLen);
+
+	}
+}
+
+void UDPNetTrans::UDPSendMsg(const void *msg, UINT32 len) {
+	if (len > SendBuffMaxSize) {
+		Logger::GetInstance().Error("Msg length %d is too long to send !", len);
+		return;
+	}
+	memset(_sendMsgBuff, 0, SendBuffMaxSize);
+	memcpy(_sendMsgBuff, msg, len);
+	_bufferLen = len;
+
+}

@@ -7,12 +7,14 @@
 /*switch type*/
 #define DSP9903 1
 #define DSP9906 0
+#define DSP9909 0
 /*switch type*/
 /*type switch setting*/
 #if (DSP9903)
 /*upgrade soft version*/
-static const INT8 *UpgradeSoftVersion = "V01.11.03";
+static const INT8 *UpgradeSoftVersion = "V01.11.04";
 /*03: adding that system will up rootfs and reboot with failed upgrading some modules.
+ * 04:modify protocol of set mask and network
  * */
 /*upgrade soft version*/
 //static const TERMINAL_DEV_TYPE Terminal_Dev_DSP = TERMINAL_DEV_DSP9903;
@@ -33,7 +35,7 @@ static const bool getMask = true;
 /*Devs type*/
 enum DEV_MODULES_TYPE {
 	DEV_AMPLIFIER = 1,			 //功放板
-	DEV_PAGER = 2,		 //寻呼器
+	DEV_PAGER = 2,//寻呼器
 	INVALID_TYPE
 };
 /*Devs type*/
@@ -56,6 +58,7 @@ static const INT8 *logPath = "/nand/log/UpgradeService_9906";
 /*log path setting*/
 /*mask.bin setting*/
 static const bool getMask = false;
+static const UINT16 mask[4] = { 0xffff, 0xffff, 0xffff, 0xffff };
 /*mask.bin setting*/
 /*Devs type*/
 enum DEV_MODULES_TYPE {
@@ -75,6 +78,7 @@ static const INT8 *PAGER = "Pager";
 static const INT32 UpUDPTransPort = 45535;
 static const INT32 UpRespondPort = 65530;
 static const INT32 UpLocalPort = 4307;
+static const INT8 *MultiCastAddr = "234.2.3.4";
 /*net port*/
 
 /* struct of protocal member size */
@@ -94,6 +98,7 @@ static const INT32 TerminalDevsNameLenMax = 20;
 
 /*file trans config*/
 static const INT32 BufferSizeMax = 1400 * 32;
+static const UINT32 SendBuffMaxSize = 1400;
 static const INT32 FileTransLen = 1024 * 32;
 static const INT32 SendBufferSizeMax = 1400;
 /*file trans config*/
@@ -129,6 +134,8 @@ static const INT8 *PCREQUESTNAME = "Name";
 static const INT8 *PCREQUESTMAC = "Mac";
 static const INT8 *PCREQUESTMASK = "Mask";
 static const INT8 *MASKPATH = "/usr/share/mask.bin";
+static const INT8 *MODIFYRESPOND_SUCCESS = "Modify successed !";
+static const INT8 *MODIFYRESPOND_FAIL = "Modify failed !";
 /*Net Set Tag*/
 
 /* upgrade */

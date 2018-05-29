@@ -26,6 +26,12 @@ UpgradeDSP::UpgradeDSP(INT8 *upgradeFile) :
 	itemName = new INT8[16];
 	versionFileItemName = new INT8[32];
 	upgraderecord = new INT8[msgLen];
+	memset(newVersion, 0, 8);
+	memset(localVersion, 0, 8);
+	memset(dependVersion, 0, 8);
+	memset(itemName, 0, 16);
+	memset(versionFileItemName, 0, 32);
+	memset(upgraderecord, 0, msgLen);
 }
 
 UpgradeDSP::~UpgradeDSP() {

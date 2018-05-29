@@ -51,6 +51,7 @@ CMDParserUp::CMDParserUp() :
 CMDParserUp::~CMDParserUp() {
 }
 UINT16 CMDParserUp::parserPCRequestHead(void *buffer, INT32 recvLen) {
+
 	PC_DEV_Header *pcHead = (PC_DEV_Header *) buffer;
 
 	printf("Recv CMD %d with tag %X from PC !\n", pcHead->HeadCmd,
@@ -59,6 +60,8 @@ UINT16 CMDParserUp::parserPCRequestHead(void *buffer, INT32 recvLen) {
 		return (UINT16) retError;
 	}
 	/* modify */
+	cout << "datalen: " << pcHead->DataLen << " recvLen: " << recvLen << endl;
+	NetTrans::printBufferByHex("recv dev : ", buffer, recvLen);
 	if ((pcHead->DataLen != recvLen - sizeof(PC_DEV_Header))
 			&& (pcHead->DataLen != 0)) {
 		return (UINT16) retError;
@@ -94,12 +97,26 @@ UINT16 CMDParserUp::parserPCRequestHead(void *buffer, INT32 recvLen) {
 //value:aaaabbbbcccc
 //name：Mask
 //value:1111FFFF1111FFFF
-INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
-		SetNetworkTerminal *setNetworkTerminal,
+INT32 CMDParserUp::parserPCSetNetCMD(void *buffer, SetNetworkTerminal *net,
 		map<string, string> &retContent) {
-
 	INT8 *pcSettingConfig = (INT8 *) buffer;
 	pcSettingConfig += sizeof(PC_DEV_Header);
+	INT8 mac[13] = { 0 };
+	strcpy(mac,
+			SetNetworkTerminal::castMacToChar13(mac,
+					net->getNetConfStruct().macAddr));
+	mac[12] = '\0';
+	INT8 devID[40] = { 0 };
+	strncpy(devID, TerminalDevTypeID, strlen(TerminalDevTypeID));
+	strcpy(devID + strlen(TerminalDevTypeID), mac);
+
+	if (strncmp(pcSettingConfig, devID, strlen(devID)) != 0) {
+		Logger::GetInstance().Info("Recv params setting cmd with devID : %s .",
+				devID);
+		return INVALID;
+	} else
+		pcSettingConfig += devIDSize;
+
 	UINT8 parameterNum = pcSettingConfig[0];
 	pcSettingConfig += 1;
 	NetConfigTransWithServer netConfigTrans;
@@ -114,8 +131,12 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 			return retError;
 		}
 		SmartPtr<UP_PROG_SET_CONF> serverConf(new UP_PROG_SET_CONF);
-		setParams(setNetworkTerminal, netConfigTrans, *serverConf.get(),
-				Terminal9903Num, retContent);
+		if (setParams(net, netConfigTrans, *serverConf.get(), Terminal9903Num,
+				retContent) == false){
+			return retError;
+		}
+		else
+			return retOk;
 
 	} else if (parameterNum == TerminalWithoutRcdPNum) {
 		if (obtainParams<NetConfigTransWithServer>(pcSettingConfig,
@@ -127,8 +148,11 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 			return retError;
 		}
 		SmartPtr<UP_PROG_SET_CONF> serverConf(new UP_PROG_SET_CONF);
-		setParams(setNetworkTerminal, netConfigTrans, *serverConf.get(),
-				TerminalWithoutRcdPNum, retContent);
+		if (setParams(net, netConfigTrans, *serverConf.get(),
+				TerminalWithoutRcdPNum, retContent) == false)
+			return retError;
+		else
+			return retOk;
 	} else if (parameterNum == TermianlInitNum) {
 		if (obtainParams<InitSetConf>(pcSettingConfig, initConfigTrans,
 				TermianlInitNum) != true || initConfigTrans.getFlag() != 3) {
@@ -137,8 +161,12 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer,
 					initConfigTrans.getFlag());
 			return retError;
 		}
-		setParams(setNetworkTerminal, initConfigTrans, TermianlInitNum,
-				retContent);
+		NetTrans::printBufferByHex("recv mask before set params: ",
+				const_cast<INT8 *>(initConfigTrans.getMASK()), 8);
+		if (setParams(net, initConfigTrans, TermianlInitNum, retContent))
+			return retOk;
+		else
+			return retError;
 	} else {
 		Logger::GetInstance().Error("Parameters' number : %d is incorrect !",
 				(INT32) parameterNum);
@@ -525,15 +553,17 @@ bool CMDParserUp::screeningParams(INT8* name, INT8* value,
 bool CMDParserUp::setParams(SetNetworkTerminal *net,
 		NetConfigTransWithServer &config, UP_PROG_SET_CONF &serverConf,
 		INT32 num, map<string, string> &retContent) {
-	if (strncmp(net->getNetConfStruct().ipAddr.c_str(), config.getIPT(),
-			strlen(config.getIPT())) != 0
-			|| strncmp(net->getNetConfStruct().netmaskAddr.c_str(),
-					config.getIPT(), strlen(config.getSubmaskT())) != 0
-			|| strncmp(net->getNetConfStruct().gatewayAddr.c_str(),
-					config.getIPT(), strlen(config.getGatewayT())) != 0) {
+	if ((strncmp(net->getNetConfStruct().ipAddr.c_str(), config.getIPT(),
+			strlen(config.getIPT())) != 0)
+			|| (strncmp(net->getNetConfStruct().netmaskAddr.c_str(),
+					config.getSubmaskT(), strlen(config.getSubmaskT())) != 0)
+			|| (strncmp(net->getNetConfStruct().gatewayAddr.c_str(),
+					config.getGatewayT(), strlen(config.getGatewayT())) != 0)) {
+		cout << "to set net ............" << endl;
 		if (net->setNetworkConfig(config.getIPT(), config.getSubmaskT(),
 				config.getGatewayT(),
 				NULL, INIFILE) != true) {
+			cout << "test 8 " << endl;
 			retContent[PCREQUESTIP] = "Set IP failed !";
 			retContent[PCREQUESTSUBMASK] = "Set submask failed !";
 			retContent[PCREQUESTGATEWAY] = "Set gateway failed !";
@@ -546,6 +576,7 @@ bool CMDParserUp::setParams(SetNetworkTerminal *net,
 #endif
 			return false;
 		} else {
+			cout << "test 9 " << endl;
 			retContent[PCREQUESTIP] = "Set IP ok !";
 			retContent[PCREQUESTSUBMASK] = "Set submask ok !";
 			retContent[PCREQUESTGATEWAY] = "Set gateway ok !";
@@ -560,13 +591,15 @@ bool CMDParserUp::setParams(SetNetworkTerminal *net,
 	memcpy(&serverConf.DevName, config.getName(), strlen(config.getName()));
 
 	if (num == Terminal9903Num) {
+#if (DSP9903)
 		serverConf.RecordingPort = config.getRecordingPort();
+#endif
 	}
 
 	bool setStatus = true;
 	LocalUDPTrans netTrans;
 	HandleUp::localUpHandle<UP_PROG_SET_CONF>(serverConf);
-	INT32 retSend = sendto(netTrans.getSockfd(), &config,
+	INT32 retSend = sendto(netTrans.getSockfd(), &serverConf,
 			sizeof(NetConfigTransWithServer), 0,
 			(struct sockaddr*) netTrans.getAddr(), *netTrans.getAddrLen());
 	if (retSend <= 0) {
@@ -608,6 +641,7 @@ bool CMDParserUp::setParams(SetNetworkTerminal *net,
 		retContent[PCREQUESTSERVERIP] = "Set server ip ok !";
 		retContent[PCREQUESTCOMMUNICATIONPORT] = "Set terminal name ok !";
 		retContent[PCREQUESTNAME] = "Set terminal name ok !";
+		cout << "okkkkkkkkkkkkkkkkkkkkkk" << endl;
 #if (DSP9903)
 		retContent[PCREQUESTRCORDINGPORT] = "Set recording port ok !";
 #endif
@@ -646,6 +680,8 @@ bool CMDParserUp::setParams(SetNetworkTerminal *net, InitSetConf &config,
 		}
 	}
 
+	NetTrans::printBufferByHex("recv mask : ",
+			const_cast<INT8 *>(config.getMASK()), 8);
 	vector<UINT16> vHexArray;
 	vHexArray.resize(4);
 	vHexArray[0] = ~((config.getMASK()[1] << 8 | config.getMASK()[0]) - 1);
@@ -662,7 +698,7 @@ bool CMDParserUp::setParams(SetNetworkTerminal *net, InitSetConf &config,
 
 	return true;
 }
-
+#if 0
 bool CMDParserUp::getConf(INT8 *buff, NetConfigTransWithServer &config,
 		INT32 num) {
 	INT8 *tmpBuff = buff;
@@ -672,12 +708,12 @@ bool CMDParserUp::getConf(INT8 *buff, NetConfigTransWithServer &config,
 	for (INT32 i = 0; i < num; i++) {
 		nameLen = (UINT32) tmpBuff[iPos];
 		iPos += 1;
-		INT8 name[iPos] = { 0 };
+		INT8 name[iPos] = {0};
 		memcpy(name, &tmpBuff[iPos], nameLen);
 		iPos += nameLen;
 		valueLen = (UINT32) tmpBuff[iPos];
 		iPos += 1;
-		INT8 value[valueLen] = { 0 };
+		INT8 value[valueLen] = {0};
 		memcpy(value, &tmpBuff[iPos], valueLen);
 		iPos += valueLen;
 
@@ -704,6 +740,7 @@ bool CMDParserUp::campareNetSetMatch(INT8 *nameLen, INT8 *name,
 	return !(bool) compareUpgradeItem(name, reName, nameLenComp);
 
 }
+#endif
 
 INT32 CMDParserUp::writeMaskFile(vector<UINT16> date) {
 

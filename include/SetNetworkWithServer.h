@@ -7,6 +7,7 @@
 #ifndef SETNETWORK_H
 #define SETNETWORK_H
 #include "SetNetwork.h"
+#include "NetTrans.h"
 
 class NetConfigTransWithServer: public NetConfigTrans {
 public:
@@ -95,11 +96,14 @@ public:
 	}
 
 	bool setMASK(const INT8 *mask) {
-		if (strlen(mask) > 16) {
+		if (strlen(mask) > 8) {
 			return false;
 		}
-		memset(MASK, 0, 16);
-		memcpy(MASK, mask, strlen(mask));
+		memset(MASK, 0, 8);
+//		for (INT32 i = 0; i < 4; i + 2)
+//			sscanf(&MASK[i], "%hu", &mask[i * 2]);
+		memcpy(MASK, mask, 8);
+		NetTrans::printBufferByHex("set MASK in set mask : ", MASK, 8);
 		flag += 2;
 		return true;
 	}
