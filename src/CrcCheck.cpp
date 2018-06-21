@@ -152,8 +152,9 @@ INT32 CrcCheck::getDevModules(const INT8* filename,
 			INT32 retCMP = strncmp(pack_head->TerminalDevs[nums], AMPLIFIER,
 					strlen(AMPLIFIER));
 			if (retCMP == 0) {
-
+#if !(DSP9909)
 				devModules[nums + 1] = DEV_AMPLIFIER;
+#endif
 			}
 #if (DSP9903)
 			else if (strncmp(pack_head->TerminalDevs[nums], PAGER,

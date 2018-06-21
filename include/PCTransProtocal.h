@@ -105,7 +105,7 @@ typedef struct PC_Request_DevUpgrade_tag{
 	PC_DEV_Header header;
 	char HardVersion[20];       //硬件版本
 	char NewSoftVersion[20];    //新软件版本 V01.01
-	/*在字符串"V01.01"后加上"WEBTERMINAL"表示由web端发送的升级指令*/
+	/*在字符串"V01.01"后加上"WEB"表示由web端发送的升级指令*/
 	UINT32 NewSoftDocumentSize; //新软件版本文件大小
 	char UpgradeFileMd5[16];	//MD5校验值//add
 }PC_Request_DevUpgrade;

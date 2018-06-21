@@ -60,8 +60,8 @@ UINT16 CMDParserUp::parserPCRequestHead(void *buffer, INT32 recvLen) {
 		return (UINT16) retError;
 	}
 	/* modify */
-	cout << "datalen: " << pcHead->DataLen << " recvLen: " << recvLen << endl;
-	NetTrans::printBufferByHex("recv dev : ", buffer, recvLen);
+//	cout << "datalen: " << pcHead->DataLen << " recvLen: " << recvLen << endl;
+//	NetTrans::printBufferByHex("recv dev : ", buffer, recvLen);
 	if ((pcHead->DataLen != recvLen - sizeof(PC_DEV_Header))
 			&& (pcHead->DataLen != 0)) {
 		return (UINT16) retError;
@@ -132,10 +132,9 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer, SetNetworkTerminal *net,
 		}
 		SmartPtr<UP_PROG_SET_CONF> serverConf(new UP_PROG_SET_CONF);
 		if (setParams(net, netConfigTrans, *serverConf.get(), Terminal9903Num,
-				retContent) == false){
+				retContent) == false) {
 			return retError;
-		}
-		else
+		} else
 			return retOk;
 
 	} else if (parameterNum == TerminalWithoutRcdPNum) {
@@ -337,7 +336,9 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 			pathVersionFile);
 	if (compareUpgradeItem(pcRequestBuffer, hardVersion, strlen(hardVersion))
 			!= true) {
-
+		Logger::GetInstance().Fatal("HardVersion matched errored : %s !",
+				hardVersion);
+		return errorVersionStatus;
 	}
 	pcRequestBuffer += hardVersionSize;
 	/* new software version */

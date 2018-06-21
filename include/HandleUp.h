@@ -19,13 +19,13 @@ class HandleUp {
 	static Mutex mutex;
 public:
 	HandleUp();
-	HandleUp(UDPNetTrans &udpNet);
+//	HandleUp(UDPNetTrans &udpNet);
 	~HandleUp();
 
 	HandleUp(const HandleUp &handle);
-	HandleUp &operator=(const HandleUp &handle);
+//	HandleUp &operator=(const HandleUp &handle);
 
-	static HandleUp &getInstance();
+//	static HandleUp &getInstance();
 	/**************************mainly Handle function ************************/
 	void devSearchCMDHandle(sockaddr_in recvAddr,
 			SetNetworkTerminal *setNetworkTerminal, UpFileAttrs &upFileAttr,
@@ -53,8 +53,7 @@ public:
 
 	static INT32 devSearchHandle(DEV_Reply_GetDevMsg &, DevSearchTerminal *);
 
-	INT32 setNetworkHandle(INT8 *recvBuff,
-			DEV_Reply_ParameterSetting &,
+	INT32 setNetworkHandle(INT8 *recvBuff, DEV_Reply_ParameterSetting &,
 			SetNetworkTerminal *setNetworkTerminal, INT32 sockfd,
 			sockaddr_in recvAdd);
 
@@ -83,16 +82,23 @@ public:
 	bool getInUpgrade() {
 		return inUpgrade;
 	}
+
+	UDPNetTrans &getUDPNetTransInstance() {
+		return _udpNet;
+	}
+
 	void setInUpgrade(bool status) {
 		inUpgrade = status;
 	}
 
 	template<typename T>
 	static INT32 localUpHandle(T &);
+
 	static INT32 getLoaclMaskFile(UINT16 *mask);
-	UDPNetTrans _udpNet;
+
 private:
 
+	UDPNetTrans _udpNet;
 	static bool inUpgrade;
 	map<INT32, DEV_MODULES_TYPE> devModuleToUpgrade;
 
@@ -113,7 +119,7 @@ typedef struct FileTransArgs_S_ {
 	UpFileAttrs *upFileAttr;
 	FileTrans *fileTrans;
 	HandleUp *handle;
-	UDPNetTrans *udpNet;
+//	UDPNetTrans *udpNet;
 } FileTransArgs;
 #pragma pack(pop)
 #include "HandleUp.hpp"

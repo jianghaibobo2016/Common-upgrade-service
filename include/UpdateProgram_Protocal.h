@@ -37,6 +37,13 @@ enum UPDATE_DEV_TYPE {
 	ERROR_TYPE
 };
 #endif
+
+#if (DSP9909)
+//zuofei config file
+enum UPDATE_DEV_TYPE {
+	ERROR_TYPE
+};
+#endif
 /************************************1. Package defines***********************/
 //传输包结构:
 //Tag 0x0101FBFC
@@ -114,7 +121,7 @@ typedef struct UPGRADE_REQUEST_SET_CONFIG_tag {
 	UPDATE_DEV_Header header;
 	UINT32 ServerIP; //inet_addr
 	UINT16 CommunicationPort;
-#if (DSP9903)
+#if ((DSP9903) || (DSP9909))
 	UINT16 RecordingPort; // DSP9903 ONLY
 #endif
 	INT8 DevName[60];

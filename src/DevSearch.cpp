@@ -97,7 +97,7 @@ DEV_Reply_GetDevMsg *DevSearchTerminal::getDevMsg(const string &pathXML,
 	strcpy(devReplyMsg->HardVersion, hardVersion);
 	strcpy(devReplyMsg->SoftVersion, version);
 	strcpy(devReplyMsg->DevName, devName.c_str());
-#if (DSP9903)
+#if ((DSP9903)||(DSP9909))
 	devReplyMsg->RecordingPort = RecordingPort;
 	HandleUp::getLoaclMaskFile(devReplyMsg->Mask);
 #else

@@ -29,9 +29,9 @@ HandleUp::HandleUp() :
 		_udpNet(NULL), devModuleToUpgrade() {
 }
 
-HandleUp::HandleUp(UDPNetTrans &udpNet) :
-		_udpNet(udpNet), devModuleToUpgrade() {
-}
+//HandleUp::HandleUp(UDPNetTrans &udpNet) :
+//		_udpNet(udpNet), devModuleToUpgrade() {
+//}
 
 HandleUp::~HandleUp() {
 }
@@ -55,10 +55,10 @@ HandleUp::HandleUp(const HandleUp &handle) :
 Mutex HandleUp::mutex;
 bool HandleUp::inUpgrade = false;
 
-HandleUp& HandleUp::getInstance() {
-	static HandleUp handle;
-	return handle;
-}
+//HandleUp& HandleUp::getInstance() {
+//	static HandleUp handle;
+//	return handle;*/
+//}
 
 void myprint(void) {
 	struct timeval tv;
@@ -109,7 +109,10 @@ void HandleUp::devSearchCMDHandle(sockaddr_in recvAddr,
 #endif
 	cout << "mask ;:::::" << tmpReMsg->Mask[0] << " " << tmpReMsg->Mask[2]
 			<< endl;
-	_udpNet.UDPSendMsg(tmpReMsg.get(), sizeof(DEV_Reply_GetDevMsg));
+	sendto(sockfd, tmpReMsg.get(), sizeof(DEV_Reply_GetDevMsg), 0,
+			(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+//	getUDPNetTransInstance().UDPSendMsg(tmpReMsg.get(),
+//			sizeof(DEV_Reply_GetDevMsg), recvAddr);
 	printf("found clint IP is:%s\n", inet_ntoa(recvAddr.sin_addr));
 	if (getInUpgrade() == true) {
 		INT32 retUpStatus = retOk;
@@ -122,9 +125,12 @@ void HandleUp::devSearchCMDHandle(sockaddr_in recvAddr,
 		if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
 				*upgradeReply.get(), strlen(replyText), replyText, retUpStatus,
 				setNetworkTerminal) == retOk) {
-
-			_udpNet.UDPSendMsg(sendtoBuffer,
-					sizeof(PC_DEV_Header) + upgradeReply->header.DataLen);
+			sendto(sockfd, sendtoBuffer,
+					sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
+					(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+//			getUDPNetTransInstance().UDPSendMsg(sendtoBuffer,
+//					sizeof(PC_DEV_Header) + upgradeReply->header.DataLen,
+//					recvAddr);
 		}
 	}
 }
@@ -210,11 +216,11 @@ INT32 HandleUp::setNetworkHandle(INT8 *recvBuff,
 			strlen(failReason), failReason, retSetNet, setNetworkTerminal)
 			== retOk) {
 	}
-	_udpNet.UDPSendMsg(sendtoBuff,
-			sizeof(PC_DEV_Header) + devReplySetPara.header.DataLen);
-//	sendto(sockfd, sendtoBuff,
-//			sizeof(PC_DEV_Header) + devReplySetPara.header.DataLen, 0,
-//			(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+//	getUDPNetTransInstance().UDPSendMsg(sendtoBuff,
+//			sizeof(PC_DEV_Header) + devReplySetPara.header.DataLen, recvAddr);
+	sendto(sockfd, sendtoBuff,
+			sizeof(PC_DEV_Header) + devReplySetPara.header.DataLen, 0,
+			(struct sockaddr *) &recvAddr, tmp_server_addr_len);
 	Logger::GetInstance().Info(
 			"===System will reboot after 2 secs for configing network.===");
 	sleep(2);
@@ -263,13 +269,14 @@ void HandleUp::devUpgradePCRequestCMDHandle(sockaddr_in &recvAddr,
 
 	INT32 retHandle = upgradePCrequestHandle(recvBuff, sendtoBuffer,
 			*devReply.get(), upFileAttr, setNetworkTerminal);
-
-	_udpNet.UDPSendMsg(sendtoBuffer,
+	NetTrans::printBufferByHex("Buff1: ", sendtoBuffer,
 			sizeof(PC_DEV_Header) + devReply->header.DataLen);
+//	getUDPNetTransInstance().UDPSendMsg(sendtoBuffer,
+//			sizeof(PC_DEV_Header) + devReply->header.DataLen, recvAddr);
 
-//	INT32 retSendto = sendto(sockfd, sendtoBuffer,
-//			sizeof(PC_DEV_Header) + devReply->header.DataLen, 0,
-//			(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+	INT32 retSendto = sendto(sockfd, sendtoBuffer,
+			sizeof(PC_DEV_Header) + devReply->header.DataLen, 0,
+			(struct sockaddr *) &recvAddr, tmp_server_addr_len);
 	if (retHandle != retOk) {
 		return;
 	}
@@ -283,7 +290,7 @@ void HandleUp::devUpgradePCRequestCMDHandle(sockaddr_in &recvAddr,
 		transArgs->upFileAttr = &upFileAttr;
 		transArgs->fileTrans = &fileTrans;
 		transArgs->handle = this;
-		transArgs->udpNet = _udpNet;
+//		transArgs->udpNet = _udpNet;
 		pthread_t tid;
 		INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
 		if (pthread_create(&tid, NULL, UpgradeThreadFun,
@@ -314,11 +321,14 @@ void HandleUp::devUpgradePCRequestCMDHandle(sockaddr_in &recvAddr,
 #endif
 	memset(request, 0, sizeof(DEV_Request_FileProtocal));
 	if (devRequestFileInit(*request, upFileAttr, fileTrans) == retOk) {
-		_udpNet.UDPSendMsg(request,
+		NetTrans::printBufferByHex("Buff2: ", request,
 				sizeof(PC_DEV_Header) + request->header.DataLen);
-//		sendto(sockfd, (INT8*) request,
-//				sizeof(PC_DEV_Header) + request->header.DataLen, 0,
-//				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+		sleep(1);
+//		getUDPNetTransInstance().UDPSendMsg(request,
+//				sizeof(PC_DEV_Header) + request->header.DataLen, recvAddr);
+		sendto(sockfd, (INT8*) request,
+				sizeof(PC_DEV_Header) + request->header.DataLen, 0,
+				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
 	} /*end send if*/
 	ofstream f(upFileAttr.getFileDownloadPath(), ios::trunc);
 	f.close();
@@ -328,6 +338,7 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 		SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd,
 		UpFileAttrs &upFileAttr, FileTrans &fileTrans,
 		DEV_Request_FileProtocal *request) {
+	cout << "000" << endl;
 
 	INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
 	SmartPtr<DEV_Request_UpgradeReply> upgradeReply(
@@ -337,6 +348,7 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 	INT32 retUpStatus = retOk;
 	INT32 retWrite = writeFileFromPC<PC_Reply_FileProtocal>(recvBuff,
 			upFileAttr.getFileDownloadPath());
+	cout << "000.000" << endl;
 	if (retWrite == retError) {
 		setInUpgrade(false);
 		return;
@@ -344,25 +356,35 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 
 	fileTrans.changeRemainedPos().setPersentage();
 	if (devRequestFile(*request, fileTrans) == retOk) {
+//		getUDPNetTransInstance().UDPSendMsg(request,
+//				sizeof(PC_DEV_Header) + request->header.DataLen, recvAddr);
+		cout << "000.111" << request->header.DataLen << endl;
 		sendto(sockfd, (INT8*) request,
 				sizeof(PC_DEV_Header) + request->header.DataLen, 0,
 				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
 	}
+
 	if (fileTrans.getNewPercent() > fileTrans.getOldPercent()) {
 		upgradeReply->header.HeadCmd = 0x0005;
 		memset(replyText, 0, msgLen);
 		sprintf(replyText, "Upgrading %u%%", fileTrans.getNewPercent());
 		replyText[strlen(replyText)] = '\0';
-		cout << "text : " << replyText << endl;
+		cout << "text 1111111111: " << replyText << endl;
 		if (devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuffer,
 				*upgradeReply.get(), strlen(replyText), replyText, retUpStatus,
 				setNetworkTerminal) == retOk) {
 		}
+		sleep(1);
+//		getUDPNetTransInstance().UDPSendMsg(sendtoBuffer,
+//				sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, recvAddr);
 		sendto(sockfd, (INT8*) sendtoBuffer,
 				sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
 				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
+		cout << "222 " << upgradeReply->header.DataLen << endl;
 	}
+	cout << "333" << endl;
 	fileTrans.setOldPercent(fileTrans.getNewPercent());
+	cout << "444" << endl;
 	if (0 == fileTrans.getFileRemainedLen()) {
 		UINT8 md5_str[MD5_SIZE];
 		if (!GetFileMD5(upFileAttr.getFileDownloadPath(), md5_str)) {
@@ -388,6 +410,8 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 				*upgradeReply.get(), strlen(replyText), replyText, retUpStatus,
 				setNetworkTerminal) == retOk) {
 		}
+//		getUDPNetTransInstance().UDPSendMsg(sendtoBuffer,
+//				sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, recvAddr);
 		sendto(sockfd, (INT8*) sendtoBuffer,
 				sizeof(PC_DEV_Header) + upgradeReply->header.DataLen, 0,
 				(struct sockaddr *) &recvAddr, tmp_server_addr_len);
@@ -413,6 +437,7 @@ void HandleUp::devFileTransCMDHandle(sockaddr_in &recvAddr, INT8 *recvBuff,
 		}
 		sleep(1);
 	}
+	cout << "555" << endl;
 	return;
 }
 
@@ -580,9 +605,11 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 	}
 
 	for (UINT32 i = 1; i <= devModules.size(); i++) {
+#if !(DSP9909)
 		if (devModules[i] == DEV_AMPLIFIER) {
 			executeDevModuleUp(AMPLIFIER, subItems->mSubItems);
 		}
+#endif
 #if (DSP9903)
 		else if (devModules[i] == DEV_PAGER) {
 			executeDevModuleUp(PAGER, subItems->mSubItems);
@@ -852,9 +879,22 @@ INT32 HandleUp::upgradePCrequestHandle(INT8 * recvBuff, INT8 * sendtoBuff,
 	retUpStatus = CMDParserUp::parserPCUpgradeCMD(recvBuff, upFileAttr,
 			failReason, devModuleToUpgrade);
 	if (retUpStatus == higherVerison) {
-		setInUpgrade(true);
-		status = retOk;
+		if (FileOperation::isExistFile(upFileAttr.getFileDownloadPath())
+				== false) {
+			Logger::GetInstance().Error("File : %s is not existed !",
+					upFileAttr.getFileDownloadPath());
+			memset(failReason, 0, 128);
+			memcpy(failReason, UPFILENOTEXIST, strlen(UPFILENOTEXIST));
+			status = retError;
+		} else {
+			setInUpgrade(true);
+			status = retOk;
+		}
 	} else if (retUpStatus == lowerVersion) {
+
+		memset(failReason, 0, 128);
+		memcpy(failReason, "Upgrade file version error !",
+				strlen("Upgrade file version error !"));
 		status = retError;
 	} else if (retUpStatus == equalVersion) {
 		if (FileOperation::isExistFile(upFileAttr.getFileDownloadPath())) {
@@ -862,6 +902,9 @@ INT32 HandleUp::upgradePCrequestHandle(INT8 * recvBuff, INT8 * sendtoBuff,
 		}
 		status = retError;
 	} else if (retUpStatus == errorVersionStatus) {
+		memset(failReason, 0, 128);
+		memcpy(failReason, "Upgrade file version error !",
+				strlen("Upgrade file version error !"));
 		status = retError;
 	}
 	devReply.header.HeadCmd = 0x0003;
@@ -917,10 +960,12 @@ INT32 HandleUp::upTerminalDevs(UPDATE_DEV_TYPE type, INT32 &sockfd,
 	}
 	Logger::GetInstance().Info("Will upgrade device type %d !", devUp.dev_type);
 	struct timeval timeout /*= { 300, 0 }*/; //3s
+#if !(DSP9909)
 	if (type == UPDATE_DEV_AMP_TYPE) {
 		timeout.tv_sec = 60;
 		timeout.tv_usec = 0;
 	}
+#endif
 #if (DSP9903)
 	else if (type == UPDATE_DEV_PAGER_TYPE) {
 		timeout.tv_sec = 60;

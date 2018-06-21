@@ -19,7 +19,7 @@ SocketException::SocketException(const std::string &message,
 }
 
 NetTrans::NetTrans(int domain, int type, int protocol) :
-		Timer(100000), port(0) {
+		Timer(1000), port(0) {
 	if ((m_socket = ::socket(domain, type, protocol)) < 0)
 		throw SocketException("Socket creation failed (socket)");
 }

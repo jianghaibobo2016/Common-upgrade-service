@@ -261,15 +261,19 @@ bool UpgradeDSPSubItem::adjustOrder(
 	map<INT32, string> m_subItem;
 	UINT32 i = 1;
 	for (i = 1; i <= devModuleToUpgrade.size(); i++) {
+#if !(DSP9909)
 		if (devModuleToUpgrade[i] == DEV_AMPLIFIER)
-			m_dev_type[i] = AMPLIFIER;
+		m_dev_type[i] = AMPLIFIER;
+#endif
 #if (DSP9903)
 		else if (devModuleToUpgrade[i] == DEV_PAGER)
-			m_dev_type[i] = PAGER;
+		m_dev_type[i] = PAGER;
 #endif
+#if !(DSP9909)
 		else {
 			return false;
 		}
+#endif
 	}
 	UINT32 nameLen = mSubItems.size();
 	UINT32 moduleLen = m_dev_type.size();
@@ -339,7 +343,9 @@ INT32 UpgradeDSPSubItem::parserSubItemsFileName(UINT32 num) {
 			strlen(AmplifierUpgrade)) == 0) {
 		cout << "up amplifier !!!!!!!!!!!!!!!!!!!!!!1" << endl;
 		this->setUpTerminalDevs(true);
+#if !(DSP9909)
 		this->setUpDevType(UPDATE_DEV_AMP_TYPE);
+#endif
 		aUpSubItem->setItemName(AMPLIFIER);
 	} else if (strncmp(mSubItems[num].c_str() + strlen(upFilePath),
 			PagerUpgrade, strlen(PagerUpgrade)) == 0) {

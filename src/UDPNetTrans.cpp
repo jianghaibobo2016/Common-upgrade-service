@@ -14,12 +14,12 @@ using namespace std;
 using namespace FrameWork;
 UDPNetTrans::UDPNetTrans(SetNetworkTerminal *setNetworkTerminal) :
 		NetTrans(UNIXAF, DATAGRAM, 0), setNetworkTerminal(setNetworkTerminal), UDPStatus(
-				false), _bufferLen(0), _sendSockAddr() {
+				false), _bufferLen(0) {
 	buffer = new INT8[BufferSizeMax];
 	_sendMsgBuff = new INT8[SendBuffMaxSize];
 	memset(buffer, 0, BufferSizeMax);
 	memset(_sendMsgBuff, 0, SendBuffMaxSize);
-	memset(&_sendSockAddr, 0, sizeof(struct sockaddr_in));
+//	memset(&_sendSockAddr, 0, sizeof(struct sockaddr_in));
 }
 
 UDPNetTrans::~UDPNetTrans() {
@@ -28,6 +28,8 @@ UDPNetTrans::~UDPNetTrans() {
 	delete[] _sendMsgBuff;
 }
 
+Mutex UDPNetTrans::mutex;
+
 UDPNetTrans::UDPNetTrans(const UDPNetTrans &udpNet) :
 		NetTrans(udpNet), setNetworkTerminal(udpNet.setNetworkTerminal), UDPStatus(
 				udpNet.UDPStatus), _bufferLen(udpNet._bufferLen) {
@@ -35,22 +37,23 @@ UDPNetTrans::UDPNetTrans(const UDPNetTrans &udpNet) :
 	memcpy(buffer, udpNet.buffer, strlen(udpNet.buffer));
 	_sendMsgBuff = new INT8[SendBuffMaxSize];
 	memcpy(_sendMsgBuff, udpNet._sendMsgBuff, udpNet._bufferLen);
+//	_mSockAddr = udpNet._mSockAddr;
 	memset(&_sendSockAddr, 0, sizeof(struct sockaddr_in));
 	memcpy(&_sendSockAddr, &udpNet._sendSockAddr, sizeof(struct sockaddr_in));
 }
 
-UDPNetTrans &UDPNetTrans::operator=(const UDPNetTrans &udpNet) :
-		NetTrans(udpNet), setNetworkTerminal(udpNet.setNetworkTerminal), UDPStatus(
-				udpNet.UDPStatus), _bufferLen(udpNet._bufferLen) {
-
-	buffer = new INT8[BufferSizeMax];
-	memcpy(buffer, udpNet.buffer, strlen(udpNet.buffer));
-	_sendMsgBuff = new INT8[SendBuffMaxSize];
-	memcpy(_sendMsgBuff, udpNet._sendMsgBuff, udpNet._bufferLen);
-	memset(&_sendSockAddr, 0, sizeof(struct sockaddr_in));
-	memcpy(&_sendSockAddr, &udpNet._sendSockAddr, sizeof(struct sockaddr_in));
-	return *this;
-}
+//UDPNetTrans &UDPNetTrans::operator=(const UDPNetTrans &udpNet) :
+//		NetTrans(udpNet), setNetworkTerminal(udpNet.setNetworkTerminal), UDPStatus(
+//				udpNet.UDPStatus), _bufferLen(udpNet._bufferLen) {
+//
+//	buffer = new INT8[BufferSizeMax];
+//	memcpy(buffer, udpNet.buffer, strlen(udpNet.buffer));
+//	_sendMsgBuff = new INT8[SendBuffMaxSize];
+//	memcpy(_sendMsgBuff, udpNet._sendMsgBuff, udpNet._bufferLen);
+//	memset(&_sendSockAddr, 0, sizeof(struct sockaddr_in));
+//	memcpy(&_sendSockAddr, &udpNet._sendSockAddr, sizeof(struct sockaddr_in));
+//	return *this;
+//}
 
 INT32 UDPNetTrans::socketRunThread() {
 	pthread_t tid;
@@ -84,10 +87,13 @@ INT32 UDPNetTrans::socketSelect() {
 	FileTrans fileTrans;
 	SmartPtr<UpFileAttrs> upFileAttrs = UpFileAttrs::createFileAttrs();
 	SmartPtr<DEV_Request_FileProtocal> request(new DEV_Request_FileProtocal);
-	SmartPtr<HandleUp> upHandle(new HandleUp(*this));
+	SmartPtr<HandleUp> upHandle(new HandleUp);
 	struct sockaddr_in recvAddr;
 	SetNetworkTerminal netSet(*setNetworkTerminal);
 
+//	upHandle->getUDPNetTransInstance().addEvent(5, 1, callBackFunc,
+//			&upHandle->getUDPNetTransInstance(), true);
+//	upHandle->getUDPNetTransInstance().asyncStart();
 	while (!UDPStatus) {
 		FD_ZERO(&readfd);
 		FD_SET(m_socket, &readfd);
@@ -107,13 +113,6 @@ INT32 UDPNetTrans::socketSelect() {
 			if (ret_recv <= 0) {
 				break;
 			}
-
-			upHandle->_udpNet.setSockAddr(recvSendAddr);
-			UINT32 id = upHandle->_udpNet.addEvent(5, 2, callBackFunc,
-					&upHandle->_udpNet, true);
-//			cout << "time id : " << id << "time id in Node "
-//					<< eventQueue.getTopNode()->id << endl;
-			upHandle->_udpNet.asyncStart();
 			memcpy(&recvAddr, &recvSendAddr, sizeof(recvSendAddr));
 			INT32 sockfd = m_socket;
 			switch (CMDParserUp::parserPCRequestHead(buffer, ret_recv)) {
@@ -134,7 +133,6 @@ INT32 UDPNetTrans::socketSelect() {
 			}/*end case 1*/
 				break;
 			case CMD_DEV_PARAMETER_SETTING: {
-				cout << "test 10 " << endl;
 				upHandle->devParamSetCMDHandle(recvAddr, buffer, &netSet,
 						sockfd);
 			}/*end case 2*/
@@ -146,6 +144,7 @@ INT32 UDPNetTrans::socketSelect() {
 			}/*end case 3*/
 				break;
 			case CMD_DEV_FILE_TRANSPORT: {
+				cout << "recv file trans ! " <<endl;
 				upHandle->devFileTransCMDHandle(recvAddr, buffer, &netSet,
 						sockfd, *upFileAttrs.get(), fileTrans, request.get());
 			}/*end case 4*/
@@ -181,38 +180,63 @@ INT32 UDPNetTrans::socketSelect() {
 	return retOk;
 }
 
+//UINT32 UDPNetTrans::getIdleTimerID() {
+//	for (UINT32 id = 1; id < 1000; id++) {
+//		if (_mSockAddr.find(id) == _mSockAddr.end()) {
+//			_mSockAddr[id]._bSockRunFlag = true;
+//			return id;
+//		} else {
+//			if (_mSockAddr[id]._bSockRunFlag == false) {
+//				_mSockAddr[id]._bSockRunFlag = true;
+//				return id;
+//			}
+//			continue;
+//		}
+//	}
+//	return 0;
+//}
+
 void UDPNetTrans::callBackFunc(void*args) {
 	UDPNetTrans *udpT = (UDPNetTrans*) args;
 	udpT->indirectFunc();
 }
 
 void UDPNetTrans::indirectFunc(void) {
+	cout << "asdf" << endl;
 	if (eventQueue.getTopNode()->id == 5) {
 		INT32 tmp_server_addr_len = sizeof(struct sockaddr_in);
+		AutoLock autoLock(&mutex);
 		if (strlen(_sendMsgBuff) != 0) {
+			NetTrans::printBufferByHex("Buff : ", _sendMsgBuff, _bufferLen);
 			INT32 retSend = sendto(m_socket, _sendMsgBuff, _bufferLen, 0,
 					(struct sockaddr *) &_sendSockAddr, tmp_server_addr_len);
-			cout << "Send data length : " << retSend << endl;
+			cout << "Send data length : " << retSend << "ip: "
+					<< inet_ntoa(_sendSockAddr.sin_addr) << " port : "
+					<< _sendSockAddr.sin_port << endl;
 			if (retSend < 0) {
 				Logger::GetInstance().Error("Send failed !");
 				NetTrans::printBufferByHex("Buff : ", _sendMsgBuff, _bufferLen);
 			}
 		}
-		struct timeval tv;
-		gettimeofday(&tv, NULL);
+//		struct timeval tv;
+//		gettimeofday(&tv, NULL);
 //			cout << tv.tv_sec << " s and us : "<<tv.tv_usec<< endl;
 		memset(_sendMsgBuff, 0, _bufferLen);
 
 	}
 }
 
-void UDPNetTrans::UDPSendMsg(const void *msg, UINT32 len) {
+void UDPNetTrans::UDPSendMsg(const void *msg, UINT32 len,
+		struct sockaddr_in &addr) {
 	if (len > SendBuffMaxSize) {
 		Logger::GetInstance().Error("Msg length %d is too long to send !", len);
 		return;
 	}
+	AutoLock autoLock(&mutex);
 	memset(_sendMsgBuff, 0, SendBuffMaxSize);
 	memcpy(_sendMsgBuff, msg, len);
 	_bufferLen = len;
+	memset(&_sendSockAddr, 0, sizeof(struct sockaddr_in));
+	memcpy(&_sendSockAddr, &addr, sizeof(struct sockaddr_in));
 
 }

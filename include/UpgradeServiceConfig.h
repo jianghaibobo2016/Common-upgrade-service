@@ -5,16 +5,17 @@
 // UpgradeServiceConfig.h
 
 /*switch type*/
-#define DSP9903 1
+#define DSP9903 0
 #define DSP9906 0
-#define DSP9909 0
+#define DSP9909 1
 /*switch type*/
 /*type switch setting*/
 #if (DSP9903)
 /*upgrade soft version*/
-static const INT8 *UpgradeSoftVersion = "V01.11.04";
+static const INT8 *UpgradeSoftVersion = "V01.21.05";
 /*03: adding that system will up rootfs and reboot with failed upgrading some modules.
  * 04:modify protocol of set mask and network
+ * 05 : upgrade zip : Begin to upgrade! fix this bug.
  * */
 /*upgrade soft version*/
 //static const TERMINAL_DEV_TYPE Terminal_Dev_DSP = TERMINAL_DEV_DSP9903;
@@ -40,6 +41,7 @@ enum DEV_MODULES_TYPE {
 };
 /*Devs type*/
 #endif
+
 #if (DSP9906)
 /*upgrade soft version*/
 static const INT8 *UpgradeSoftVersion = "V01.03.01";
@@ -63,6 +65,34 @@ static const UINT16 mask[4] = { 0xffff, 0xffff, 0xffff, 0xffff };
 /*Devs type*/
 enum DEV_MODULES_TYPE {
 	DEV_AMPLIFIER = 1,			 //功放板
+	INVALID_TYPE
+};
+/*Devs type*/
+#endif
+/*type switch setting*/
+
+
+#if (DSP9909)
+/*upgrade soft version*/
+static const INT8 *UpgradeSoftVersion = "V00.01.01";
+/*upgrade soft version*/
+static const INT8 *TerminalDevTypeID = "0068";
+static const INT8 *TerminalDevType = "DSP9909";
+static const INT8 *StringFind = "DSP9909_";
+static const INT8 *INIFILE = "/dsppa/SET_NET/DSP9909_NET_CONF.ini";
+static const INT8 *upFileDownload = "/nand/Update_File/DSP9909_PRODUCT_";
+static const INT8 *AmplifierUpgrade = "DSP9909_Amplifier_INVALID";
+static const INT8 *PagerUpgrade = "DSP9909_Pager_INVALID";
+static const INT8 *MainRootfsUpgrade = "DSP9909_MROOTFS_";
+/*log path setting*/
+static const INT8 *logPath = "/nand/log/UpgradeService_9909";
+/*log path setting*/
+/*mask.bin setting*/
+static const bool getMask = true;
+/*mask.bin setting*/
+/*Devs type*/
+enum DEV_MODULES_TYPE {
+//	DEV_AMPLIFIER = 1,			 //功放板
 	INVALID_TYPE
 };
 /*Devs type*/
