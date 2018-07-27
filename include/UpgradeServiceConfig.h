@@ -5,17 +5,18 @@
 // UpgradeServiceConfig.h
 
 /*switch type*/
-#define DSP9903 0
+#define DSP9903 1
 #define DSP9906 0
-#define DSP9909 1
+#define DSP9909 0
 /*switch type*/
 /*type switch setting*/
 #if (DSP9903)
 /*upgrade soft version*/
-static const INT8 *UpgradeSoftVersion = "V01.21.05";
+static const INT8 *UpgradeSoftVersion = "V01.34.01";
 /*03: adding that system will up rootfs and reboot with failed upgrading some modules.
  * 04:modify protocol of set mask and network
  * 05 : upgrade zip : Begin to upgrade! fix this bug.
+ * 30.01 HandleUp.cpp 620 modified
  * */
 /*upgrade soft version*/
 //static const TERMINAL_DEV_TYPE Terminal_Dev_DSP = TERMINAL_DEV_DSP9903;
@@ -44,7 +45,7 @@ enum DEV_MODULES_TYPE {
 
 #if (DSP9906)
 /*upgrade soft version*/
-static const INT8 *UpgradeSoftVersion = "V01.03.01";
+static const INT8 *UpgradeSoftVersion = "V01.23.01";
 /*upgrade soft version*/
 //static const TERMINAL_DEV_TYPE Terminal_Dev_DSP = TERMINAL_DEV_DSP9906;
 static const INT8 *TerminalDevTypeID = "0066";
@@ -74,7 +75,7 @@ enum DEV_MODULES_TYPE {
 
 #if (DSP9909)
 /*upgrade soft version*/
-static const INT8 *UpgradeSoftVersion = "V00.01.01";
+static const INT8 *UpgradeSoftVersion = "V01.03.02";
 /*upgrade soft version*/
 static const INT8 *TerminalDevTypeID = "0068";
 static const INT8 *TerminalDevType = "DSP9909";
@@ -108,7 +109,8 @@ static const INT8 *PAGER = "Pager";
 static const INT32 UpUDPTransPort = 45535;
 static const INT32 UpRespondPort = 65530;
 static const INT32 UpLocalPort = 4307;
-static const INT8 *MultiCastAddr = "234.2.3.4";
+static const INT8 *MultiCastAddrRECV = "239.0.0.5";
+static const INT8 *MultiCastAddrSEND = "239.0.0.6";
 /*net port*/
 
 /* struct of protocal member size */
@@ -166,6 +168,7 @@ static const INT8 *PCREQUESTMASK = "Mask";
 static const INT8 *MASKPATH = "/usr/share/mask.bin";
 static const INT8 *MODIFYRESPOND_SUCCESS = "Modify successed !";
 static const INT8 *MODIFYRESPOND_FAIL = "Modify failed !";
+static const INT8 *MODIFYRESPOND_SAMECONF = "Same config !";
 /*Net Set Tag*/
 
 /* upgrade */
@@ -197,6 +200,7 @@ static const INT32 subNum = 9;
 /*WEB request */
 static const INT8 *WEBREQUEST = "WEB";
 static const INT8 *PCREQUEST = "PC";
+//static const INT8 *VOIDREQUEST = '\0';
 
 /*Force to upgrade*/
 static const INT8 *FORCEUPGRADE = "_FORCE";

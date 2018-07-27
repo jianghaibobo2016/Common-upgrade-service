@@ -54,7 +54,7 @@ enum UPDATE_DEV_TYPE {
 typedef struct UPDATE_DEV_Header_tag {
 	UINT32 HeadTag;
 	UINT16 HeadCmd;
-	UINT16 DataLen;//Length of data of Struct
+	UINT16 DataLen;//Length of data of Struct total
 } UPDATE_DEV_Header;
 
 //------------------------------1.设备升级-------------------------//
@@ -122,7 +122,7 @@ typedef struct UPGRADE_REQUEST_SET_CONFIG_tag {
 	UINT32 ServerIP; //inet_addr
 	UINT16 CommunicationPort;
 #if ((DSP9903) || (DSP9909))
-	UINT16 RecordingPort; // DSP9903 ONLY
+	UINT16 RecordingPort; // DSP9903 and DSP9909
 #endif
 	INT8 DevName[60];
 } UP_PROG_SET_CONF;

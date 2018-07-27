@@ -8,6 +8,7 @@
 #include "UpgradeServiceConfig.h"
 #include "md5.h"
 #include "Uncopyable.h"
+#include "NetTrans.h"
 #include <map>
 #include <vector>
 
@@ -58,6 +59,8 @@ public:
 		return forceUpgrade;
 	}
 	void setUpgradeFile(INT8 *file) {
+		NetTrans::printBufferByHex("File name in set file func : ", file,
+				strlen(file));
 		upgradeFile = file;
 	}
 	void setUpStatus(upgradeFileStatus status) {

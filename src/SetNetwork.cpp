@@ -14,10 +14,13 @@
 #include "Logger.h"
 #include <errno.h>
 #include <unistd.h>
+#include <string.h>
 #include <arpa/inet.h>
 #include <net/if_arp.h> /* ARPHRD_ETHER */
 #include "SetNetwork.h"
 #include "UpgradeServiceConfig.h"
+#include "NetTrans.h"
+#include "IniConfigFile.h"
 
 using namespace std;
 using namespace FrameWork;
@@ -126,10 +129,11 @@ bool SetNetwork::getNetworkConfig() {
 		close(sock);
 		return false;
 	}
-	strncpy(ifr.ifr_name, IFNAME, IFNAMSIZ - 1);
 
 	//No such file or directory ! ioctl()
 	//mac addr
+	memset(&ifr,0, sizeof(struct ifreq));
+	strncpy(ifr.ifr_name, IFNAME, IFNAMSIZ - 1);
 	INT32 retIO = ioctl(sock, SIOCGIFHWADDR, &ifr);
 	if (retIO < 0) {
 		FILE_LINE;
@@ -140,6 +144,7 @@ bool SetNetwork::getNetworkConfig() {
 //		 printf("%02x\n", ifr.ifr_hwaddr.sa_data[3]);
 		m_netWorkConfig.macAddr = ByteToHexString(ifr.ifr_hwaddr.sa_data, 6);
 	}
+//	cout << "mac in func " << m_netWorkConfig.macAddr << endl;
 	//ip addr
 	if (ioctl(sock, SIOCGIFADDR, &ifr) != 0) {
 
@@ -164,7 +169,6 @@ bool SetNetwork::getNetworkConfig() {
 		m_netWorkConfig.netmaskAddr = inet_ntoa(sin.sin_addr);
 	}
 	close(sock);
-
 	//gateway
 
 	fp = fopen("/proc/net/route", "r");
@@ -176,7 +180,6 @@ bool SetNetwork::getNetworkConfig() {
 	/* Skip title line */
 	if (!fgets(buf, sizeof(buf), fp))
 		return false;
-
 	INT32 countOut = 20;
 	while (fgets(buf, sizeof(buf), fp)) {
 		countOut--;
@@ -190,6 +193,7 @@ bool SetNetwork::getNetworkConfig() {
 			}
 		}
 		struct in_addr addr;
+
 		memcpy(&addr, &gate_addr, sizeof(gate_addr));
 		m_netWorkConfig.gatewayAddr = inet_ntoa(addr);
 		break;
@@ -217,6 +221,7 @@ INT8* SetNetwork::castMacToChar13(INT8 *macDest, string macaddr) {
 		}
 	}
 	mutex.Unlock();
+	cout << macDest << endl;
 	return macDest;
 }
 
@@ -233,8 +238,21 @@ INT8* SetNetwork::castMacToChar13(INT8 *macDest, string macaddr) {
 bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 		const INT8 *gateway, const INT8* macaddr, const INT8* iniFile) {
 	CheckNetConfig checkNetConfig;
+	INT8 m_ipaddr[20] = { 0 };
+	if (ipaddr != NULL)
+		memcpy(m_ipaddr, ipaddr, strlen(ipaddr));
+	INT8 m_subnet[20] = { 0 };
+	if (subnet != NULL)
+		memcpy(m_subnet, subnet, strlen(subnet));
+	INT8 m_gateway[20] = { 0 };
+	if (gateway != NULL)
+		memcpy(m_gateway, gateway, strlen(gateway));
+	INT8 m_macaddr[40] = { 0 };
+	if (macaddr != NULL) {
+		memcpy(m_macaddr, macaddr, strlen(macaddr));
+	}
 	/* args check */
-	if (ipaddr == NULL && macaddr == NULL) {
+	if (strlen(m_ipaddr) == 0 && strlen(m_macaddr) == 0) {
 		Logger::GetInstance().Error("None input!");
 		return false;
 	}
@@ -250,55 +268,56 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 			return false;
 		}
 	}
-	IniConfigFile iniConfFile;
+	IniConfigFile iniConfFile(INIFILE);
 	/*  */
+	Logger::GetInstance().Info(
+			"%s() :Get net setting request:\nIP:\t%s\nNETMASK:\t%s\nGATEWA:\t%s\nMAC:\t%s\n",
+			__FUNCTION__, m_ipaddr, m_subnet, m_gateway, m_macaddr);
+//	sync();
 
-	Logger::GetInstance().Error(
-			"Get net setting request:\nIP:\t%s\nNETMASK:\t%s\nGATEWAY:\t%s\nMAC:\t%s\n",
-			ipaddr, subnet, gateway, macaddr);
-	sync();
-	if (macaddr == NULL) {
-		if (subnet == NULL) {
-			if (checkNetConfig.checkIP(ipaddr, 0) != true) {
+	if (strlen(m_macaddr) == 0) {
+		cout << "check restart prog 2 " << endl;
+		if (m_subnet == NULL) {
+			if (checkNetConfig.checkIP(m_ipaddr, 0) != true) {
 				Logger::GetInstance().Error("%s() : Ip input is incorrect !",
 						__FUNCTION__);
 				return false;
 			}
-			if (setNet(ipaddr, this->m_netWorkConfig.netmaskAddr.c_str(),
+			if (setNet(m_ipaddr, this->m_netWorkConfig.netmaskAddr.c_str(),
 					this->m_netWorkConfig.gatewayAddr.c_str()) != true) {
 				RESTORENET;
 				Logger::GetInstance().Error(
-						"%s %s() : Set ip netmask gateway !",
+						"%s %s() : Set ip netmask m_gateway !",
 						__FILE__, __FUNCTION__);
 				return false;
 			}
-			if (iniConfFile.setIniConfFile("NETWORK", "ipaddr", ipaddr)
+			if (iniConfFile.setIniConfFile("NETWORK", "ipaddr", m_ipaddr)
 					!= retOk) {
 				Logger::GetInstance().Error("%s() : Set ip into ini file !",
 						__FUNCTION__);
 				RESTORENET;
 				return false;
 			}
-		} else if (subnet != NULL && gateway != NULL) {
-
-			if (checkNetConfig.checkGateway(ipaddr, subnet, gateway) != true) {
+		} else if (m_subnet != NULL && m_gateway != NULL) {
+			if (checkNetConfig.checkGateway(m_ipaddr, m_subnet, m_gateway)
+					!= true) {
 				Logger::GetInstance().Error(
 						"%s() : Ip netmask gateyway input is incorrect !",
 						__FUNCTION__);
 				return false;
 			}
-			if (setNet(ipaddr, subnet, gateway) != true) {
+			if (setNet(m_ipaddr, m_subnet, m_gateway) != true) {
 				RESTORENET;
 				Logger::GetInstance().Error("%s() : Set ip netmask gateway !",
 						__FUNCTION__);
 				return false;
 			}
-			if ((iniConfFile.setIniConfFile("NETWORK", "ipaddr", ipaddr)
+			if ((iniConfFile.setIniConfFile("NETWORK", "ipaddr", m_ipaddr)
 					!= retOk)
-					|| (iniConfFile.setIniConfFile("NETWORK", "netmask", subnet)
-							!= retOk)
+					|| (iniConfFile.setIniConfFile("NETWORK", "netmask",
+							m_subnet) != retOk)
 					|| (iniConfFile.setIniConfFile("NETWORK", "gateway",
-							gateway) != retOk)) {
+							m_gateway) != retOk)) {
 				Logger::GetInstance().Error(
 						"%s() : Set network config into ini file !",
 						__FUNCTION__);
@@ -308,21 +327,21 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 		} else
 			return false;
 	} else {
-		if (strlen(macaddr) != 12) {
+		if (strlen(m_macaddr) != 12) {
 			Logger::GetInstance().Error("%s() :Mac input is incorrect !",
 					__FUNCTION__);
 		}
 		//modify macCheck::20aabbcc..--->> 20:aa:bb:cc...
 		INT8 macCheck[18] = { 0 };
 		UINT32 i, iPos = 0;
-		for (i = 0; i < strlen(macaddr); i++) {
+		for (i = 0; i < strlen(m_macaddr); i++) {
 			if (i != 0 && i % 2 == 0) {
 				memcpy(&macCheck[iPos], ":", 1);
 				iPos++;
-				memcpy(&macCheck[iPos], &macaddr[i], 1);
+				memcpy(&macCheck[iPos], &m_macaddr[i], 1);
 				iPos++;
 			} else {
-				memcpy(&macCheck[iPos], &macaddr[i], 1);
+				memcpy(&macCheck[iPos], &m_macaddr[i], 1);
 				iPos++;
 			}
 		}
@@ -333,9 +352,9 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 					__FUNCTION__);
 			return false;
 		}
-		if (ipaddr != NULL) {
-			if (subnet == NULL) {
-				if (checkNetConfig.checkIP(ipaddr, 0) != true) {
+		if (strlen(m_ipaddr) != 0) {
+			if (strlen(m_subnet) == 0) {
+				if (checkNetConfig.checkIP(m_ipaddr, 0) != true) {
 					Logger::GetInstance().Error(
 							"%s() : Ip input is incorrect !", __FUNCTION__);
 					return false;
@@ -344,7 +363,7 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 				SETMACADDR;
 				UPNET;
 				SETMACINTOINI;
-				if (setNet(ipaddr, this->m_netWorkConfig.netmaskAddr.c_str(),
+				if (setNet(m_ipaddr, this->m_netWorkConfig.netmaskAddr.c_str(),
 						this->m_netWorkConfig.gatewayAddr.c_str()) == false) {
 					DOWNNET
 					RESTOREMAC;
@@ -361,7 +380,7 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 							__FUNCTION__);
 					return false;
 				}
-				if (iniConfFile.setIniConfFile("NETWORK", "ipaddr", ipaddr)
+				if (iniConfFile.setIniConfFile("NETWORK", "ipaddr", m_ipaddr)
 						!= retOk) {
 					Logger::GetInstance().Error("%s() : Set ip into ini file !",
 							__FUNCTION__);
@@ -371,8 +390,8 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 					RESTORENET;
 					return false;
 				}
-			} else if (subnet != NULL && gateway != NULL) {
-				if (checkNetConfig.checkGateway(ipaddr, subnet, gateway)
+			} else if (strlen(m_subnet) != 0 && strlen(m_gateway) != 0) {
+				if (checkNetConfig.checkGateway(m_ipaddr, m_subnet, m_gateway)
 						!= true) {
 					Logger::GetInstance().Error(
 							"%s() : Ip netmask gateway input is incorrect !",
@@ -383,7 +402,7 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 				SETMACADDR;
 				UPNET;
 				SETMACINTOINI;
-				if (setNet(ipaddr, subnet, gateway) != true) {
+				if (setNet(m_ipaddr, m_subnet, m_gateway) != true) {
 					DOWNNET
 					RESTOREMAC;
 					UPNET;
@@ -393,12 +412,12 @@ bool SetNetwork::setNetworkConfig(const INT8 *ipaddr, const INT8 *subnet,
 					return false;
 				}
 
-				if ((iniConfFile.setIniConfFile("NETWORK", "ipaddr", ipaddr)
+				if ((iniConfFile.setIniConfFile("NETWORK", "ipaddr", m_ipaddr)
 						!= retOk)
 						|| (iniConfFile.setIniConfFile("NETWORK", "netmask",
-								subnet) != retOk)
+								m_subnet) != retOk)
 						|| (iniConfFile.setIniConfFile("NETWORK", "gateway",
-								gateway) != retOk)) {
+								m_gateway) != retOk)) {
 					Logger::GetInstance().Error(
 							"%s() : Set network config into ini file !",
 							__FUNCTION__);
@@ -463,7 +482,7 @@ bool SetNetwork::setNet(const INT8 *ipaddr, const INT8 *subnet,
 	retIOCTL = ioctl(sockfd, SIOCSIFADDR, &ifr);
 	if (retIOCTL < 0) {
 
-		Logger::GetInstance().Error("%s() : Func ioctl !", __FUNCTION__);
+		Logger::GetInstance().Error("%s() : Func ioctl (IP) !", __FUNCTION__);
 		close(sockfd);
 		return false;
 	}
@@ -477,7 +496,8 @@ bool SetNetwork::setNet(const INT8 *ipaddr, const INT8 *subnet,
 
 	retIOCTL = ioctl(sockfd, SIOCSIFNETMASK, &ifr);
 	if (retIOCTL < 0) {
-		Logger::GetInstance().Error("Func ioctl !");
+
+		Logger::GetInstance().Error("Func ioctl (netmask) !");
 		close(sockfd);
 		return false;
 	}
@@ -501,8 +521,9 @@ bool SetNetwork::setNet(const INT8 *ipaddr, const INT8 *subnet,
 
 	rt.rt_flags = RTF_UP | RTF_GATEWAY;
 	retIOCTL = ioctl(sockfd, SIOCADDRT, &rt);
-	if (retIOCTL < 0) {
-		Logger::GetInstance().Error("Func ioctl !");
+	if ((retIOCTL < 0) && (errno != 17)) {
+		Logger::GetInstance().Error("Func ioctl (gateway) %s!",
+				strerror(errno));
 		close(sockfd);
 		return false;
 	}
@@ -559,16 +580,21 @@ bool SetNetwork::setNet(INT32 mac, const INT8 *macaddr) {
 }
 string SetNetwork::ByteToHexString(const void *pData, INT32 len) {
 	const string &split = "";
-	INT8 strNum[100];
+	INT8 strNum[100] = { 0 };
 	string strResult;
 	for (INT32 i = 0; i < len; i++) {
-		if (i == len - 1)
+		if (i == len - 1){
 			sprintf(strNum, "%02x%s", *((UINT8 *) pData + i), split.c_str());
-		else
+//			cout << "strNum:: "<<strNum<<endl;
+		}
+		else{
 			sprintf(strNum, "%02x-%s", *((UINT8 *) pData + i), split.c_str());
+//			cout << "strNum:: "<<strNum<<endl;
+		}
 
 		strResult += strNum;
 	}
+//	cout << "strresult : " << strResult.c_str() << endl;
 	// sprintf(strResult, "%02x-%02x-%02x-%02x-%02x-%02x", macAddress[0] & 0xff, macAddress[1] & 0xff, macAddress[2] & 0xff, macAddress[3] & 0xff, macAddress[4] & 0xff, macAddress[5] & 0xff);
 	return strResult;
 }
@@ -689,12 +715,13 @@ bool CheckNetConfig::checkIP(const INT8* ipaddr, const INT32 subnetFlag) {
 			}
 		} else {
 //			section[dotIndex] = '\0';
-			cout << "check 11111: " << section[dotIndex] << "xiaoyu0"
-					<< atoi(section[dotIndex]) << "len:"
-					<< strlen(section[dotIndex]) << endl;
-			cout << "check : " << atoi(section[dotIndex]) << "xiaoyu0"
-					<< atoi(section[dotIndex]) << "len:"
-					<< strlen(section[dotIndex]) << endl;
+
+//			cout << "check 11111: " << section[dotIndex] << "xiaoyu0"
+//					<< atoi(section[dotIndex]) << "len:"
+//					<< strlen(section[dotIndex]) << endl;
+//			cout << "check : " << atoi(section[dotIndex]) << "xiaoyu0"
+//					<< atoi(section[dotIndex]) << "len:"
+//					<< strlen(section[dotIndex]) << endl;
 			if (atoi(section[dotIndex]) >= 255 || atoi(section[dotIndex]) < 0
 					|| strlen(section[dotIndex]) == 0) {
 				Logger::GetInstance().Error("Error input7!");
@@ -797,195 +824,7 @@ bool CheckNetConfig::checkMAC(INT8 *mac) {
 		return false;
 	return true;
 }
-IniConfigFile::IniConfigFile() :
-		iniFile(INIFILE) {
-}
-bool IniConfigFile::readIniConfFile(const INT8 *section, const INT8 *key,
-		INT8 *value, INT32 valueLen) {
-	// Logger::GetInstance().Error("Input error ! %s()", __FUNCTION__);
-	if (section == NULL || key == NULL || value == NULL || iniFile == NULL) {
-		Logger::GetInstance().Error("Input error !");
-		return false;
-	}
-	const INT8 *default_value = " ";
-	const INT32 MAX_FILE_SIZE = 1024;
-	//size is value length
-	INT32 file_size = 0;
-	INT8 buf[MAX_FILE_SIZE] = { 0 };
-	INT32 sec_s = 0, sec_e = 0, key_s = 0, key_e = 0, value_s = 0, value_e = 0;
-	//check parameters
-	if (!load_ini_file(iniFile, buf, &file_size)) {
-		if (default_value != NULL) {
-			strncpy(value, default_value, valueLen);
-		}
-		return false;
-	}
-	if (!parse_file(section, key, buf, &sec_s, &sec_e, &key_s, &key_e, &value_s,
-			&value_e)) {
-		if (default_value != NULL) {
-			strncpy(value, default_value, valueLen);
-		}
-		return false; //not find the key
-	} else {
-		INT32 cpcount = value_e - value_s;
-		if (valueLen - 1 < cpcount) {
-			cpcount = valueLen - 1;
-		}
-		memset(value, 0, valueLen);
-		memcpy(value, buf + value_s, cpcount);
-		value[cpcount] = '\0';
-		return true;
-	}
-}
-INT32 IniConfigFile::load_ini_file(const INT8 *file, INT8 *buf,
-		INT32 *file_size) {
-	if (file == NULL || buf == NULL) {
-		Logger::GetInstance().Error("%s() : Input error !", __FUNCTION__);
-		return retError;
-	}
-	const INT32 MAX_FILE_SIZE = 1024;
-	INT32 i = 0;
-	*file_size = 0;
-	FILE *fd = fopen(file, "r");
-	if (NULL == fd) {
-		return retOk;
-	}
-	buf[i] = fgetc(fd);
-	//load initialization file
-	while (buf[i] != (INT8) EOF) {
-		i++;
-		if (i >= MAX_FILE_SIZE) {
-			//file too big, you can redefine MAX_FILE_SIZE to fit the big file
-			Logger::GetInstance().Error("%s() : Over file size !",
-					__FUNCTION__);
-			fclose(fd);
-			return retError;
-		}
-		buf[i] = fgetc(fd);
-	}
-	buf[i] = '\0';
-	*file_size = i;
-	fclose(fd);
-	return retError;
-}
-INT32 IniConfigFile::parse_file(const INT8 *section, const INT8 *key,
-		const INT8 *buf, INT32 *sec_s, INT32 *sec_e, INT32 *key_s, INT32 *key_e,
-		INT32 *value_s, INT32 *value_e) {
-	if (section == NULL || buf == NULL || key == NULL) {
-		Logger::GetInstance().Error("%s() : Input error !", __FUNCTION__);
-		return retError;
-	}
 
-	const INT8 *p = buf;
-	INT32 i = 0;
-	*sec_e = *sec_s = *key_e = *key_s = *value_s = *value_e = -1;
-	while (!end_of_string(p[i])) {
-		//find the section
-		if ((0 == i || newline(p[i - 1])) && left_barce(p[i])) {
-			INT32 section_start = i + 1;
-			//find the ']'
-			do {
-				i++;
-			} while (!isright_brace(p[i]) && !end_of_string(p[i]));
-			if (0 == strncmp(p + section_start, section, i - section_start)) {
-				INT32 newline_start = 0;
-				i++;
-				//Skip over space char after ']'
-				while (isspace(p[i])) {
-					i++;
-				}
-				//find the section
-				*sec_s = section_start;
-				*sec_e = i;
-				while (!(newline(p[i - 1]) && left_barce(p[i]))
-						&& !end_of_string(p[i])) {
-					INT32 j = 0;
-					//get a new line
-					newline_start = i;
-					while (!newline(p[i]) && !end_of_string(p[i])) {
-						i++;
-					}
-
-					//now i is equal to end of the line
-					j = newline_start;
-					if (';' != p[j]) //skip over comment
-							{
-						while (j < i && p[j] != '=') {
-							j++;
-							if ('=' == p[j]) {
-								if (strncmp(key, p + newline_start,
-										j - newline_start) == 0) {
-									//find the key ok
-									*key_s = newline_start;
-									*key_e = j - 1;
-									*value_s = j + 1;
-									*value_e = i;
-									return retError;
-								}
-							}
-						}
-					}
-					i++;
-				}
-			}
-		} else {
-			i++;
-		}
-	}
-	return retOk;
-}
-INT32 IniConfigFile::setIniConfFile(const INT8 *section, const INT8 *key,
-		const INT8 *value) {
-	if (section == NULL || value == NULL || key == NULL || iniFile == NULL) {
-		Logger::GetInstance().Error("%s() : Input error !", __FUNCTION__);
-		return retError;
-	}
-
-	const INT32 MAX_FILE_SIZE = 1024 * 4;
-	INT8 buf[MAX_FILE_SIZE] = { 0 };
-	INT8 w_buf[MAX_FILE_SIZE] = { 0 };
-	INT32 sec_s, sec_e, key_s, key_e, value_s, value_e;
-	INT32 value_len = (INT32) strlen(value);
-	INT32 file_size;
-	FILE *out;
-	//check parameters
-	if (!load_ini_file(iniFile, buf, &file_size)) {
-		sec_s = -1;
-	} else {
-		parse_file(section, key, buf, &sec_s, &sec_e, &key_s, &key_e, &value_s,
-				&value_e);
-	}
-	if (-1 == sec_s) {
-		if (0 == file_size) {
-			sprintf(w_buf + file_size, "[%s]\n%s=%s\n", section, key, value);
-		} else {
-			//not find the section, then add the new section at end of the file
-			memcpy(w_buf, buf, file_size);
-			sprintf(w_buf + file_size, "\n[%s]\n%s=%s\n", section, key, value);
-		}
-	} else if (-1 == key_s) {
-		//not find the key, then add the new key=value at end of the section
-		memcpy(w_buf, buf, sec_e);
-		sprintf(w_buf + sec_e, "%s=%s\n", key, value);
-		sprintf(w_buf + sec_e + strlen(key) + strlen(value) + 2, buf + sec_e,
-				file_size - sec_e);
-	} else {
-		//update value with new value
-		memcpy(w_buf, buf, value_s);
-		memcpy(w_buf + value_s, value, value_len);
-		memcpy(w_buf + value_s + value_len, buf + value_e, file_size - value_e);
-	}
-	out = fopen(iniFile, "w");
-	if (NULL == out) {
-		return retError;
-	}
-	if (-1 == fputs(w_buf, out)) {
-		fclose(out);
-		return retError;
-	}
-	fclose(out);
-	return retOk;
-}
 INT32 SetNetwork::stringToHex(const string &strNum) {
 	if (strNum.length() != 2) {
 		cout << "string ::::" << strNum << endl;

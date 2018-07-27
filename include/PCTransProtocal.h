@@ -145,7 +145,7 @@ typedef struct PC_Reply_FileProtocal_tag{
 typedef struct DEV_Request_UpgradeReply_tag{
 	PC_DEV_Header header;
 	INT8 DevID[40]; //设备ID(前四个字符为设备类型)//add
-	UINT8 Result; //升级结果反馈 成功:1, 失败:0
+	UINT8 Result; //升级结果反馈 成功:1, 失败:0 	升级完毕 :2
 	//UINT8 FailReasonLen;
 	//char* text
 }DEV_Request_UpgradeReply;

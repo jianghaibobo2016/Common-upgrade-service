@@ -60,7 +60,8 @@ INT32 UDPNetTrans::socketRunThread() {
 	struct timeval tv;
 	if (pthread_create(&tid, NULL, pthreadStart, (void *) this) == 0) {
 		gettimeofday(&tv, NULL);
-		Logger::GetInstance().Info("System time is %d", (INT32) tv.tv_sec);
+		Logger::GetInstance().Info("System time is %d.%d", (INT32) tv.tv_sec,
+				(INT32) tv.tv_usec);
 		Logger::GetInstance().Info("The upgrade soft version is %s.",
 				UpgradeSoftVersion);
 		printf("Create UDP thread successfully!........\n");
@@ -123,12 +124,12 @@ INT32 UDPNetTrans::socketSelect() {
 				Logger::GetInstance().Info(
 						"Get dev search command from PC : %s !",
 						inet_ntoa(recvAddr.sin_addr));
-				NetTrans::printBufferByHex("recv dev : ", buffer,
+				NetTrans::printBufferByHex("Dev serach buffer : ", buffer,
 						strlen(buffer));
 				upHandle->devSearchCMDHandle(recvAddr, &netSet,
 						*upFileAttrs.get(), sockfd);
 				cout
-						<< "=====================dev search end================================"
+						<< "=====================dev search end=================================="
 						<< endl;
 			}/*end case 1*/
 				break;
@@ -144,7 +145,6 @@ INT32 UDPNetTrans::socketSelect() {
 			}/*end case 3*/
 				break;
 			case CMD_DEV_FILE_TRANSPORT: {
-				cout << "recv file trans ! " <<endl;
 				upHandle->devFileTransCMDHandle(recvAddr, buffer, &netSet,
 						sockfd, *upFileAttrs.get(), fileTrans, request.get());
 			}/*end case 4*/
@@ -157,11 +157,14 @@ INT32 UDPNetTrans::socketSelect() {
 				Logger::GetInstance().Info(
 						"Get test mode change command from PC : %s !",
 						inet_ntoa(recvAddr.sin_addr));
-				upHandle->devTestModeCntCMDHandle(buffer);
+				upHandle->devTestModeCntCMDHandle(buffer, recvAddr, &netSet,
+						sockfd);
 			}/*end case 7*/
 				break;
 			case CMD_DEV_GETMASK: {
+#if (!DSP9906)
 				upHandle->devGetMaskCMDHandle(recvAddr, &netSet, sockfd);
+#endif
 			}/*end case 8*/
 				break;
 			case CMD_DEV_REQUESTVERSION: {

@@ -17,6 +17,7 @@
 
 class HandleUp {
 	static Mutex mutex;
+	static struct timeval start;
 public:
 	HandleUp();
 //	HandleUp(UDPNetTrans &udpNet);
@@ -42,7 +43,8 @@ public:
 			DEV_Request_FileProtocal *request);
 	void devGetMaskCMDHandle(sockaddr_in &recvAddr,
 			SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd);
-	void devTestModeCntCMDHandle(INT8 *recvBuff);
+	void devTestModeCntCMDHandle(INT8 *recvBuff, sockaddr_in &recvAddr,
+			SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd);
 	void devGetVersionCMDHandle(INT32 &sockfd, sockaddr_in recvAddr);
 	/**************************mainly Handle function ************************/
 
@@ -83,12 +85,19 @@ public:
 		return inUpgrade;
 	}
 
+	bool getInFileTrans() {
+		return inFileTrans;
+	}
+
 	UDPNetTrans &getUDPNetTransInstance() {
 		return _udpNet;
 	}
 
-	void setInUpgrade(bool status) {
+	void setInUpgrade(const bool status) {
 		inUpgrade = status;
+	}
+	void setInFileTrans(const bool status) {
+		inFileTrans = status;
 	}
 
 	template<typename T>
@@ -100,6 +109,7 @@ private:
 
 	UDPNetTrans _udpNet;
 	static bool inUpgrade;
+	static bool inFileTrans;
 	map<INT32, DEV_MODULES_TYPE> devModuleToUpgrade;
 
 	static INT32 upTerminalDevs(UPDATE_DEV_TYPE type, INT32 &sockfd,
@@ -108,6 +118,11 @@ private:
 			map<INT32, string> &mExtract);
 
 	INT32 getMaskInfo(UINT16 *mask);
+
+	void inUpgradingMsgSend(sockaddr_in recvAddr,
+			SetNetworkTerminal *setNetworkTerminal, INT32 sockfd);
+
+	double diffTimeval(const struct timeval *end, const struct timeval *start);
 
 };
 class UDPNetTrans;

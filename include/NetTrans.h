@@ -45,7 +45,7 @@ public:
 	INT32 getSockfd() {
 		return m_socket;
 	}
-	void socketBind(unsigned short localPort);
+	INT32 socketBind(unsigned short localPort);
 
 	void static printBufferByHex(const INT8 *note, void *buff, UINT32 len);
 

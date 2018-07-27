@@ -59,11 +59,14 @@ DEV_Reply_GetDevMsg *DevSearchTerminal::getDevMsg(const string &pathXML,
 		return NULL;
 	}
 	INT8 mac[13] = { 0 };
+//	cout << "addr : "<<setNetworkTerminal->getNetConfStruct().macAddr<<endl;
 	strcpy(mac,
 			SetNetworkTerminal::castMacToChar13(mac,
 					setNetworkTerminal->getNetConfStruct().macAddr));
+
 	mac[12] = '\0';
-	XMLParser xmlParser(pathXML);
+	XMLParser xmlParser(pathXml);
+
 	xmlParser.xmlInit();
 	string serverIP = xmlParser.getString("TCPServer", "ServerIP",
 			"172.16.0.228");
@@ -74,7 +77,6 @@ DEV_Reply_GetDevMsg *DevSearchTerminal::getDevMsg(const string &pathXML,
 			"Terminal");
 	INT8 version[7] = { 0 };
 	getSoftwareVersion(ProductVersionName, version, pathVersionFile);
-
 	//
 	devReplyMsg->header.HeadTag = 0x0101FBFC;
 	devReplyMsg->header.HeadCmd = 0x0001;

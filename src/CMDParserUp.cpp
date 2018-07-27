@@ -10,12 +10,13 @@
 #include "FileOperation.h"
 #include "DevSearch.h"
 #include "Logger.h"
-
+#include "UpgradeServiceConfig.h"
 #include "LocalUDPTrans.h"
 #include "HandleUp.h"
 
 using namespace FrameWork;
 
+#if 0
 #define OFFSETPTR                                                                   \
     pcSettingConfig += (1 + (INT32)pcSettingConfig[0]);
 #define COPYIP                                                                      \
@@ -45,6 +46,7 @@ using namespace FrameWork;
 #define COPYMASK                                                                    \
     OFFSETPTR                                                                       \
     memcpy(netConfigTrans.MASK, pcSettingConfig + 1, (INT32)pcSettingConfig[0]);
+#endif
 CMDParserUp::CMDParserUp() :
 		settingNum(0) {
 }
@@ -54,8 +56,10 @@ UINT16 CMDParserUp::parserPCRequestHead(void *buffer, INT32 recvLen) {
 
 	PC_DEV_Header *pcHead = (PC_DEV_Header *) buffer;
 
-	printf("Recv CMD %d with tag %X from PC !\n", pcHead->HeadCmd,
-			pcHead->HeadTag);
+	Logger::GetInstance().Info("Recv CMD %d with tag %X from PC !\n",
+			pcHead->HeadCmd, pcHead->HeadTag);
+//	printf("Recv CMD %d with tag %X from PC !\n", pcHead->HeadCmd,
+//			pcHead->HeadTag);
 	if (pcHead->HeadTag != PROTOCAL_PC_DEV_HEAD) {
 		return (UINT16) retError;
 	}
@@ -131,10 +135,13 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer, SetNetworkTerminal *net,
 			return retError;
 		}
 		SmartPtr<UP_PROG_SET_CONF> serverConf(new UP_PROG_SET_CONF);
-		if (setParams(net, netConfigTrans, *serverConf.get(), Terminal9903Num,
-				retContent) == false) {
+		INT32 retSetNet = setParams(net, netConfigTrans, *serverConf.get(),
+				Terminal9903Num, retContent);
+		if (retSetNet == retError) {
 			return retError;
-		} else
+		} else if (retSetNet == SAMECONF)
+			return SAMECONF;
+		else
 			return retOk;
 
 	} else if (parameterNum == TerminalWithoutRcdPNum) {
@@ -147,9 +154,14 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer, SetNetworkTerminal *net,
 			return retError;
 		}
 		SmartPtr<UP_PROG_SET_CONF> serverConf(new UP_PROG_SET_CONF);
-		if (setParams(net, netConfigTrans, *serverConf.get(),
-				TerminalWithoutRcdPNum, retContent) == false)
+		memset(serverConf.get(), 0, sizeof(UP_PROG_SET_CONF));
+
+		INT32 retSetNet_2 = setParams(net, netConfigTrans, *serverConf.get(),
+				TerminalWithoutRcdPNum, retContent);
+		if (retSetNet_2 == retError) {
 			return retError;
+		} else if (retSetNet_2 == SAMECONF)
+			return SAMECONF;
 		else
 			return retOk;
 	} else if (parameterNum == TermianlInitNum) {
@@ -163,12 +175,25 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer, SetNetworkTerminal *net,
 		NetTrans::printBufferByHex("recv mask before set params: ",
 				const_cast<INT8 *>(initConfigTrans.getMASK()), 8);
 		if (setParams(net, initConfigTrans, TermianlInitNum, retContent))
-			return retOk;
+			return DEVINITSETRET;
+		else
+			return retError;
+	} else if (parameterNum == TerminalOnlyMAC) {
+		if (obtainParams<InitSetConf>(pcSettingConfig, initConfigTrans,
+				TerminalOnlyMAC) != true || initConfigTrans.getFlag() != 1) {
+			Logger::GetInstance().Error(
+					"Obtain parameters failed with flag %d !",
+					initConfigTrans.getFlag());
+			return retError;
+		}
+		if (setParams(net, initConfigTrans, TerminalOnlyMAC, retContent))
+			return DEVINITSETRET;
 		else
 			return retError;
 	} else {
 		Logger::GetInstance().Error("Parameters' number : %d is incorrect !",
 				(INT32) parameterNum);
+		return retError;
 	}
 
 #if 0
@@ -329,15 +354,19 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer, SetNetworkTerminal *net,
 upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 		UpFileAttrs &upFileAttr, INT8 *failReason,
 		map<INT32, DEV_MODULES_TYPE> &devModuleToUpgrade) {
+	NetTrans::printBufferByHex("Buff from cmd : ", buffer, 68);
 	INT8 *pcRequestBuffer = (INT8 *) buffer;
 	pcRequestBuffer += sizeof(PC_DEV_Header);
 	INT8 hardVersion[8] = { 0 };
 	DevSearchTerminal::getSoftwareVersion("hardware_version", hardVersion,
 			pathVersionFile);
+	INT8 hardV[7] = { 0 };
+	memcpy(hardV, pcRequestBuffer, 6);
 	if (compareUpgradeItem(pcRequestBuffer, hardVersion, strlen(hardVersion))
-			!= true) {
-		Logger::GetInstance().Fatal("HardVersion matched errored : %s !",
-				hardVersion);
+			!= 0) {
+		Logger::GetInstance().Fatal(
+				"HardVersion matched errored : %s and return %d !", hardVersion,
+				errorVersionStatus);
 		return errorVersionStatus;
 	}
 	pcRequestBuffer += hardVersionSize;
@@ -351,6 +380,8 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 	DevSearchTerminal::getSoftwareVersion(ProductVersionName, version,
 			pathVersionFile);
 	/*WEB request to upgrade CMD judgement*/
+	cout << "buff content after software version : "
+			<< pcRequestBuffer + strlen(upFileAttr.getNewSoftVersion()) << endl;
 	if (compareUpgradeItem(
 			pcRequestBuffer + strlen(upFileAttr.getNewSoftVersion()),
 			FORCEUPGRADE, strlen(FORCEUPGRADE)) == 0) {
@@ -378,6 +409,9 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 					upFileAttr.getFileDownloadPath());
 			if (!FileOperation::isExistFile(upFileAttr.getFileDownloadPath())) {
 				strcpy(failReason, UPFILENOTEXIST);
+				Logger::GetInstance().Info(
+						"File %s is not existed and return %d !",
+						upFileAttr.getFileDownloadPath(), errorVersionStatus);
 				return errorVersionStatus;
 			}
 			upFileAttr.setWebUpMethod(true);
@@ -390,11 +424,14 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 				upFileAttr.getFileDownloadPath());
 		if (!FileOperation::isExistFile(upFileAttr.getFileDownloadPath())) {
 			strcpy(failReason, UPFILENOTEXIST);
+			Logger::GetInstance().Info("File %s is not existed and return %d !",
+					upFileAttr.getFileDownloadPath(), errorVersionStatus);
 			return errorVersionStatus;
 		}
 		upFileAttr.setWebUpMethod(true);
 
-	} else {
+	} else if (strlen(pcRequestBuffer + strlen(upFileAttr.getNewSoftVersion()))
+			== 0) {
 		pcRequestBuffer += newSoftVersionSize;
 		INT32 fileSize = 0;
 		memcpy(&fileSize, pcRequestBuffer, sizeof(UINT32));
@@ -403,11 +440,14 @@ upgradeFileStatus CMDParserUp::parserPCUpgradeCMD(void *buffer,
 		pcRequestBuffer += sizeof(UINT32);
 		upFileAttr.setFileMD5Code(pcRequestBuffer, upgradeFileMd5Size);
 
+	} else {
+//		strcpy(failReason, BeginToUpgrade);
+		Logger::GetInstance().Info("return %d !", errorVersionStatus);
+		return errorVersionStatus;
 	}
 	strcpy(failReason, BeginToUpgrade);
 	return higherVerison;
 
-	return errorVersionStatus;
 }
 
 INT32 CMDParserUp::isDevModulesUpgradeEnable(
@@ -419,67 +459,74 @@ INT32 CMDParserUp::isDevModulesUpgradeEnable(
 	INT32 validDevModule = 1;
 	for (; num <= devModules.size(); num++) {
 		getDevStatus.header.HeadCmd = 0x0004;
-		getDevStatus.dev_type = devModules[num];
-		cout << "sendto servarappp type :: " << getDevStatus.dev_type << endl;
-		HandleUp::localUpHandle<UPDATE_GET_DEVSTATUS>(getDevStatus);
-		INT32 retSend = sendto(netTrans.getSockfd(), &getDevStatus,
-				sizeof(UPDATE_SEND_UPDATEDEV), 0,
-				(struct sockaddr*) netTrans.getAddr(), *netTrans.getAddrLen());
-		if (retSend <= 0) {
-			cout << "errorsend" << endl;
-			return retError;
-		} else {
-		}
-		Logger::GetInstance().Info("Ask device type %d is online or not!",
-				getDevStatus.dev_type);
-		struct timeval timeout = { 8, 0 }; //10s
-		setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_RCVTIMEO,
-				(const char *) &timeout, sizeof(timeout));
-		INT8 recvBuff[16] = { 0 };
-		INT32 retRecv = recvfrom(netTrans.getSockfd(), recvBuff,
-				sizeof(recvBuff), 0, (struct sockaddr*) netTrans.getAddr(),
-				netTrans.getAddrLen());
-		if (retRecv == -1) {
-			Logger::GetInstance().Error("Device type %d no recv !",
-					getDevStatus.dev_type);
-			return retError;
-		} else if (retRecv == 0)
-			cout << "no recv" << endl;
-		else if (retRecv > 0) {
-			for (INT32 i = 0; i < retRecv; i++)
-				printf("recv : %02x\t", recvBuff[i]);
-			ARM_REPLAY_GETDEVSTATUS *devStatus =
-					(ARM_REPLAY_GETDEVSTATUS*) recvBuff;
-			if (devStatus->header.HeadCmd != CMD_DEV_ONLINE) {
-				Logger::GetInstance().Error("Device type %d recv error!",
-						getDevStatus.dev_type);
+		//////////////////////add "!="
+		if (devModules[num] != INVALID_TYPE) {
+			getDevStatus.dev_type = devModules[num];
+			NetTrans::printBufferByHex("sendto servarappp type :: ",
+					&getDevStatus, sizeof(UPDATE_GET_DEVSTATUS));
+			HandleUp::localUpHandle<UPDATE_GET_DEVSTATUS>(getDevStatus);
+			INT32 retSend = sendto(netTrans.getSockfd(), &getDevStatus,
+					sizeof(UPDATE_SEND_UPDATEDEV), 0,
+					(struct sockaddr*) netTrans.getAddr(),
+					*netTrans.getAddrLen());
+			cout << "retSend to server app : len : " << retSend << endl;
+			if (retSend <= 0) {
+				cout << "errorsend" << endl;
 				return retError;
 			} else {
-				if (devStatus->dev_type != devModules[num]) {
-					Logger::GetInstance().Error(
-							"Want to get device type %d but recv device type %d !",
-							devModules[num], devStatus->dev_type);
+			}
+			Logger::GetInstance().Info("Ask device type %d is online or not!",
+					getDevStatus.dev_type);
+			struct timeval timeout = { 8, 0 }; //10s
+			setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_RCVTIMEO,
+					(const char *) &timeout, sizeof(timeout));
+			INT8 recvBuff[16] = { 0 };
+			INT32 retRecv = recvfrom(netTrans.getSockfd(), recvBuff,
+					sizeof(recvBuff), 0, (struct sockaddr*) netTrans.getAddr(),
+					netTrans.getAddrLen());
+			if (retRecv == -1) {
+				Logger::GetInstance().Error("Device type %d no recv !",
+						getDevStatus.dev_type);
+				return retError;
+			} else if (retRecv == 0)
+				cout << "no recv" << endl;
+			else if (retRecv > 0) {
+				for (INT32 i = 0; i < retRecv; i++)
+					printf("recv : %02x\t", recvBuff[i]);
+				ARM_REPLAY_GETDEVSTATUS *devStatus =
+						(ARM_REPLAY_GETDEVSTATUS*) recvBuff;
+				if (devStatus->header.HeadCmd != CMD_DEV_ONLINE) {
+					Logger::GetInstance().Error("Device type %d recv error!",
+							getDevStatus.dev_type);
 					return retError;
-				}
-				if (upFileAttr.getForceStatus() == true) {
-					if (devStatus->state == UPGRADE_VALID
-							|| devStatus->state == NONEEDUP) {
-						devModuleToUpgrade[validDevModule] =
-								(DEV_MODULES_TYPE) devStatus->dev_type;
-						validDevModule++;
-					}
 				} else {
-					if (devStatus->state == UPGRADE_VALID) {
-						devModuleToUpgrade[validDevModule] =
-								(DEV_MODULES_TYPE) devStatus->dev_type;
-						cout << "need devs type :::: "
-								<< devModuleToUpgrade[validDevModule] << endl;
-						validDevModule++;
+					if (devStatus->dev_type != devModules[num]) {
+						Logger::GetInstance().Error(
+								"Want to get device type %d but recv device type %d !",
+								devModules[num], devStatus->dev_type);
+						return retError;
+					}
+					if (upFileAttr.getForceStatus() == true) {
+						if (devStatus->state == UPGRADE_VALID
+								|| devStatus->state == NONEEDUP) {
+							devModuleToUpgrade[validDevModule] =
+									(DEV_MODULES_TYPE) devStatus->dev_type;
+							validDevModule++;
+						}
+					} else {
+						if (devStatus->state == UPGRADE_VALID) {
+							devModuleToUpgrade[validDevModule] =
+									(DEV_MODULES_TYPE) devStatus->dev_type;
+							cout << "need devs type :::: "
+									<< devModuleToUpgrade[validDevModule]
+									<< endl;
+							validDevModule++;
+						}
 					}
 				}
 			}
-		}
 
+		}
 	}
 	map<INT32, DEV_MODULES_TYPE>::iterator iter;
 	for (iter = devModuleToUpgrade.begin(); iter != devModuleToUpgrade.end();
@@ -518,11 +565,11 @@ bool CMDParserUp::screeningParams(INT8* name, INT8* value,
 	}
 #if (DSP9903)
 	else if (compareUpgradeItem(name, PCREQUESTRCORDINGPORT,
-			strlen(PCREQUESTRCORDINGPORT) + 1) == 0) {
+					strlen(PCREQUESTRCORDINGPORT) + 1) == 0) {
 		UINT16 port = 0;
 		sscanf(value, "%hu", &port);
 		if (config.setRecordingPort(port) != true)
-			return false;
+		return false;
 	}
 #endif
 	else {
@@ -551,16 +598,25 @@ bool CMDParserUp::screeningParams(INT8* name, INT8* value,
 	return true;
 }
 
-bool CMDParserUp::setParams(SetNetworkTerminal *net,
+INT32 CMDParserUp::setParams(SetNetworkTerminal *net,
 		NetConfigTransWithServer &config, UP_PROG_SET_CONF &serverConf,
 		INT32 num, map<string, string> &retContent) {
-	if ((strncmp(net->getNetConfStruct().ipAddr.c_str(), config.getIPT(),
-			strlen(config.getIPT())) != 0)
-			|| (strncmp(net->getNetConfStruct().netmaskAddr.c_str(),
-					config.getSubmaskT(), strlen(config.getSubmaskT())) != 0)
-			|| (strncmp(net->getNetConfStruct().gatewayAddr.c_str(),
-					config.getGatewayT(), strlen(config.getGatewayT())) != 0)) {
-		cout << "to set net ............" << endl;
+	bool isSetNetwork = false;
+	bool sameConfig = false;
+	INT8 m_ipaddr[20] = { 0 };
+	INT8 m_subnet[20] = { 0 };
+	INT8 m_gateway[20] = { 0 };
+	memcpy(m_ipaddr, net->getNetConfStruct().ipAddr.c_str(),
+			strlen(net->getNetConfStruct().ipAddr.c_str()));
+	memcpy(m_subnet, net->getNetConfStruct().netmaskAddr.c_str(),
+			strlen(net->getNetConfStruct().netmaskAddr.c_str()));
+	memcpy(m_gateway, net->getNetConfStruct().gatewayAddr.c_str(),
+			strlen(net->getNetConfStruct().gatewayAddr.c_str()));
+	if ((strncmp(m_ipaddr, config.getIPT(), strlen(config.getIPT())) != 0)
+			|| (strncmp(m_subnet, config.getSubmaskT(),
+					strlen(config.getSubmaskT())) != 0)
+			|| (strncmp(m_gateway, config.getGatewayT(),
+					strlen(config.getGatewayT())) != 0)) {
 		if (net->setNetworkConfig(config.getIPT(), config.getSubmaskT(),
 				config.getGatewayT(),
 				NULL, INIFILE) != true) {
@@ -575,88 +631,147 @@ bool CMDParserUp::setParams(SetNetworkTerminal *net,
 #if (DSP9903)
 			retContent[PCREQUESTRCORDINGPORT] = "Set recording port failed !";
 #endif
-			return false;
+			return retError;
 		} else {
+			isSetNetwork = true;
 			cout << "test 9 " << endl;
 			retContent[PCREQUESTIP] = "Set IP ok !";
 			retContent[PCREQUESTSUBMASK] = "Set submask ok !";
 			retContent[PCREQUESTGATEWAY] = "Set gateway ok !";
 		}
+	} else {
+		sameConfig = true;
+		Logger::GetInstance().Info(
+				"Ip netmask gateway were not changed for same !");
 	}
 
-	serverConf.header.HeadCmd = CMD_SET_TERMINAL_CONFIG;
+	XMLParser xmlParser(pathXml);
+	xmlParser.xmlInit();
+	UINT16 RecordingPort = 0;
+	string serverIP = xmlParser.getString("TCPServer", "ServerIP",
+			"172.16.0.228");
+	UINT16 serverPort = xmlParser.getInt("TCPServer", "ServerPort", 7001);
+#if (!DSP9906)
+	RecordingPort = xmlParser.getInt("RecordServer", "RecordServerport", 7101);
+#endif
+	string devName = xmlParser.getString("TerminalInfo", "TerminalName",
+			"Terminal");
+
 	serverConf.ServerIP = inet_addr(config.getServerIPT());
 	UINT16 tmpPort = 0;
 	sscanf(config.getCommunicationPort(), "%hu", &tmpPort);
 	serverConf.CommunicationPort = tmpPort;
 	memcpy(&serverConf.DevName, config.getName(), strlen(config.getName()));
-
 	if (num == Terminal9903Num) {
-#if (DSP9903)
+#if (!DSP9906)
 		serverConf.RecordingPort = config.getRecordingPort();
 #endif
 	}
-
-	bool setStatus = true;
-	LocalUDPTrans netTrans;
-	HandleUp::localUpHandle<UP_PROG_SET_CONF>(serverConf);
-	INT32 retSend = sendto(netTrans.getSockfd(), &serverConf,
-			sizeof(NetConfigTransWithServer), 0,
-			(struct sockaddr*) netTrans.getAddr(), *netTrans.getAddrLen());
-	if (retSend <= 0) {
-		Logger::GetInstance().Error("Send to Server program failed !");
-		setStatus = false;
-	} else {
-		Logger::GetInstance().Info("Send to Server program %d bytes .",
-				retSend);
-		INT8 recvBuff[sizeof(SERVER_REPLY_SET_CONF)] = { 0 };
-		struct timeval timeout = { 2, 0 }; //2s for waiting
-		setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_RCVTIMEO,
-				(const char *) &timeout, sizeof(timeout));
-		INT32 retRecv = recvfrom(netTrans.getSockfd(), recvBuff,
-				sizeof(SERVER_REPLY_SET_CONF), 0,
-				(struct sockaddr*) netTrans.getAddr(), netTrans.getAddrLen());
-		if (retRecv == -1) {
-			Logger::GetInstance().Error("Recv from Server program error !");
-			setStatus = false;
-		} else if (retRecv > 0) {
-			SERVER_REPLY_SET_CONF *serverReply =
-					(SERVER_REPLY_SET_CONF*) recvBuff;
-			if (serverReply->header.HeadCmd == CMD_SET_TERMINAL_CONFIG) {
-				Logger::GetInstance().Info("Server set params result : %d ",
-						(INT32) serverReply->result);
-				if (serverReply->result == 1)
-					return true;
-				else if (serverReply->result == 0)
-					setStatus = false;
-			} else {
-				Logger::GetInstance().Error(
-						"Incorrect reply from server program with cmd : %d !",
-						serverReply->header.HeadCmd);
-				setStatus = false;
-			}
+#if (!DSP9906)
+	if ((serverConf.ServerIP == inet_addr(serverIP.c_str()))
+			&& (serverConf.CommunicationPort == serverPort)
+			&& (strcmp(serverConf.DevName, devName.c_str()) == 0)
+			&& (serverConf.RecordingPort == RecordingPort)) {
+		sameConfig &= true;
+		if ((sameConfig & true) == true) {
+			Logger::GetInstance().Info(
+					"Server IP CommunicationPort devname RecordingPort were not changed for same !");
+			return SAMECONF;
 		}
-
-	}
-	if (setStatus == true) {
-		retContent[PCREQUESTSERVERIP] = "Set server ip ok !";
-		retContent[PCREQUESTCOMMUNICATIONPORT] = "Set terminal name ok !";
-		retContent[PCREQUESTNAME] = "Set terminal name ok !";
-		cout << "okkkkkkkkkkkkkkkkkkkkkk" << endl;
-#if (DSP9903)
-		retContent[PCREQUESTRCORDINGPORT] = "Set recording port ok !";
-#endif
 	} else {
-		retContent[PCREQUESTSERVERIP] = "Set server ip failed !";
-		retContent[PCREQUESTCOMMUNICATIONPORT] =
-				"Set communication port failed !";
-		retContent[PCREQUESTNAME] = "Set terminal name failed !";
-#if (DSP9903)
-		retContent[PCREQUESTRCORDINGPORT] = "Set recording port failed !";
+#elif(DSP9906)
+	if ((serverConf.ServerIP == inet_addr(serverIP.c_str()))
+			&& (serverConf.CommunicationPort == serverPort)
+			&& (strcmp(serverConf.DevName, devName.c_str()) == 0)) {
+		if ((sameConfig & true) == true) {
+			Logger::GetInstance().Info(
+					"Server IP CommunicationPort devname were not changed for same !");
+			return SAMECONF;
+		}
+	} else {
 #endif
-		return false;
+		serverConf.header.HeadCmd = CMD_SET_TERMINAL_CONFIG;
+
+		bool setStatus = true;
+		LocalUDPTrans netTrans;
+		HandleUp::localUpHandle<UP_PROG_SET_CONF>(serverConf);
+		INT32 retSend = sendto(netTrans.getSockfd(), &serverConf,
+				sizeof(UP_PROG_SET_CONF), 0,
+				(struct sockaddr*) netTrans.getAddr(), *netTrans.getAddrLen());
+		NetTrans::printBufferByHex("send to server app : ", &serverConf,
+				sizeof(UP_PROG_SET_CONF));
+		if (retSend <= 0) {
+			Logger::GetInstance().Error("Send to Server program failed !");
+			setStatus = false;
+		} else {
+			Logger::GetInstance().Info("Send to Server program %d bytes .",
+					retSend);
+			INT8 recvBuff[sizeof(SERVER_REPLY_SET_CONF)] = { 0 };
+			struct timeval timeout = { 2, 0 }; //2s for waiting
+			setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_RCVTIMEO,
+					(const char *) &timeout, sizeof(timeout));
+			INT32 retRecv = recvfrom(netTrans.getSockfd(), recvBuff,
+					sizeof(SERVER_REPLY_SET_CONF), 0,
+					(struct sockaddr*) netTrans.getAddr(),
+					netTrans.getAddrLen());
+			if (retRecv == -1) {
+				Logger::GetInstance().Error("Recv from Server program error !");
+				setStatus = false;
+			} else if (retRecv > 0) {
+				SERVER_REPLY_SET_CONF *serverReply =
+						(SERVER_REPLY_SET_CONF*) recvBuff;
+				if (serverReply->header.HeadCmd == CMD_SET_TERMINAL_CONFIG) {
+					Logger::GetInstance().Info("Server set params result : %d ",
+							(INT32) serverReply->result);
+					if (serverReply->result == 1)
+						return retOk;
+					else if (serverReply->result == 0)
+						setStatus = false;
+				} else {
+					Logger::GetInstance().Error(
+							"Incorrect reply from server program with cmd : %d !",
+							serverReply->header.HeadCmd);
+					setStatus = false;
+				}
+			}
+
+		}
+		if (setStatus == true) {
+			retContent[PCREQUESTSERVERIP] = "Set server ip ok !";
+			retContent[PCREQUESTCOMMUNICATIONPORT] = "Set terminal name ok !";
+			retContent[PCREQUESTNAME] = "Set terminal name ok !";
+			cout << "okkkkkkkkkkkkkkkkkkkkkk" << endl;
+#if (DSP9903)
+			retContent[PCREQUESTRCORDINGPORT] = "Set recording port ok !";
+#endif
+		} else {
+			if (isSetNetwork == true) {
+				Logger::GetInstance().Info(
+						"Will restore net config to ip : %s,\nnetmask : %s,\ngateway : %s",
+						m_ipaddr, m_subnet, m_gateway);
+				bool retRestore = net->setNetworkConfig(m_ipaddr, m_subnet,
+						m_gateway, NULL, INIFILE);
+				if (retRestore == true)
+					Logger::GetInstance().Info(
+							"Restored network to ip : %s,\nnetmask : %s,\ngateway : %s",
+							m_ipaddr, m_subnet, m_gateway);
+				else
+					Logger::GetInstance().Fatal(
+							"Can not restore network to ip : %s,\nnetmask : %s,\ngateway : %s",
+							m_ipaddr, m_subnet, m_gateway);
+				retContent[PCREQUESTSERVERIP] = "Set server ip failed !";
+				retContent[PCREQUESTCOMMUNICATIONPORT] =
+						"Set communication port failed !";
+				retContent[PCREQUESTNAME] = "Set terminal name failed !";
+#if (DSP9903)
+				retContent[PCREQUESTRCORDINGPORT] = "Set recording port failed !";
+#endif
+				return retError;
+			} else
+				return retError;
+		}
 	}
-	return true;
+	return retOk;
 }
 
 bool CMDParserUp::setParams(SetNetworkTerminal *net, InitSetConf &config,
@@ -680,22 +795,23 @@ bool CMDParserUp::setParams(SetNetworkTerminal *net, InitSetConf &config,
 			retContent[PCREQUESTMAC] = "Set MAC OK !";
 		}
 	}
-
-	NetTrans::printBufferByHex("recv mask : ",
-			const_cast<INT8 *>(config.getMASK()), 8);
-	vector<UINT16> vHexArray;
-	vHexArray.resize(4);
-	vHexArray[0] = ~((config.getMASK()[1] << 8 | config.getMASK()[0]) - 1);
-	vHexArray[1] = ~((config.getMASK()[3] << 8 | config.getMASK()[2]) - 1);
-	vHexArray[2] = ~((config.getMASK()[5] << 8 | config.getMASK()[4]) - 1);
-	vHexArray[3] = ~((config.getMASK()[7] << 8 | config.getMASK()[6]) - 1);
-	for (int i = 0; i < 4; i++) {
-		printf("vHexArray[%d] : %04x\n", i, vHexArray[i]);
+	if (strlen(config.getMASK()) != 0) {
+		NetTrans::printBufferByHex("recv mask : ",
+				const_cast<INT8 *>(config.getMASK()), 8);
+		vector<UINT16> vHexArray;
+		vHexArray.resize(4);
+		vHexArray[0] = ~((config.getMASK()[1] << 8 | config.getMASK()[0]) - 1);
+		vHexArray[1] = ~((config.getMASK()[3] << 8 | config.getMASK()[2]) - 1);
+		vHexArray[2] = ~((config.getMASK()[5] << 8 | config.getMASK()[4]) - 1);
+		vHexArray[3] = ~((config.getMASK()[7] << 8 | config.getMASK()[6]) - 1);
+		for (int i = 0; i < 4; i++) {
+			printf("vHexArray[%d] : %04x\n", i, vHexArray[i]);
+		}
+		if (writeMaskFile(vHexArray) == 1) {
+			retContent[PCREQUESTMASK] = "Set MASK OK !";
+		} else
+			retContent[PCREQUESTMASK] = "Set MASK failed !";
 	}
-	if (writeMaskFile(vHexArray) == 1) {
-		retContent[PCREQUESTMASK] = "Set MASK OK !";
-	} else
-		retContent[PCREQUESTMASK] = "Set MASK failed !";
 
 	return true;
 }

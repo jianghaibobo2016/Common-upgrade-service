@@ -2,6 +2,7 @@
 #include <iostream>
 #include "UpFileAttrs.h"
 #include "UpgradeServiceConfig.h"
+#include "Logger.h"
 using namespace std;
 
 UpFileAttrs::UpFileAttrs() :
@@ -11,6 +12,8 @@ UpFileAttrs::UpFileAttrs() :
 }
 
 UpFileAttrs::~UpFileAttrs() {
+	FrameWork::Logger::GetInstance().Info(
+			"-----------Delete[] fileDownloadPath, newSoftFileSize, upFileMD5code------------");
 	delete[] fileDownloadPath;
 	delete[] newSoftVersion;
 	delete[] upFileMD5code;
@@ -70,11 +73,29 @@ void UpFileAttrs::setFileMD5Code(const INT8 *MD5, INT32 length) {
 }
 
 bool UpFileAttrs::clearMemberData() {
-	memset(this->fileDownloadPath, 0, fileDownloadPathSize);
-	memset(this->newSoftVersion, 0, newSoftVersionSize);
-	this->newSoftFileSize = 0;
-	memset(this->upFileMD5code, 0, upgradeFileMd5Size);
+	FrameWork::Logger::GetInstance().Info("test exception exit bug 1 ");
+	if (fileDownloadPath)
+		memset(fileDownloadPath, 0, strlen(fileDownloadPath));
+	else
+		FrameWork::Logger::GetInstance().Info(
+				"-----------NULL 1 -------------");
+	FrameWork::Logger::GetInstance().Info("test exception exit bug 2 ");
+	if (newSoftFileSize)
+		memset(newSoftVersion, 0, strlen(newSoftVersion));
+	else
+		FrameWork::Logger::GetInstance().Info(
+				"-----------NULL 2 -------------");
+	FrameWork::Logger::GetInstance().Info("test exception exit bug 3 ");
+	newSoftFileSize = 0;
+	FrameWork::Logger::GetInstance().Info("test exception exit bug 4 ");
+	if (upFileMD5code)
+		memset(upFileMD5code, 0, strlen(upFileMD5code));
+	else
+		FrameWork::Logger::GetInstance().Info(
+				"-----------NULL 3 -------------");
+	FrameWork::Logger::GetInstance().Info("test exception exit bug 5 ");
 	webUpMethod = false;
 	inUpgrading = false;
+	FrameWork::Logger::GetInstance().Info("test exception exit bug 6 ");
 	return true;
 }

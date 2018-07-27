@@ -14,7 +14,10 @@
 #include "UpFileAttrs.h"
 
 enum ConfigParamsNum {
-	TermianlInitNum = 2, TerminalWithoutRcdPNum = 6, Terminal9903Num = 7
+	TerminalOnlyMAC = 1,
+	TermianlInitNum = 2,
+	TerminalWithoutRcdPNum = 6,
+	Terminal9903Num = 7
 };
 
 class CMDParserUp {
@@ -49,11 +52,11 @@ private:
 			NetConfigTransWithServer &config);
 	static bool screeningParams(INT8* name, INT8* value, InitSetConf &config);
 
-	static bool setParams(SetNetworkTerminal *net, NetConfigTransWithServer &config,
-			UP_PROG_SET_CONF &serverConf, INT32 num,
-			map<string, string> &retContent);
-	static bool setParams(SetNetworkTerminal *net, InitSetConf &config, INT32 num,
-			map<string, string> &retContent);
+	static INT32 setParams(SetNetworkTerminal *net,
+			NetConfigTransWithServer &config, UP_PROG_SET_CONF &serverConf,
+			INT32 num, map<string, string> &retContent);
+	static bool setParams(SetNetworkTerminal *net, InitSetConf &config,
+			INT32 num, map<string, string> &retContent);
 
 	bool getConf(INT8 *buff, NetConfigTransWithServer &config, INT32 num);
 	bool getInitSet(INT8 *buff, InitSetConf &initConf);

@@ -19,6 +19,7 @@ public:
 
 	bool createFile(string fileName);
 	static bool isExistFile(string fileName);
+	static bool isExisteDirectory(string path);
 	static bool deleteFile(string fileName);
 
 	bool alterFileName(string fileName, string newname);
@@ -27,7 +28,6 @@ public:
 	static bool extractTarFile(string fileName, map<INT32, string> &subItems);
 
 protected:
-	bool isExisteDirectory(string path);
 	string m_strPath;
 private:
 };

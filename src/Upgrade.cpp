@@ -107,7 +107,8 @@ upgradeFileStatus UpgradeDSP::getVersion() {
 		}
 	}
 	INT32 retUpStatus = compareUpgradeItem(newVersion, localVersion);
-	cout << "newVersion::" << newVersion << " " << __FUNCTION__ << endl;
+
+	cout << "newVersion::" << localVersion << " " << __FUNCTION__ << endl;
 	if (retUpStatus > 0)
 		return higherVerison;
 	else if (retUpStatus == 0) {
@@ -124,7 +125,7 @@ INT32 UpgradeDSP::parserFileName() {
 	/*DPS9903*/
 	memset(upgraderecord, 0, msgLen);
 	fileWithoutPath = upgradeFile + strlen(upFilePath);
-	cout << "fileWithoutpaht:: " << fileWithoutPath << endl;
+	Logger::GetInstance().Info("File name without path : %s", fileWithoutPath);
 	if (compareUpgradeItem(fileWithoutPath, TerminalDevType) != 0) {
 		strcpy(upgraderecord, "Upgrade file name error1 !");
 		return retError;
@@ -135,13 +136,14 @@ INT32 UpgradeDSP::parserFileName() {
 		return retError;
 	}
 	if (getForceStatus() != true)
-		cout << "not force upgrade !!!!!!!!!!!!!!!" << endl;
+		Logger::GetInstance().Info("Not force upgrade method !");
 	if ((upStatus = getVersion()) != higherVerison
 			&& getForceStatus() != true) {
 		if (FileOperation::isExistFile(upgradeFile)) {
 			FileOperation::deleteFile(upgradeFile);
 		}
-		cout << __FUNCTION__ << "() upstatus : " << upStatus << endl;
+		Logger::GetInstance().Info("%s() : Upgrade status : %d", __FUNCTION__,
+				upStatus);
 		return retError;
 	} else
 		setUpStatus(higherVerison);
@@ -181,7 +183,8 @@ INT32 UpgradeDSP::modifyVersionFile() {
 	newVersionLine += getVersionFileItemName();
 	newVersionLine += "=";
 	newVersionLine += (getNewVersion() + 1);
-	cout << "newVersionLine:: " << newVersionLine << endl;
+	Logger::GetInstance().Info("New version in line : %s !",
+			newVersionLine.c_str());
 
 	chmod(pathVersionFile, S_IWUSR | S_IWGRP | S_IWOTH);
 	ifstream in;
@@ -243,14 +246,11 @@ bool UpgradeDSPSubItem::getSubItems(
 				npos - strlen(StringFind));
 	}
 //		mSubItems.clear();
-	cout << "test amp mapppppppppppppppppppppppppppppppppp::3 "
-			<< mSubItemName[1] << endl;
-	cout << "test amp sizeeeeeeeeeeeeeeeeedevM::4 " << devModuleToUpgrade.size()
-			<< endl;
+	cout << "test amp map::3 " << mSubItemName[1] << endl;
+	cout << "test amp sizedevM::4 " << devModuleToUpgrade.size() << endl;
 	//adjust order
 	adjustOrder(devModuleToUpgrade);
-	cout << "test amp mapppppppppppppppppppppppppppppppppp::2 " << mSubItems[1]
-			<< endl;
+	cout << "test amp map::2 " << mSubItems[1] << endl;
 	return true;
 }
 
@@ -263,11 +263,11 @@ bool UpgradeDSPSubItem::adjustOrder(
 	for (i = 1; i <= devModuleToUpgrade.size(); i++) {
 #if !(DSP9909)
 		if (devModuleToUpgrade[i] == DEV_AMPLIFIER)
-		m_dev_type[i] = AMPLIFIER;
+			m_dev_type[i] = AMPLIFIER;
 #endif
 #if (DSP9903)
 		else if (devModuleToUpgrade[i] == DEV_PAGER)
-		m_dev_type[i] = PAGER;
+			m_dev_type[i] = PAGER;
 #endif
 #if !(DSP9909)
 		else {
@@ -287,14 +287,12 @@ bool UpgradeDSPSubItem::adjustOrder(
 			if (mSubItems[i].find(m_dev_type[j]) != string::npos) {
 				m_devs[j] = mSubItems[i];
 //				mDevNum++;
-				cout << "set flag1111" << endl;
 				matchFlag = true;
 				break;
 			}
 		}
 		if (!matchFlag && mSubItemName[i] != AMPLIFIER
 				&& mSubItemName[i] != PAGER) {
-			cout << "set flag2222" << endl;
 //			mSubItems[mSubNum] = mSubItemName[i];
 			m_subItem[mSubNum] = mSubItems[i];
 			cout << m_subItem[mSubNum] << endl;
@@ -307,16 +305,14 @@ bool UpgradeDSPSubItem::adjustOrder(
 	mSubItems.clear();
 	for (i = 1; i <= m_subItem.size(); i++) {
 		mSubItems[i] = m_subItem[i];
-		cout << "test amp mapppppppppppppppppppppppppppppppppp::111 "
-				<< mSubItems[i] << endl;
+		cout << "test amp map::111 " << mSubItems[i] << endl;
 	}
 	cout << "size::2:::::::" << mSubItems.size() << endl;
 	mSubNum = m_subItem.size();
 	cout << "msubnum::::" << mSubNum << endl;
 	for (i = 1; i <= m_devs.size(); i++) {
 		mSubItems[mSubNum + i] = m_devs[i];
-		cout << "test amp mapppppppppppppppppppppppppppppppppp::11 "
-				<< mSubItems[1] << endl;
+		cout << "test amp map::11 " << mSubItems[1] << endl;
 	}
 //	cout << "test amp mapppppppppppppppppppppppppppppppppp::22 " << mSubItems[1]
 //			<< endl;
@@ -332,8 +328,7 @@ bool UpgradeDSPSubItem::adjustOrder(
 //		mSubItems[i] = m_subItem[i];
 	}
 //	}
-	cout << "test amp mapppppppppppppppppppppppppppppppppp::33 "
-			<< mSubItems.size() << endl;
+	cout << "test amp map::33 " << mSubItems.size() << endl;
 	return true;
 }
 
@@ -341,7 +336,7 @@ INT32 UpgradeDSPSubItem::parserSubItemsFileName(UINT32 num) {
 
 	if (strncmp(mSubItems[num].c_str() + strlen(upFilePath), AmplifierUpgrade,
 			strlen(AmplifierUpgrade)) == 0) {
-		cout << "up amplifier !!!!!!!!!!!!!!!!!!!!!!1" << endl;
+		Logger::GetInstance().Info("Upgrade Amplifier !!");
 		this->setUpTerminalDevs(true);
 #if !(DSP9909)
 		this->setUpDevType(UPDATE_DEV_AMP_TYPE);
@@ -349,7 +344,7 @@ INT32 UpgradeDSPSubItem::parserSubItemsFileName(UINT32 num) {
 		aUpSubItem->setItemName(AMPLIFIER);
 	} else if (strncmp(mSubItems[num].c_str() + strlen(upFilePath),
 			PagerUpgrade, strlen(PagerUpgrade)) == 0) {
-		cout << "up pager !!!!!!!!!!!!!!!!!!!!!!2" << endl;
+		Logger::GetInstance().Info("Upgrade Pager !!");
 		this->setUpTerminalDevs(true);
 #if (DSP9903)
 		this->setUpDevType(UPDATE_DEV_PAGER_TYPE);
@@ -381,7 +376,7 @@ INT32 UpgradeDSPSubItem::parserSubItemsFileName(UINT32 num) {
 		} else {
 			if (strncmp(mSubItems[num].c_str() + strlen(upFilePath),
 					MainRootfsUpgrade, strlen(MainRootfsUpgrade)) == 0) {
-				cout << "up mainrootfs !!!!!!!!!!!!!!!!!!!!!!3" << endl;
+				Logger::GetInstance().Info("Upgrade mainrootfs !!");
 				this->setUpSystem(true);
 			}
 		}
@@ -437,8 +432,7 @@ INT32 UpgradeDSPSubItem::excuteUpgradeShell(UINT32 num, INT8 *PCIP) {
 			iPosBuff += 2;
 			if ((strncmp(&buff[iPosBuff], UpShellRespondTag_3_Success, 2))
 					== 0) {
-				cout << "trueeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee00000 "
-						<< buff[iPosBuff] << endl;
+				cout << "trueeeeeeeeee " << buff[iPosBuff] << endl;
 				upSuccessed = true;
 			} else {
 				memcpy(upStatus, &buff[iPosBuff], 2);

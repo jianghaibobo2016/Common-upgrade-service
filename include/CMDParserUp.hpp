@@ -18,6 +18,7 @@ bool CMDParserUp::obtainParams(INT8 *buff, T &config, INT32 num) {
 	UINT32 iPos = 0;
 	UINT32 nameLen = 0;
 	UINT32 valueLen = 0;
+	NetTrans::printBufferByHex("recv obtain : ", buff, 100);
 	for (INT32 i = 0; i < num; i++) {
 		nameLen = (UINT32) tmpBuff[iPos];
 		iPos += 1;
@@ -27,13 +28,14 @@ bool CMDParserUp::obtainParams(INT8 *buff, T &config, INT32 num) {
 		valueLen = (UINT32) tmpBuff[iPos];
 		iPos += 1;
 		SmartPtr<INT8> value(new INT8[valueLen]);
-		cout << "value len :: "<<valueLen<<endl;
+		FrameWork::Logger::GetInstance().Info("Each value length : %d",
+				valueLen);
 		memcpy(value.get(), &tmpBuff[iPos], valueLen);
 		iPos += valueLen;
 		if (screeningParams(name.get(), value.get(), config) != true) {
 			FrameWork::Logger::GetInstance().Error(
-					"Can not set parameter name : %s with its value : %s!", name.get(),
-					value.get());
+					"Can not set parameter name : %s with its value : %s!",
+					name.get(), value.get());
 			return false;
 		}
 	}

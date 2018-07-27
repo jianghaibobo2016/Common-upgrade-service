@@ -54,4 +54,12 @@ const INT32 retError = -1;
 #define INVALID           (1)
 #endif
 
+#ifndef SAMECONF
+#define SAMECONF          (2)
+#endif
+
+#ifndef DEVINITSETRET
+#define DEVINITSETRET     (3)
+#endif
+
 #endif /* #ifndef _GLOBDEFINE_H */

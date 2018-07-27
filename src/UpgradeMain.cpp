@@ -11,9 +11,13 @@
 #include <string.h>
 #include <SetNetworkWithServer.h>
 #include "UpgradeService.h"
+#include "LogSizeLimit.h"
 using namespace FrameWork;
 int main(int argc, char *argv[]) {
 	setvbuf(stdout, (char *) NULL, _IOLBF, 0);
+	LogSizeLimit logLimit(IniFileName);
+	logLimit.start();
+
 	const INT8 *ifname = IFNAMETERMINAL;
 	SetNetworkTerminal getnetwork;
 	InitLogging(argv[0], DEBUG, logPath);
@@ -31,6 +35,7 @@ int main(int argc, char *argv[]) {
 	getnetwork.setIfname(ifname);
 	getnetwork.getNetworkConfig();
 	UpgradeService upgradeService(&getnetwork);
+
 	upgradeService.start();
 	return retOk;
 }
