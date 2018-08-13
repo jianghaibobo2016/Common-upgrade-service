@@ -9,6 +9,8 @@
 #include "SetNetwork.h"
 #include "NetTrans.h"
 
+static const INT8 DefaultChar = 'D';
+
 class NetConfigTransWithServer: public NetConfigTrans {
 public:
 	NetConfigTransWithServer();
@@ -25,6 +27,9 @@ public:
 	}
 	const INT8 *getName() const {
 		return Name;
+	}
+	const INT8 getCastMode() const {
+		return castMode;
 	}
 
 	bool setServerIPT(const INT8*ip) {
@@ -61,6 +66,12 @@ public:
 		flag += 7;
 		return true;
 	}
+	bool setCastMode(INT8 mode) {
+		memset(&castMode, 0, 1);
+		memcpy(&castMode, &mode, 1);
+		flag += 8;
+		return true;
+	}
 
 private:
 
@@ -68,6 +79,7 @@ private:
 	INT8 *CommunicationPort;
 	UINT16 RecordingPort;
 	INT8 *Name;
+	INT8 castMode;
 
 };
 

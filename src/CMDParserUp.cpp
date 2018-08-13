@@ -114,7 +114,7 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer, SetNetworkTerminal *net,
 	strncpy(devID, TerminalDevTypeID, strlen(TerminalDevTypeID));
 	strcpy(devID + strlen(TerminalDevTypeID), mac);
 
-	if (strncmp(pcSettingConfig, devID, strlen(devID)) != 0) {
+	if (strcmp(pcSettingConfig, devID) != 0) {
 		Logger::GetInstance().Info("Recv params setting cmd with devID : %s .",
 				devID);
 		return INVALID;
@@ -125,10 +125,13 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer, SetNetworkTerminal *net,
 	pcSettingConfig += 1;
 	NetConfigTransWithServer netConfigTrans;
 	InitSetConf initConfigTrans;
-	if (parameterNum == Terminal9903Num) {
+	if (parameterNum == Terminal9903Num
+			|| parameterNum == Terminal9903AddCastMode) {
 		if (obtainParams<NetConfigTransWithServer>(pcSettingConfig,
-				netConfigTrans, Terminal9903Num) != true
-				|| netConfigTrans.getFlag() != 28) {
+				netConfigTrans, parameterNum) != true
+				|| (netConfigTrans.getFlag() != 28
+						&& netConfigTrans.getFlag() != 36
+						&& netConfigTrans.getFlag() != 30)) {
 			Logger::GetInstance().Error(
 					"Obtain parameters failed with flag %d !",
 					netConfigTrans.getFlag());
@@ -143,10 +146,9 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer, SetNetworkTerminal *net,
 			return SAMECONF;
 		else
 			return retOk;
-
 	} else if (parameterNum == TerminalWithoutRcdPNum) {
 		if (obtainParams<NetConfigTransWithServer>(pcSettingConfig,
-				netConfigTrans, TerminalWithoutRcdPNum) != true
+				netConfigTrans, parameterNum) != true
 				|| netConfigTrans.getFlag() != 22) {
 			Logger::GetInstance().Error(
 					"Obtain parameters failed with flag %d !",
@@ -166,7 +168,7 @@ INT32 CMDParserUp::parserPCSetNetCMD(void *buffer, SetNetworkTerminal *net,
 			return retOk;
 	} else if (parameterNum == TermianlInitNum) {
 		if (obtainParams<InitSetConf>(pcSettingConfig, initConfigTrans,
-				TermianlInitNum) != true || initConfigTrans.getFlag() != 3) {
+				parameterNum) != true || initConfigTrans.getFlag() != 3) {
 			Logger::GetInstance().Error(
 					"Obtain parameters failed with flag %d !",
 					initConfigTrans.getFlag());
@@ -570,6 +572,17 @@ bool CMDParserUp::screeningParams(INT8* name, INT8* value,
 		sscanf(value, "%hu", &port);
 		if (config.setRecordingPort(port) != true)
 		return false;
+	} else if (compareUpgradeItem(name, PCREQUESTCASTMODE,
+					strlen(PCREQUESTCASTMODE) + 1) == 0) {
+		if (config.setCastMode(*value) != true)
+		return false;
+	}
+#endif
+#if (DSP9906)
+	else if (compareUpgradeItem(name, PCREQUESTCASTMODE,
+			strlen(PCREQUESTCASTMODE) + 1) == 0) {
+		if (config.setCastMode(*value) != true)
+			return false;
 	}
 #endif
 	else {
@@ -606,17 +619,21 @@ INT32 CMDParserUp::setParams(SetNetworkTerminal *net,
 	INT8 m_ipaddr[20] = { 0 };
 	INT8 m_subnet[20] = { 0 };
 	INT8 m_gateway[20] = { 0 };
+	memset(&serverConf, 0, sizeof(UP_PROG_SET_CONF));
 	memcpy(m_ipaddr, net->getNetConfStruct().ipAddr.c_str(),
 			strlen(net->getNetConfStruct().ipAddr.c_str()));
 	memcpy(m_subnet, net->getNetConfStruct().netmaskAddr.c_str(),
 			strlen(net->getNetConfStruct().netmaskAddr.c_str()));
 	memcpy(m_gateway, net->getNetConfStruct().gatewayAddr.c_str(),
 			strlen(net->getNetConfStruct().gatewayAddr.c_str()));
-	if ((strncmp(m_ipaddr, config.getIPT(), strlen(config.getIPT())) != 0)
-			|| (strncmp(m_subnet, config.getSubmaskT(),
-					strlen(config.getSubmaskT())) != 0)
-			|| (strncmp(m_gateway, config.getGatewayT(),
-					strlen(config.getGatewayT())) != 0)) {
+//	if ((strncmp(m_ipaddr, config.getIPT(), strlen(config.getIPT())) != 0)
+//			|| (strncmp(m_subnet, config.getSubmaskT(),
+//					strlen(config.getSubmaskT())) != 0)
+//			|| (strncmp(m_gateway, config.getGatewayT(),
+//					strlen(config.getGatewayT())) != 0)) {
+	if ((strcmp(m_ipaddr, config.getIPT()) != 0)
+			|| (strcmp(m_subnet, config.getSubmaskT()) != 0)
+			|| (strcmp(m_gateway, config.getGatewayT()) != 0)) {
 		if (net->setNetworkConfig(config.getIPT(), config.getSubmaskT(),
 				config.getGatewayT(),
 				NULL, INIFILE) != true) {
@@ -656,18 +673,25 @@ INT32 CMDParserUp::setParams(SetNetworkTerminal *net,
 #endif
 	string devName = xmlParser.getString("TerminalInfo", "TerminalName",
 			"Terminal");
+	INT32 icastMode = 0;
+#if (!DSP9909)
+	icastMode = xmlParser.getInt("TerminalNet", "IsUseMultiCast", 0);
+#endif
 
 	serverConf.ServerIP = inet_addr(config.getServerIPT());
 	UINT16 tmpPort = 0;
 	sscanf(config.getCommunicationPort(), "%hu", &tmpPort);
 	serverConf.CommunicationPort = tmpPort;
 	memcpy(&serverConf.DevName, config.getName(), strlen(config.getName()));
-	if (num == Terminal9903Num) {
+//	if (num == Terminal9903Num) {
 #if (!DSP9906)
-		serverConf.RecordingPort = config.getRecordingPort();
+	serverConf.RecordingPort = config.getRecordingPort();
 #endif
-	}
-#if (!DSP9906)
+#if (!DSP9909)
+	serverConf.CastMode = config.getCastMode();
+#endif
+
+#if (DSP9909)
 	if ((serverConf.ServerIP == inet_addr(serverIP.c_str()))
 			&& (serverConf.CommunicationPort == serverPort)
 			&& (strcmp(serverConf.DevName, devName.c_str()) == 0)
@@ -682,13 +706,27 @@ INT32 CMDParserUp::setParams(SetNetworkTerminal *net,
 #elif(DSP9906)
 	if ((serverConf.ServerIP == inet_addr(serverIP.c_str()))
 			&& (serverConf.CommunicationPort == serverPort)
-			&& (strcmp(serverConf.DevName, devName.c_str()) == 0)) {
+			&& (strcmp(serverConf.DevName, devName.c_str()) == 0)
+			&& ((atoi(&serverConf.CastMode) == icastMode)
+					|| (serverConf.CastMode == DefaultChar))) {
 		if ((sameConfig & true) == true) {
 			Logger::GetInstance().Info(
 					"Server IP CommunicationPort devname were not changed for same !");
 			return SAMECONF;
 		}
 	} else {
+#elif(DSP9903)
+		if ((serverConf.ServerIP == inet_addr(serverIP.c_str()))
+				&& (serverConf.CommunicationPort == serverPort)
+				&& (strcmp(serverConf.DevName, devName.c_str()) == 0)
+				&& ((atoi(&serverConf.CastMode) == icastMode)
+						|| (serverConf.CastMode == DefaultChar))) {
+			if ((sameConfig & true) == true) {
+				Logger::GetInstance().Info(
+						"Server IP CommunicationPort devname cast mode were not changed for same !");
+				return SAMECONF;
+			}
+		} else {
 #endif
 		serverConf.header.HeadCmd = CMD_SET_TERMINAL_CONFIG;
 
@@ -740,7 +778,6 @@ INT32 CMDParserUp::setParams(SetNetworkTerminal *net,
 			retContent[PCREQUESTSERVERIP] = "Set server ip ok !";
 			retContent[PCREQUESTCOMMUNICATIONPORT] = "Set terminal name ok !";
 			retContent[PCREQUESTNAME] = "Set terminal name ok !";
-			cout << "okkkkkkkkkkkkkkkkkkkkkk" << endl;
 #if (DSP9903)
 			retContent[PCREQUESTRCORDINGPORT] = "Set recording port ok !";
 #endif
@@ -764,7 +801,8 @@ INT32 CMDParserUp::setParams(SetNetworkTerminal *net,
 						"Set communication port failed !";
 				retContent[PCREQUESTNAME] = "Set terminal name failed !";
 #if (DSP9903)
-				retContent[PCREQUESTRCORDINGPORT] = "Set recording port failed !";
+				retContent[PCREQUESTRCORDINGPORT] =
+				"Set recording port failed !";
 #endif
 				return retError;
 			} else
@@ -776,8 +814,7 @@ INT32 CMDParserUp::setParams(SetNetworkTerminal *net,
 
 bool CMDParserUp::setParams(SetNetworkTerminal *net, InitSetConf &config,
 		INT32 num, map<string, string> &retContent) {
-	if (strncmp(net->getNetConfStruct().macAddr.c_str(), config.getMAC(),
-			strlen(config.getMAC())) != 0) {
+	if (strcmp(net->getNetConfStruct().macAddr.c_str(), config.getMAC()) != 0) {
 		string mac;
 		for (int i = 0; i < 13;) {
 			mac += config.getMAC()[i];

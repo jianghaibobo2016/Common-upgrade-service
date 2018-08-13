@@ -46,6 +46,8 @@ public:
 	void devTestModeCntCMDHandle(INT8 *recvBuff, sockaddr_in &recvAddr,
 			SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd);
 	void devGetVersionCMDHandle(INT32 &sockfd, sockaddr_in recvAddr);
+	void devGetCastModeCMDHandle(sockaddr_in &recvAddr,
+			SetNetworkTerminal *setNetworkTerminal, INT32 &sockfd);
 	/**************************mainly Handle function ************************/
 
 	/**************************thread function ************************/
@@ -93,6 +95,9 @@ public:
 		return _udpNet;
 	}
 
+	UINT32 getFileTransStartTime() {
+		return _fileTransStartTime.tv_sec;
+	}
 	void setInUpgrade(const bool status) {
 		inUpgrade = status;
 	}
@@ -111,6 +116,7 @@ private:
 	static bool inUpgrade;
 	static bool inFileTrans;
 	map<INT32, DEV_MODULES_TYPE> devModuleToUpgrade;
+	struct timeval _fileTransStartTime;
 
 	static INT32 upTerminalDevs(UPDATE_DEV_TYPE type, INT32 &sockfd,
 			sockaddr_in &addr, SetNetworkTerminal *setNet);

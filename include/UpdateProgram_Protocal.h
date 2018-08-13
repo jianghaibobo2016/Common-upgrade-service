@@ -25,7 +25,7 @@ enum UPDATE_DEV_COMMAND {
 //zuofei config file
 enum UPDATE_DEV_TYPE {
 	UPDATE_DEV_AMP_TYPE = 1,			 //功放板
-	UPDATE_DEV_PAGER_TYPE = 2,		 //寻呼器
+	UPDATE_DEV_PAGER_TYPE = 2,//寻呼器
 	ERROR_TYPE
 };
 #endif
@@ -54,7 +54,7 @@ enum UPDATE_DEV_TYPE {
 typedef struct UPDATE_DEV_Header_tag {
 	UINT32 HeadTag;
 	UINT16 HeadCmd;
-	UINT16 DataLen;//Length of data of Struct total
+	UINT16 DataLen;			 //Length of data of Struct total
 } UPDATE_DEV_Header;
 
 //------------------------------1.设备升级-------------------------//
@@ -125,6 +125,9 @@ typedef struct UPGRADE_REQUEST_SET_CONFIG_tag {
 	UINT16 RecordingPort; // DSP9903 and DSP9909
 #endif
 	INT8 DevName[60];
+#if ((DSP9903) || (DSP9906))
+	INT8 CastMode; //value 0单播 1组播
+#endif
 } UP_PROG_SET_CONF;
 
 //服务程序回复
@@ -132,7 +135,6 @@ typedef struct SERVER_PROG_REPLY_SET_CONFIG_tag {
 	UPDATE_DEV_Header header;
 	UINT8 result; // fail : 0 ; success : 1
 } SERVER_REPLY_SET_CONF;
-
 
 #pragma pack(pop)
 #endif /* PROTOCAL_UPDATEPROGRAM_PROTOCAL_H_ */

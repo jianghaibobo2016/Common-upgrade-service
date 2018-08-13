@@ -17,7 +17,9 @@ enum ConfigParamsNum {
 	TerminalOnlyMAC = 1,
 	TermianlInitNum = 2,
 	TerminalWithoutRcdPNum = 6,
-	Terminal9903Num = 7
+	Terminal9906AddCastMode = 7,
+	Terminal9903Num = 7,
+	Terminal9903AddCastMode = 8
 };
 
 class CMDParserUp {

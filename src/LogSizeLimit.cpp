@@ -161,9 +161,12 @@ bool LogSizeLimit::readConfig() {
 			_specialFileAttr[logPath] = logFileAttr;
 			map<string, string>::iterator iter;
 			iter = _specialFileAttr.begin();
-			cout << "_specialFileAttr_size : " << _specialFileAttr.size()
-					<< " begin : " << iter->first << " end : " << iter->second
-					<< endl;
+			for (UINT32 i = 1; i <= _specialFileAttr.size(); i++) {
+				cout << "_specialFileAttr_size : " << _specialFileAttr.size()
+						<< " begin : " << iter->first << " end : "
+						<< iter->second << endl;
+				iter++;
+			}
 		} while (0); // read the special log files
 
 		catelogCnt++;

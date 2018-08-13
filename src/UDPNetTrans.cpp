@@ -96,6 +96,15 @@ INT32 UDPNetTrans::socketSelect() {
 //			&upHandle->getUDPNetTransInstance(), true);
 //	upHandle->getUDPNetTransInstance().asyncStart();
 	while (!UDPStatus) {
+		if (upHandle->getInFileTrans()) {
+			struct timeval currentTime;
+			gettimeofday(&currentTime, NULL);
+			if ((currentTime.tv_sec - upHandle->getFileTransStartTime()) > 10) {
+				Logger::GetInstance().Error("File trans failed !");
+				upHandle->setInFileTrans(false);
+				upHandle->setInUpgrade(false);
+			}
+		}
 		FD_ZERO(&readfd);
 		FD_SET(m_socket, &readfd);
 		ret_select = select(m_socket + 1, &readfd, NULL, NULL, NULL);
@@ -170,6 +179,10 @@ INT32 UDPNetTrans::socketSelect() {
 			case CMD_DEV_REQUESTVERSION: {
 				upHandle->devGetVersionCMDHandle(sockfd, recvAddr);
 			}/*end case 9*/
+				break;
+			case CMD_DEV_REQUESTCASTMODE: {
+				upHandle->devGetCastModeCMDHandle(recvAddr, &netSet, sockfd);
+			}
 				break;
 			default: {
 				Logger::GetInstance().Error("CMD unknow !");

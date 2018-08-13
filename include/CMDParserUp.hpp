@@ -12,13 +12,13 @@
 #include "Logger.h"
 #include "NetTrans.h"
 
-template<class T>
+template<typename T>
 bool CMDParserUp::obtainParams(INT8 *buff, T &config, INT32 num) {
 	INT8 *tmpBuff = buff;
 	UINT32 iPos = 0;
 	UINT32 nameLen = 0;
 	UINT32 valueLen = 0;
-	NetTrans::printBufferByHex("recv obtain : ", buff, 100);
+	NetTrans::printBufferByHex("recv obtain : ", buff, 200);
 	for (INT32 i = 0; i < num; i++) {
 		nameLen = (UINT32) tmpBuff[iPos];
 		iPos += 1;
@@ -37,7 +37,10 @@ bool CMDParserUp::obtainParams(INT8 *buff, T &config, INT32 num) {
 					"Can not set parameter name : %s with its value : %s!",
 					name.get(), value.get());
 			return false;
-		}
+		} else
+			FrameWork::Logger::GetInstance().Info(
+					"Set parameter name : %s with its value : %s!", name.get(),
+					value.get());
 	}
 	return true;
 }

@@ -5,14 +5,14 @@
 // UpgradeServiceConfig.h
 
 /*switch type*/
-#define DSP9903 1
+#define DSP9903 0
 #define DSP9906 0
-#define DSP9909 0
+#define DSP9909 1
 /*switch type*/
 /*type switch setting*/
 #if (DSP9903)
 /*upgrade soft version*/
-static const INT8 *UpgradeSoftVersion = "V01.34.01";
+static const INT8 *UpgradeSoftVersion = "V01.35.01";
 /*03: adding that system will up rootfs and reboot with failed upgrading some modules.
  * 04:modify protocol of set mask and network
  * 05 : upgrade zip : Begin to upgrade! fix this bug.
@@ -45,7 +45,8 @@ enum DEV_MODULES_TYPE {
 
 #if (DSP9906)
 /*upgrade soft version*/
-static const INT8 *UpgradeSoftVersion = "V01.23.01";
+static const INT8 *UpgradeSoftVersion = "V01.27.01";
+//update
 /*upgrade soft version*/
 //static const TERMINAL_DEV_TYPE Terminal_Dev_DSP = TERMINAL_DEV_DSP9906;
 static const INT8 *TerminalDevTypeID = "0066";
@@ -75,7 +76,8 @@ enum DEV_MODULES_TYPE {
 
 #if (DSP9909)
 /*upgrade soft version*/
-static const INT8 *UpgradeSoftVersion = "V01.03.02";
+static const INT8 *UpgradeSoftVersion = "V01.06.01";
+//update
 /*upgrade soft version*/
 static const INT8 *TerminalDevTypeID = "0068";
 static const INT8 *TerminalDevType = "DSP9909";
@@ -165,6 +167,7 @@ static const INT8 *PCREQUESTRCORDINGPORT = "RecordingPort";
 static const INT8 *PCREQUESTNAME = "Name";
 static const INT8 *PCREQUESTMAC = "Mac";
 static const INT8 *PCREQUESTMASK = "Mask";
+static const INT8 *PCREQUESTCASTMODE = "CastMode";
 static const INT8 *MASKPATH = "/usr/share/mask.bin";
 static const INT8 *MODIFYRESPOND_SUCCESS = "Modify successed !";
 static const INT8 *MODIFYRESPOND_FAIL = "Modify failed !";

@@ -58,7 +58,7 @@ bool SetNetworkTerminal::setServerNetConfig(const string &ip,
 	return true;
 }
 NetConfigTransWithServer::NetConfigTransWithServer() :
-		NetConfigTrans(), RecordingPort(0) {
+		NetConfigTrans(), RecordingPort(0), castMode(DefaultChar) {
 	serverIPT = new INT8[18];
 	CommunicationPort = new INT8[5];
 	Name = new INT8[60];
