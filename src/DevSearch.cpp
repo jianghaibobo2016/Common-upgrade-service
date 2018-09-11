@@ -124,7 +124,7 @@ bool XMLParser::xmlInit() {
 	}
 	return true;
 }
-const string XMLParser::getString(const char *section, const char *strKey,
+const string XMLParser::getString(const DP_C_S8 *section, const DP_C_S8 *strKey,
 		const string &strDefualtValue) {
 	XMLNode childnode = _top.getChildNode(section);
 	if (childnode.isEmpty()) {
@@ -138,7 +138,7 @@ const string XMLParser::getString(const char *section, const char *strKey,
 		child.addText(strValue.c_str());
 		_bChanged = true;
 	} else {
-		const char *pTemp = curnode.getText();
+		const DP_C_S8 *pTemp = curnode.getText();
 		if (pTemp)
 			strValue = pTemp;
 		else
@@ -146,24 +146,24 @@ const string XMLParser::getString(const char *section, const char *strKey,
 	}
 	return strValue;
 }
-const int XMLParser::getInt(const char *section, const char *strKey,
+const int XMLParser::getInt(const DP_C_S8 *section, const DP_C_S8 *strKey,
 		const int defualtvalue) {
 	string strValue;
-	char strNum[10];
+	DP_C_S8 strNum[10];
 	sprintf(strNum, "%d", defualtvalue);
 	strValue = strNum;
 	strValue = getString(section, strKey, strValue);
 	return atoi(strValue.c_str());
 }
-const unsigned short XMLParser::getUShort(const char *section,
-		const char *strKey, const unsigned short defualtvalue) {
+const unsigned short XMLParser::getUShort(const DP_C_S8 *section,
+		const DP_C_S8 *strKey, const unsigned short defualtvalue) {
 	return getInt(section, strKey, (int) defualtvalue);
 }
 
-void XMLParser::updateServerNetConfig(const char *section, const char *strKey,
-		const char *fmt, ...) {
+void XMLParser::updateServerNetConfig(const DP_C_S8 *section, const DP_C_S8 *strKey,
+		const DP_C_S8 *fmt, ...) {
 // _bChanged = true;
-	char strValue[2048];
+	DP_C_S8 strValue[2048];
 	va_list vl;
 	va_start(vl, fmt);
 	vsnprintf(strValue, 2048, fmt, vl);

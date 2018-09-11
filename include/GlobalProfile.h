@@ -49,7 +49,7 @@ private:
 				XMLError ret = _top.writeToFile(_strcurpath.c_str());
 			}
 		}
-		const string getString(const char* section, const char* strKey, const string& strDefualtValue) {
+		const string getString(const DP_C_S8* section, const DP_C_S8* strKey, const string& strDefualtValue) {
 			XMLNode childnode = _top.getChildNode(section);
 			if (childnode.isEmpty()) {
 				childnode = _top.addChild(section);
@@ -62,7 +62,7 @@ private:
 				child.addText(strValue.c_str());
 				_bChanged = true;
 			} else {
-				const char * pTemp = curnode.getText();
+				const DP_C_S8 * pTemp = curnode.getText();
 				if (pTemp)
 					strValue = pTemp;
 				else
@@ -70,21 +70,21 @@ private:
 			}
 			return strValue;
 		}
-		 int getInt(const char* section, const char* strKey, const int defualtvalue) {
+		 int getInt(const DP_C_S8* section, const DP_C_S8* strKey, const int defualtvalue) {
 			string strValue;
-			char strNum[10];
+			DP_C_S8 strNum[10];
 			sprintf(strNum, "%d", defualtvalue);
 			strValue = strNum;
 			strValue = getString(section, strKey, strValue);
 			return atoi(strValue.c_str());
 		}
-		 unsigned short getUShort(const char* section, const char* strKey, const unsigned short defualtvalue) {
+		 unsigned short getUShort(const DP_C_S8* section, const DP_C_S8* strKey, const unsigned short defualtvalue) {
 			return getInt(section, strKey, (int) defualtvalue);
 		}
 
-		void updateValue(const char* section, const char* strKey, const char* fmt, ...) {
+		void updateValue(const DP_C_S8* section, const DP_C_S8* strKey, const DP_C_S8* fmt, ...) {
 			_bChanged = true;
-			char strValue[2048];
+			DP_C_S8 strValue[2048];
 			va_list vl;
 			va_start(vl, fmt);
 			vsnprintf(strValue, 2048, fmt, vl);

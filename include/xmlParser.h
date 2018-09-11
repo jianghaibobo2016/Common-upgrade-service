@@ -57,7 +57,7 @@
  * <a href="../../xmlParser.h">xmlParser.h</a>. These comments can be transformed in
  * full-fledged HTML documentation using the DOXYGEN software: simply type: "doxygen doxy.cfg"
  *
- * By default, the XMLParser library uses (char*) for string representation.To use the (wchar_t*)
+ * By default, the XMLParser library uses (DP_C_S8*) for string representation.To use the (wchar_t*)
  * version of the library, you need to define the "_UNICODE" preprocessor definition variable
  * (this is usually done inside your project definition file) (This is done automatically for you
  * when using Visual Studio).
@@ -68,7 +68,7 @@
  * <a href="../../xmlParser.html">xmlParser.html</a>
  *
  * Some additional small examples are also inside the file <a href="../../xmlTest.cpp">xmlTest.cpp</a>
- * (for the "char*" version of the library) and inside the file
+ * (for the "DP_C_S8*" version of the library) and inside the file
  * <a href="../../xmlTestUnicode.cpp">xmlTestUnicode.cpp</a> (for the "wchar_t*"
  * version of the library). If you have a question, please review these additionnal examples
  * before sending an e-mail to the author.
@@ -121,7 +121,7 @@
 #ifdef _UNICODE
 // If you comment the next "define" line then the library will never "switch to" _UNICODE (wchar_t*) mode (16/32 bits per characters).
 // This is useful when you get error messages like:
-//    'XMLNode::openFileHelper' : cannot convert parameter 2 from 'const char [5]' to 'const wchar_t *'
+//    'XMLNode::openFileHelper' : cannot convert parameter 2 from 'const DP_C_S8 [5]' to 'const wchar_t *'
 // The _XMLWIDECHAR preprocessor variable force the XMLParser library into either utf16/32-mode (the proprocessor variable
 // must be defined) or utf8-mode(the pre-processor variable must be undefined).
 #define _XMLWIDECHAR
@@ -163,7 +163,7 @@
 #endif
 #endif
 
-// Some common types for char set portable code
+// Some common types for DP_C_S8 set portable code
 #ifdef _XMLWIDECHAR
     #define _CXML(c) L ## c
     #define XMLCSTR const wchar_t *
@@ -171,9 +171,9 @@
     #define XMLCHAR wchar_t
 #else
     #define _CXML(c)  c
-    #define XMLCSTR const char *
-    #define XMLSTR  char *
-    #define XMLCHAR char
+    #define XMLCSTR const DP_C_S8 *
+    #define XMLSTR  DP_C_S8 *
+    #define XMLCHAR DP_C_S8
 #endif
 #ifndef FALSE
     #define FALSE 0
@@ -262,7 +262,7 @@ typedef struct XMLDLLENTRY XMLNode
     struct XMLNodeDataTag;
 
     /// Constructors are protected, so use instead one of: XMLNode::parseString, XMLNode::parseFile, XMLNode::openFileHelper, XMLNode::createXMLTopNode
-    XMLNode(struct XMLNodeDataTag *pParent, XMLSTR lpszName, char isDeclaration);
+    XMLNode(struct XMLNodeDataTag *pParent, XMLSTR lpszName, DP_C_S8 isDeclaration);
     /// Constructors are protected, so use instead one of: XMLNode::parseString, XMLNode::parseFile, XMLNode::openFileHelper, XMLNode::createXMLTopNode
     XMLNode(struct XMLNodeDataTag *p);
 
@@ -302,7 +302,7 @@ typedef struct XMLDLLENTRY XMLNode
     /// Parse an XML file and return the root of a XMLNode tree representing the file. A very crude error checking is made. An attempt to guess the Char Encoding used in the file is made.
     static XMLNode openFileHelper(XMLCSTR     filename, XMLCSTR tag=NULL);
     /**< The "openFileHelper" function reports to the screen all the warnings and errors that occurred during parsing of the XML file.
-     * This function also tries to guess char Encoding (UTF-8, ASCII or SHIT-JIS) based on the first 200 bytes of the file. Since each
+     * This function also tries to guess DP_C_S8 Encoding (UTF-8, ASCII or SHIT-JIS) based on the first 200 bytes of the file. Since each
      * application has its own way to report and deal with errors, you should rather use the "parseFile" function to parse XML files
      * and program yourself thereafter an "error reporting" tailored for your needs (instead of using the very crude "error reporting"
      * mechanism included inside the "openFileHelper" function).
@@ -329,8 +329,8 @@ typedef struct XMLDLLENTRY XMLNode
 
     /// Save the content of an xmlNode inside a file
     XMLError writeToFile(XMLCSTR filename,
-                         const char *encoding=NULL,
-                         char nFormat=1) const;
+                         const DP_C_S8 *encoding=NULL,
+                         DP_C_S8 nFormat=1) const;
     /**< If nFormat==0, no formatting is required otherwise this returns an user friendly XML string from a given element with appropriate white spaces and carriage returns.
      * If the global parameter "characterEncoding==encoding_UTF8", then the "encoding" parameter is ignored and always set to "utf-8".
      * If the global parameter "characterEncoding==encoding_ShiftJIS", then the "encoding" parameter is ignored and always set to "SHIFT-JIS".
@@ -352,9 +352,9 @@ typedef struct XMLDLLENTRY XMLNode
                                       XMLCSTR attributeName,
                                       XMLCSTR attributeValue=NULL,
                                       int *i=NULL)  const;         ///< return child node with specific name/attribute (return an empty node if failing)
-    XMLNode getChildNodeByPath(XMLCSTR path, char createNodeIfMissing=0, XMLCHAR sep='/');
+    XMLNode getChildNodeByPath(XMLCSTR path, DP_C_S8 createNodeIfMissing=0, XMLCHAR sep='/');
                                                                    ///< return the first child node with specific path
-    XMLNode getChildNodeByPathNonConst(XMLSTR  path, char createNodeIfMissing=0, XMLCHAR sep='/');
+    XMLNode getChildNodeByPathNonConst(XMLSTR  path, DP_C_S8 createNodeIfMissing=0, XMLCHAR sep='/');
                                                                    ///< return the first child node with specific path.
 
     int nChildNode(XMLCSTR name) const;                            ///< return the number of child node with specific name
@@ -362,7 +362,7 @@ typedef struct XMLDLLENTRY XMLNode
     XMLAttribute getAttribute(int i=0) const;                      ///< return ith attribute
     XMLCSTR      getAttributeName(int i=0) const;                  ///< return ith attribute name
     XMLCSTR      getAttributeValue(int i=0) const;                 ///< return ith attribute value
-    char  isAttributeSet(XMLCSTR name) const;                      ///< test if an attribute with a specific name is given
+    DP_C_S8  isAttributeSet(XMLCSTR name) const;                      ///< test if an attribute with a specific name is given
     XMLCSTR getAttribute(XMLCSTR name, int i) const;               ///< return ith attribute content with specific name (return a NULL if failing)
     XMLCSTR getAttribute(XMLCSTR name, int *i=NULL) const;         ///< return next attribute content with specific name (return a NULL if failing)
     int nAttribute() const;                                        ///< nbr of attribute
@@ -370,8 +370,8 @@ typedef struct XMLDLLENTRY XMLNode
     int nClear() const;                                            ///< nbr of clear field
     XMLNodeContents enumContents(XMLElementPosition i) const;      ///< enumerate all the different contents (attribute,child,text, clear) of the current XMLNode. The order is reflecting the order of the original file/string. NOTE: 0 <= i < nElement();
     int nElement() const;                                          ///< nbr of different contents for current node
-    char isEmpty() const;                                          ///< is this node Empty?
-    char isDeclaration() const;                                    ///< is this node a declaration <? .... ?>
+    DP_C_S8 isEmpty() const;                                          ///< is this node Empty?
+    DP_C_S8 isDeclaration() const;                                    ///< is this node a declaration <? .... ?>
     XMLNode deepCopy() const;                                      ///< deep copy (duplicate/clone) a XMLNode
     static XMLNode emptyNode();                                    ///< return XMLNode::emptyXMLNode;
     /** @} */
@@ -398,8 +398,8 @@ typedef struct XMLDLLENTRY XMLNode
     /** @defgroup creation Creating from scratch a XMLNode structure
      * @ingroup xmlModify
      * @{ */
-    static XMLNode createXMLTopNode(XMLCSTR lpszName, char isDeclaration=FALSE);                    ///< Create the top node of an XMLNode structure
-    XMLNode        addChild(XMLCSTR lpszName, char isDeclaration=FALSE, XMLElementPosition pos=-1); ///< Add a new child node
+    static XMLNode createXMLTopNode(XMLCSTR lpszName, DP_C_S8 isDeclaration=FALSE);                    ///< Create the top node of an XMLNode structure
+    XMLNode        addChild(XMLCSTR lpszName, DP_C_S8 isDeclaration=FALSE, XMLElementPosition pos=-1); ///< Add a new child node
     XMLNode        addChild(XMLNode nodeToAdd, XMLElementPosition pos=-1);                          ///< If the "nodeToAdd" has some parents, it will be detached from it's parents before being attached to the current XMLNode
     XMLAttribute  *addAttribute(XMLCSTR lpszName, XMLCSTR lpszValuev);                              ///< Add a new attribute
     XMLCSTR        addText(XMLCSTR lpszValue, XMLElementPosition pos=-1);                           ///< Add a new text content
@@ -462,19 +462,19 @@ typedef struct XMLDLLENTRY XMLNode
      *  \endcode
      *  Typically, you will never do:
      *  \code
-     *     char *b=(char*)malloc(...);
+     *     DP_C_S8 *b=(DP_C_S8*)malloc(...);
      *     xNode.addText(b);
      *     free(b);
      *  \endcode
      *  ... but rather:
      *  \code
-     *     char *b=(char*)malloc(...);
+     *     DP_C_S8 *b=(DP_C_S8*)malloc(...);
      *     xNode.addText_WOSD(b);
      *  \endcode
      *  ('free(b)' is performed by the XMLNode class)
      * @{ */
-    static XMLNode createXMLTopNode_WOSD(XMLSTR lpszName, char isDeclaration=FALSE);                     ///< Create the top node of an XMLNode structure
-    XMLNode        addChild_WOSD(XMLSTR lpszName, char isDeclaration=FALSE, XMLElementPosition pos=-1);  ///< Add a new child node
+    static XMLNode createXMLTopNode_WOSD(XMLSTR lpszName, DP_C_S8 isDeclaration=FALSE);                     ///< Create the top node of an XMLNode structure
+    XMLNode        addChild_WOSD(XMLSTR lpszName, DP_C_S8 isDeclaration=FALSE, XMLElementPosition pos=-1);  ///< Add a new child node
     XMLAttribute  *addAttribute_WOSD(XMLSTR lpszName, XMLSTR lpszValue);                                 ///< Add a new attribute
     XMLCSTR        addText_WOSD(XMLSTR lpszValue, XMLElementPosition pos=-1);                            ///< Add a new text content
     XMLClear      *addClear_WOSD(XMLSTR lpszValue, XMLCSTR lpszOpen=NULL, XMLCSTR lpszClose=NULL, XMLElementPosition pos=-1); ///< Add a new clear Tag
@@ -522,8 +522,8 @@ typedef struct XMLDLLENTRY XMLNode
      * @{ */
 
     /// Sets the global options for the conversions
-    static char setGlobalOptions(XMLCharEncoding characterEncoding=XMLNode::char_encoding_UTF8, char guessWideCharChars=1,
-                                 char dropWhiteSpace=1, char removeCommentsInMiddleOfText=1);
+    static DP_C_S8 setGlobalOptions(XMLCharEncoding characterEncoding=XMLNode::char_encoding_UTF8, DP_C_S8 guessWideCharChars=1,
+                                 DP_C_S8 dropWhiteSpace=1, DP_C_S8 removeCommentsInMiddleOfText=1);
     /**< The "setGlobalOptions" function allows you to change four global parameters that affect string & file
      * parsing. First of all, you most-probably will never have to change these 3 global parameters.
      *
@@ -532,13 +532,13 @@ typedef struct XMLDLLENTRY XMLNode
      *     characters. If this is the case, then the file will be loaded and converted in memory to
      *     WideChar before being parsed. If 0, no conversion will be performed.
      *
-     * @param guessWideCharChars If "guessWideCharChars"=1 and if this library is compiled in ASCII/UTF8/char* mode, then the
+     * @param guessWideCharChars If "guessWideCharChars"=1 and if this library is compiled in ASCII/UTF8/DP_C_S8* mode, then the
      *     XMLNode::parseFile and XMLNode::openFileHelper functions will test if the file contains WideChar
      *     characters. If this is the case, then the file will be loaded and converted in memory to
-     *     ASCII/UTF8/char* before being parsed. If 0, no conversion will be performed.
+     *     ASCII/UTF8/DP_C_S8* before being parsed. If 0, no conversion will be performed.
      *
-     * @param characterEncoding This parameter is only meaningful when compiling in char* mode (multibyte character mode).
-     *     In wchar_t* (wide char mode), this parameter is ignored. This parameter should be one of the
+     * @param characterEncoding This parameter is only meaningful when compiling in DP_C_S8* mode (multibyte character mode).
+     *     In wchar_t* (wide DP_C_S8 mode), this parameter is ignored. This parameter should be one of the
      *     three currently recognized encodings: XMLNode::encoding_UTF8, XMLNode::encoding_ascii,
      *     XMLNode::encoding_ShiftJIS.
      *
@@ -572,10 +572,10 @@ typedef struct XMLDLLENTRY XMLNode
      * \return "0" when there are no errors. If you try to set an unrecognized encoding then the return value will be "1" to signal an error.
      *
      * \note Sometime, it's useful to set "guessWideCharChars=0" to disable any conversion
-     * because the test to detect the file-type (ASCII/UTF8/char* or WideChar) may fail (rarely). */
+     * because the test to detect the file-type (ASCII/UTF8/DP_C_S8* or WideChar) may fail (rarely). */
 
     /// Guess the character encoding of the string (ascii, utf8 or shift-JIS)
-    static XMLCharEncoding guessCharEncoding(void *buffer, int bufLen, char useXMLEncodingAttribute=1);
+    static XMLCharEncoding guessCharEncoding(void *buffer, int bufLen, DP_C_S8 useXMLEncodingAttribute=1);
     /**< The "guessCharEncoding" function try to guess the character encoding. You most-probably will never
      * have to use this function. It then returns the appropriate value of the global parameter
      * "characterEncoding" described in the XMLNode::setGlobalOptions. The guess is based on the content of a buffer of length
@@ -598,7 +598,7 @@ typedef struct XMLDLLENTRY XMLNode
                                  nText,           // Number of text fields
                                  nClear,          // Number of Clear fields (comments)
                                  nAttribute;      // Number of attributes
-          char                   isDeclaration;   // Whether node is an XML declaration - '<?xml ?>'
+          DP_C_S8                   isDeclaration;   // Whether node is an XML declaration - '<?xml ?>'
           struct XMLNodeDataTag  *pParent;        // Pointer to parent element (=NULL if root)
           XMLNode                *pChild;         // Array of child nodes
           XMLCSTR                *pText;          // Array of text fields
@@ -609,17 +609,17 @@ typedef struct XMLDLLENTRY XMLNode
       } XMLNodeData;
       XMLNodeData *d;
 
-      char parseClearTag(void *px, void *pa);
-      char maybeAddTxT(void *pa, XMLCSTR tokenPStr);
+      DP_C_S8 parseClearTag(void *px, void *pa);
+      DP_C_S8 maybeAddTxT(void *pa, XMLCSTR tokenPStr);
       int ParseXMLElement(void *pXML);
       void *addToOrder(int memInc, int *_pos, int nc, void *p, int size, XMLElementType xtype);
       int indexText(XMLCSTR lpszValue) const;
       int indexClear(XMLCSTR lpszValue) const;
-      XMLNode addChild_priv(int,XMLSTR,char,int);
+      XMLNode addChild_priv(int,XMLSTR,DP_C_S8,int);
       XMLAttribute *addAttribute_priv(int,XMLSTR,XMLSTR);
       XMLCSTR addText_priv(int,XMLSTR,int);
       XMLClear *addClear_priv(int,XMLSTR,XMLCSTR,XMLCSTR,int);
-      void emptyTheNode(char force);
+      void emptyTheNode(DP_C_S8 force);
       static inline XMLElementPosition findPosition(XMLNodeData *d, int index, XMLElementType xtype);
       static int CreateXMLStringR(XMLNodeData *pEntry, XMLSTR lpszMarker, int nFormat);
       static int removeOrderElement(XMLNodeData *d, XMLElementType t, int index);
@@ -663,7 +663,7 @@ XMLDLLENTRY void freeXMLString(XMLSTR t); // {free(t);}
  * delete them without any trouble.
  *
  * @{ */
-XMLDLLENTRY char    xmltob(XMLCSTR xmlString,char   defautValue=0);
+XMLDLLENTRY DP_C_S8    xmltob(XMLCSTR xmlString,DP_C_S8   defautValue=0);
 XMLDLLENTRY int     xmltoi(XMLCSTR xmlString,int    defautValue=0);
 XMLDLLENTRY long    xmltol(XMLCSTR xmlString,long   defautValue=0);
 XMLDLLENTRY double  xmltof(XMLCSTR xmlString,double defautValue=.0);
@@ -726,14 +726,14 @@ public:
 
     /**
      * @param formatted If "formatted"=true, some space will be reserved for a carriage-return every 72 chars. */
-    static int encodeLength(int inBufLen, char formatted=0); ///< return the length of the base64 string that encodes a data buffer of size inBufLen bytes.
+    static int encodeLength(int inBufLen, DP_C_S8 formatted=0); ///< return the length of the base64 string that encodes a data buffer of size inBufLen bytes.
 
     /**
      * The "base64Encode" function returns a string containing the base64 encoding of "inByteLen" bytes
      * from "inByteBuf". If "formatted" parameter is true, then there will be a carriage-return every 72 chars.
      * The string will be free'd when the XMLParserBase64Tool object is deleted.
      * All returned strings are sharing the same memory space. */
-    XMLSTR encode(unsigned char *inByteBuf, unsigned int inByteLen, char formatted=0); ///< returns a pointer to an internal buffer containing the base64 string containing the binary data encoded from "inByteBuf"
+    XMLSTR encode(DP_U8 *inByteBuf, unsigned int inByteLen, DP_C_S8 formatted=0); ///< returns a pointer to an internal buffer containing the base64 string containing the binary data encoded from "inByteBuf"
 
     /// returns the number of bytes which will be decoded from "inString".
     static unsigned int decodeSize(XMLCSTR inString, XMLError *xe=NULL);
@@ -743,13 +743,13 @@ public:
      * The output buffer will be free'd when the XMLParserBase64Tool object is deleted.
      * All output buffer are sharing the same memory space.
      * @param inString If "instring" is malformed, NULL will be returned */
-    unsigned char* decode(XMLCSTR inString, int *outByteLen=NULL, XMLError *xe=NULL); ///< returns a pointer to an internal buffer containing the binary data decoded from "inString"
+    DP_U8* decode(XMLCSTR inString, int *outByteLen=NULL, XMLError *xe=NULL); ///< returns a pointer to an internal buffer containing the binary data decoded from "inString"
 
     /**
      * decodes data from "inString" to "outByteBuf". You need to provide the size (in byte) of "outByteBuf"
      * in "inMaxByteOutBuflen". If "outByteBuf" is not large enough or if data is malformed, then "FALSE"
      * will be returned; otherwise "TRUE". */
-    static unsigned char decode(XMLCSTR inString, unsigned char *outByteBuf, int inMaxByteOutBuflen, XMLError *xe=NULL); ///< deprecated.
+    static DP_U8 decode(XMLCSTR inString, DP_U8 *outByteBuf, int inMaxByteOutBuflen, XMLError *xe=NULL); ///< deprecated.
 
 private:
     void *buf;

@@ -15,7 +15,7 @@
 #include <iostream>
 using namespace std;
 const int MaxFilePathLen = 1024;
-const char PathSplitChar = '/';
+const DP_C_S8 PathSplitChar = '/';
 namespace FrameWork
 {
 enum LogLevel
@@ -53,7 +53,7 @@ class ILogger
     virtual ~ILogger() {}
 #define ABSTRACT_LOG_FUNC(name)        \
     virtual void name(string msg) = 0; \
-    virtual void name(const char *fmt, ...) = 0;
+    virtual void name(const DP_C_S8 *fmt, ...) = 0;
 
     ABSTRACT_LOG_FUNC(Debug)
     ABSTRACT_LOG_FUNC(Info)
@@ -64,9 +64,9 @@ class ILogger
 #undef ABSTRACT_LOG_FUNC
 #define ABSTRACT_LOG_FUNC_X(name)                                               \
     virtual void name(LogLevel lv, string msg) = 0;                             \
-    virtual void name(LogLevel lv, const char *fmt, ...) = 0;                   \
-    virtual void name(const char *file, int line, LogLevel lv, string msg) = 0; \
-    virtual void name(const char *file, int line, LogLevel lv, const char *fmt, ...) = 0;
+    virtual void name(LogLevel lv, const DP_C_S8 *fmt, ...) = 0;                   \
+    virtual void name(const DP_C_S8 *file, int line, LogLevel lv, string msg) = 0; \
+    virtual void name(const DP_C_S8 *file, int line, LogLevel lv, const DP_C_S8 *fmt, ...) = 0;
     ABSTRACT_LOG_FUNC_X(Log)
 
 
@@ -81,7 +81,7 @@ class Logger : public ILogger
     std::fstream logFile;
     LogLevel level;
     Mutex mutex;
-    Logger(LogLevel level, char *folder, char *prefix);
+    Logger(LogLevel level, DP_C_S8 *folder, DP_C_S8 *prefix);
 
   public:
 
@@ -94,12 +94,12 @@ class Logger : public ILogger
 
 #define DECLARE_LOG_FUNC(name)     \
     virtual void name(string msg); \
-    virtual void name(const char *fmt, ...);
+    virtual void name(const DP_C_S8 *fmt, ...);
 #define DECLARE_LOG_FUNC_X(name)                                            \
     virtual void name(LogLevel lv, string msg);                             \
-    virtual void name(LogLevel lv, const char *fmt, ...);                   \
-    virtual void name(const char *file, int line, LogLevel lv, string msg); \
-    virtual void name(const char *file, int line, LogLevel lv, const char *fmt, ...);
+    virtual void name(LogLevel lv, const DP_C_S8 *fmt, ...);                   \
+    virtual void name(const DP_C_S8 *file, int line, LogLevel lv, string msg); \
+    virtual void name(const DP_C_S8 *file, int line, LogLevel lv, const DP_C_S8 *fmt, ...);
 
 
     DECLARE_LOG_FUNC(Debug)
@@ -120,14 +120,14 @@ class LogMessage
     static Mutex mutex;
 
   public:
-    LogMessage(const char *file, int line, LogLevel lv);
+    LogMessage(const DP_C_S8 *file, int line, LogLevel lv);
     ostream &stream() {
         return logger->stream();
     }
     virtual ~LogMessage();
 };
 
-void InitLogging(const char *filename, LogLevel minlevel, const char *destFolder);
+void InitLogging(const DP_C_S8 *filename, LogLevel minlevel, const DP_C_S8 *destFolder);
 void CloseLogging();
 
 

@@ -162,7 +162,7 @@ private:
 	bool setNet(INT32 mac, const INT8 *macaddr);
 	bool setNet(const INT8 *ipaddr, const INT8 *subnet, const INT8 *gateway);
 	INT32 stringToHex(const string &strNum);
-	INT32 charToHex(const char cNum);
+	INT32 charToHex(const DP_C_S8 cNum);
 	bool cSplitString(const string strKey, const string strChar,
 			vector<string> &vMac);
 };

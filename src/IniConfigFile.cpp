@@ -113,7 +113,7 @@ INT32 IniConfigFile::parse_file(const INT8 *section, const INT8 *key,
 			if (0 == strncmp(p + section_start, section, i - section_start)) {
 				INT32 newline_start = 0;
 				i++;
-				//Skip over space char after ']'
+				//Skip over space DP_C_S8 after ']'
 				while (isspace(p[i])) {
 					i++;
 				}

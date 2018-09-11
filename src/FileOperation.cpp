@@ -21,7 +21,7 @@ FileOperation::~FileOperation(void) {
 }
 //#include <sys/types.h>
 //#include <sys/stat.h>
-//int mkdir(const char *pathname, mode_t mode);
+//int mkdir(const DP_C_S8 *pathname, mode_t mode);
 //S_IRWXU
 //00700权限，代表该文件所有者拥有读，写和执行操作的权限
 //S_IRUSR(S_IREAD)
@@ -77,7 +77,7 @@ bool FileOperation::extractTarFile(string fileName,
 		return false;
 	}
 	FILE *fstream = NULL;
-	char buff[fileDownloadPathSize] = { 0 };
+	DP_C_S8 buff[fileDownloadPathSize] = { 0 };
 	memset(buff, 0, sizeof(buff));
 	string exeCMD = "tar -zxvf ";
 	exeCMD += fileName;
@@ -89,7 +89,7 @@ bool FileOperation::extractTarFile(string fileName,
 		fprintf(stderr, "execute command failed: %s", strerror(errno));
 		return false;
 	}
-	char items[][32] = { 0 };
+	DP_C_S8 items[][32] = { 0 };
 	int num = 1, ch = 0, bufflen = 0;
 	while (NULL != fgets(buff, sizeof(buff), fstream)) {
 		printf("buff: %s\n", buff);

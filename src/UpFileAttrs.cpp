@@ -21,21 +21,21 @@ UpFileAttrs::~UpFileAttrs() {
 
 SmartPtr<UpFileAttrs> UpFileAttrs::createFileAttrs() {
 	static SmartPtr<UpFileAttrs> upFileAttrs(new UpFileAttrs());
-	upFileAttrs->fileDownloadPath = new char[fileDownloadPathSize];
-	upFileAttrs->newSoftVersion = new char[newSoftVersionSize];
-	upFileAttrs->upFileMD5code = new char[upgradeFileMd5Size];
+	upFileAttrs->fileDownloadPath = new DP_C_S8[fileDownloadPathSize];
+	upFileAttrs->newSoftVersion = new DP_C_S8[newSoftVersionSize];
+	upFileAttrs->upFileMD5code = new DP_C_S8[upgradeFileMd5Size];
 	return upFileAttrs;
 }
 
 UpFileAttrs::UpFileAttrs(const UpFileAttrs & tmpFileAttr) {
-	fileDownloadPath = new char[fileDownloadPathSize];
+	fileDownloadPath = new DP_C_S8[fileDownloadPathSize];
 	memcpy(fileDownloadPath, tmpFileAttr.fileDownloadPath,
 			strlen(tmpFileAttr.fileDownloadPath));
-	newSoftVersion = new char[newSoftVersionSize];
+	newSoftVersion = new DP_C_S8[newSoftVersionSize];
 	memcpy(newSoftVersion, tmpFileAttr.newSoftVersion,
 			strlen(tmpFileAttr.newSoftVersion));
 	newSoftFileSize = tmpFileAttr.newSoftFileSize;
-	upFileMD5code = new char[upgradeFileMd5Size];
+	upFileMD5code = new DP_C_S8[upgradeFileMd5Size];
 	memcpy(upFileMD5code, tmpFileAttr.upFileMD5code,
 			strlen(tmpFileAttr.upFileMD5code));
 	webUpMethod = tmpFileAttr.webUpMethod;

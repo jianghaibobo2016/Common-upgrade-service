@@ -13,8 +13,8 @@
 #include "UpgradeService.h"
 #include "LogSizeLimit.h"
 using namespace FrameWork;
-int main(int argc, char *argv[]) {
-	setvbuf(stdout, (char *) NULL, _IOLBF, 0);
+int main(int argc, DP_C_S8 *argv[]) {
+	setvbuf(stdout, (DP_C_S8 *) NULL, _IOLBF, 0);
 	LogSizeLimit logLimit(IniFileName);
 	logLimit.start();
 

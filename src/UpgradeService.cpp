@@ -15,14 +15,11 @@ INT32 UpgradeService::start() {
 	INT32 retBind = udpNetTrans->socketBind(UpUDPTransPort);
 	if (retBind == retError)
 		return retError;
-	if (strlen(const_cast<SetNetworkTerminal*>(&getNetC())->getPCIP()) != 0)
-	{
+	if (strlen(const_cast<SetNetworkTerminal*>(&getNetC())->getPCIP()) != 0) {
 		HandleUp::upMainRootfsRespond(udpNetTrans->getSockfd(),
 				*const_cast<SetNetworkTerminal*>(&getNetC()));
 	}
-	udpNetTrans->socketRunThread();//join
-
-
+	udpNetTrans->socketRunThread(); //join
 
 	return retOk;
 }

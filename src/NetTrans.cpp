@@ -76,9 +76,9 @@ INT32 NetTrans::socketBind(UINT16 localPort) {
 	}
 	//Disable loopback so you do not receive your own datagrams.
 	{
-		char loopch = 0;
+		DP_C_S8 loopch = 0;
 		if (setsockopt(m_socket, IPPROTO_IP, IP_MULTICAST_LOOP,
-				(char *) &loopch, sizeof(loopch)) < 0) {
+				(DP_C_S8 *) &loopch, sizeof(loopch)) < 0) {
 			perror("Setting IP_MULTICAST_LOOP error");
 			close(m_socket);
 			return retError;

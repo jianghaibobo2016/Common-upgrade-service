@@ -18,21 +18,21 @@
 namespace FrameWork
 {
 Mutex LogMessage::mutex;
-static char _defaltFolder[] = "/var/tmp/";
-static char _appName[MaxFilePathLen];
-static char _appFolder[MaxFilePathLen];
-static char _destFolder[MaxFilePathLen];
-static char _destPrefix[MaxFilePathLen];
+static DP_C_S8 _defaltFolder[] = "/var/tmp/";
+static DP_C_S8 _appName[MaxFilePathLen];
+static DP_C_S8 _appFolder[MaxFilePathLen];
+static DP_C_S8 _destFolder[MaxFilePathLen];
+static DP_C_S8 _destPrefix[MaxFilePathLen];
 static LogLevel _destLevel;
-static char _levelInfos[][16] = {
+static DP_C_S8 _levelInfos[][16] = {
     "Debug", "Info", "Warn", "Error", "Fatal"};
 const int BUFFER_SIZE = 8196;
-static char _gBuffer[BUFFER_SIZE];
-void combine_folder(char **destpath, char *basefolder, char *relativefolder)
+static DP_C_S8 _gBuffer[BUFFER_SIZE];
+void combine_folder(DP_C_S8 **destpath, DP_C_S8 *basefolder, DP_C_S8 *relativefolder)
 {
     int lenb = strlen(basefolder);
     int lenr = strlen(relativefolder);
-    char *pret = (char *)malloc((lenb + lenr + 1) * sizeof(char));
+    DP_C_S8 *pret = (DP_C_S8 *)malloc((lenb + lenr + 1) * sizeof(DP_C_S8));
     int pos = lenb - 1;
     memset(pret, 0, lenb + lenr + 1);
     while (pos > 0 && (basefolder[pos] != '/'))
@@ -48,7 +48,7 @@ void combine_folder(char **destpath, char *basefolder, char *relativefolder)
     }
 }
 
-static void InitPaths(const char *filename, const char *destFolder)
+static void InitPaths(const DP_C_S8 *filename, const DP_C_S8 *destFolder)
 {
     memset(_appName, 0, MaxFilePathLen);
     memset(_appFolder, 0, MaxFilePathLen);
@@ -94,7 +94,7 @@ static void InitPaths(const char *filename, const char *destFolder)
     // printf("folder%s\n", _destPrefix);
 }
 
-void InitLogging(const char *filename, LogLevel minlevel, const char *destFolder)
+void InitLogging(const DP_C_S8 *filename, LogLevel minlevel, const DP_C_S8 *destFolder)
 {
     InitPaths(filename, destFolder);
     _destLevel = minlevel;
@@ -104,7 +104,7 @@ void InitLogging(const char *filename, LogLevel minlevel, const char *destFolder
 //{
 //    time_t t = time(0);
 //    tm *ld;
-//    char tmp[64] = "";
+//    DP_C_S8 tmp[64] = "";
 //    ld = localtime(&t);
 //    strftime(tmp, sizeof(tmp), "%Y-%m-%d", ld);
 //    return string(tmp);
@@ -113,13 +113,13 @@ static string GetCurTime(void)
 {
     time_t t = time(0);
     tm *ld;
-    char tmp[64] = "";
+    DP_C_S8 tmp[64] = "";
     ld = localtime(&t);
     strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S", ld);
     return string(tmp);
 }
 
-Logger::Logger(LogLevel level, char *folder, char *prefix)
+Logger::Logger(LogLevel level, DP_C_S8 *folder, DP_C_S8 *prefix)
     : level(level)
 {
     std::string path;
@@ -159,7 +159,7 @@ Logger::~Logger()
     }
 
 #define IMPLEMENT_LOG_FUNC2(cname, fname, lv)                                             \
-    void cname::fname(const char *format, ...)                                            \
+    void cname::fname(const DP_C_S8 *format, ...)                                            \
     {                                                                                     \
         if (level <= lv)                                                                  \
         {                                                                                 \
@@ -201,7 +201,7 @@ void Logger::Log(LogLevel lv, string msg)
     }
 }
 
-void Logger::Log(LogLevel lv, const char *format, ...)
+void Logger::Log(LogLevel lv, const DP_C_S8 *format, ...)
 {
     if (level <= lv)
     {
@@ -212,7 +212,7 @@ void Logger::Log(LogLevel lv, const char *format, ...)
     }
 }
 
-void Logger::Log(const char *file, int line, LogLevel lv, string msg)
+void Logger::Log(const DP_C_S8 *file, int line, LogLevel lv, string msg)
 {
     if (level <= lv)
     {
@@ -227,7 +227,7 @@ Logger *Logger::GetInstancePtr()
     return &GetInstance();
 }
 //
-void Logger::Log(const char *file, int line, LogLevel lv, const char *format, ...)
+void Logger::Log(const DP_C_S8 *file, int line, LogLevel lv, const DP_C_S8 *format, ...)
 {
     if (level <= lv)
     {
@@ -239,7 +239,7 @@ void Logger::Log(const char *file, int line, LogLevel lv, const char *format, ..
         logFile.flush();
     }
 }
-LogMessage::LogMessage(const char *file, int line, LogLevel lv)
+LogMessage::LogMessage(const DP_C_S8 *file, int line, LogLevel lv)
 {
     logger = Logger::GetInstancePtr();
     mutex.Lock();

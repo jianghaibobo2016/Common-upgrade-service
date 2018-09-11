@@ -534,7 +534,7 @@ void HandleUp::devGetMaskCMDHandle(sockaddr_in &recvAddr,
 	maskInfo->header.HeadCmd = CMD_DEV_GETMASK;
 	maskInfo->header.DataLen = sizeof(maskInfo->DevID)
 			+ sizeof(maskInfo->m_mask);
-	char mac[13] = { 0 };
+	DP_C_S8 mac[13] = { 0 };
 	strcpy(mac,
 			setNetworkTerminal->castMacToChar13(mac,
 					setNetworkTerminal->getNetConfStruct().macAddr));
@@ -615,7 +615,7 @@ void HandleUp::devGetCastModeCMDHandle(sockaddr_in &recvAddr,
 		inUpgradingMsgSend(recvAddr, setNetworkTerminal, sockfd);
 		return;
 	}
-	char mac[13] = { 0 };
+	DP_C_S8 mac[13] = { 0 };
 	strcpy(mac,
 			setNetworkTerminal->castMacToChar13(mac,
 					setNetworkTerminal->getNetConfStruct().macAddr));
@@ -630,7 +630,7 @@ void HandleUp::devGetCastModeCMDHandle(sockaddr_in &recvAddr,
 	XMLParser xmlParser(pathXml);
 	xmlParser.xmlInit();
 	INT32 icastMode = xmlParser.getInt("TerminalNet", "IsUseMultiCast", 0);
-	cout << "icastMode : "<<icastMode<<endl;///////////////////0 1 is reality
+	cout << "icastMode : " << icastMode << endl; ///////////////////0 1 is reality
 	memcpy(&devCastMode->castMode, &icastMode, 1);
 	struct sockaddr_in sendAddr;
 	memset(&sendAddr, 0, sizeof(struct sockaddr_in));
@@ -965,7 +965,7 @@ void *HandleUp::UpgradeThreadFun(void *args) {
 					memcpy(replyText, UPFILESYSTEM, strlen(UPFILESYSTEM));
 			} else {
 				cout << "test go to main() fault 7" << endl;
-				sprintf(replyText, "Upgrade successed !");
+				sprintf(replyText, "Upgrade succeeded !");
 			}
 			cout << "test go to main() fault 8" << endl;
 		}
@@ -1129,7 +1129,7 @@ INT32 HandleUp::upTerminalDevs(UPDATE_DEV_TYPE type, INT32 &sockfd,
 	INT8 replyText[msgLen] = { 0 };
 	INT32 retUpStatus = retOk;
 	setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_RCVTIMEO,
-			(const char *) &timeout, sizeof(timeout));
+			(const DP_C_S8 *) &timeout, sizeof(timeout));
 	while (1) {
 		INT32 retRecv = recvfrom(netTrans.getSockfd(), recvBuff,
 				sizeof(recvBuff), 0, (struct sockaddr*) netTrans.getAddr(),
@@ -1144,9 +1144,10 @@ INT32 HandleUp::upTerminalDevs(UPDATE_DEV_TYPE type, INT32 &sockfd,
 				ARM_REPLAYUPDATE_UPDATEDEV *upReply =
 						(ARM_REPLAYUPDATE_UPDATEDEV*) recvBuff;
 				cout << "recv ret : " << retRecv << endl;
-				for (INT32 i = 0; i < retRecv; i++) {
-					printf("recv result :: %02x\t", recvBuff[i]);
-				}
+				NetTrans::printBufferByHex("Recv ret : ", recvBuff, retRecv);
+//				for (INT32 i = 0; i < retRecv; i++) {
+//					printf("recv result :: %02x\t", recvBuff[i]);
+//				}
 				if (upReply->header.HeadCmd == CMD_LOCALDEV_UPGRADE) {
 					if (upReply->state == 1 || upReply->state == 2) {
 						cout << "get up dev  " << upReply->state
@@ -1157,6 +1158,9 @@ INT32 HandleUp::upTerminalDevs(UPDATE_DEV_TYPE type, INT32 &sockfd,
 								<< endl;
 						return retError;
 					} else {
+						Logger::GetInstance().Error(
+								"Upgrade error with state : %d",
+								upReply->state);
 						return retError;
 					}
 				} else
@@ -1321,7 +1325,7 @@ INT32 HandleUp::getMaskInfo(UINT16 *mask) {
 	INT8 recvBuff[16] = { 0 };
 	struct timeval timeout = { 2, 0 }; //2s
 	setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_RCVTIMEO,
-			(const char *) &timeout, sizeof(timeout));
+			(const DP_C_S8 *) &timeout, sizeof(timeout));
 	INT32 retRecv = recvfrom(netTrans.getSockfd(), recvBuff, sizeof(recvBuff),
 			0, (struct sockaddr*) netTrans.getAddr(), netTrans.getAddrLen());
 	if (retRecv == -1) {

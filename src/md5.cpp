@@ -8,7 +8,7 @@
 #include "md5.h"
 #include <memory.h>
 
-unsigned char PADDING[] =
+DP_U8 PADDING[] =
 {
     0x80,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -26,7 +26,7 @@ void MD5Init(MD5_CTX *context)
     context->state[3] = 0x10325476;
 }
 
-void MD5Update(MD5_CTX *context,unsigned char *input, unsigned int inputlen)
+void MD5Update(MD5_CTX *context,DP_U8 *input, unsigned int inputlen)
 {
     unsigned int i = 0;
     unsigned int index = 0;
@@ -57,10 +57,10 @@ void MD5Update(MD5_CTX *context,unsigned char *input, unsigned int inputlen)
     memcpy(&context->buffer[index], &input[i], inputlen-i);
 }
 
-void MD5Final(MD5_CTX *context, unsigned char digest[16])
+void MD5Final(MD5_CTX *context, DP_U8 digest[16])
 {
     unsigned int index = 0,padlen = 0;
-    unsigned char bits[8];
+    DP_U8 bits[8];
 
     index = (context->count[0] >> 3) & 0x3F;
     padlen = (index < 56)?(56-index):(120-index);
@@ -70,7 +70,7 @@ void MD5Final(MD5_CTX *context, unsigned char digest[16])
     MD5Encode(digest, context->state, 16);
 }
 
-void MD5Encode(unsigned char *output,unsigned int *input,unsigned int len)
+void MD5Encode(DP_U8 *output,unsigned int *input,unsigned int len)
 {
     unsigned int i = 0;
     unsigned int j = 0;
@@ -86,7 +86,7 @@ void MD5Encode(unsigned char *output,unsigned int *input,unsigned int len)
     }
 }
 
-void MD5Decode(unsigned int *output, unsigned char *input, unsigned int len)
+void MD5Decode(unsigned int *output, DP_U8 *input, unsigned int len)
 {
     unsigned int i = 0;
     unsigned int j = 0;
@@ -102,7 +102,7 @@ void MD5Decode(unsigned int *output, unsigned char *input, unsigned int len)
     }
 }
 
-void MD5Transform(unsigned int state[4],unsigned char block[64])
+void MD5Transform(unsigned int state[4],DP_U8 block[64])
 {
     unsigned int a = state[0];
     unsigned int b = state[1];
@@ -187,10 +187,10 @@ void MD5Transform(unsigned int state[4],unsigned char block[64])
     state[2] += c;
     state[3] += d;
 }
-bool GetFileMD5(const char *file_path,unsigned char *md5_str) {
+bool GetFileMD5(const DP_C_S8 *file_path,DP_U8 *md5_str) {
 	int fd,ret = 0;
-	unsigned char data[READ_DATA_SIZE] = {0};
-	//unsigned char md5_value[MD5_SIZE] ={0};
+	DP_U8 data[READ_DATA_SIZE] = {0};
+	//DP_U8 md5_value[MD5_SIZE] ={0};
 	MD5_CTX md5;
 
 	fd = open(file_path, O_RDONLY);
@@ -226,7 +226,7 @@ bool GetFileMD5(const char *file_path,unsigned char *md5_str) {
 //	md5_str[MD5_STR_LEN] = '\0'; // add end
 	return true;
 }
-//bool ChartoHex(char *md5_str, char *md5_str_end){
+//bool ChartoHex(DP_C_S8 *md5_str, DP_C_S8 *md5_str_end){
 //	int iPos = 0;
 //	for(int i=0; i<16; i++){
 //		int iTemp = 0;

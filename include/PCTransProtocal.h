@@ -63,12 +63,12 @@ typedef struct DEV_Reply_GetDevMsg_tag {
 	UINT32 DevGateway;		 //设备网关
 	UINT32 DevServerIP;      //设备服务器IP
 	UINT16 CommunicationPort;    //设备服务器端口 //2018.05.23 modify CommunicationPort
-	char DevMACAddress[13];  //设备MAC地址 //ASCII字符大写，包含结束符
-	char DevID[40];          //设备ID(前四个字符为设备类型)
-	char DevType[20];        //设备型号
-	char HardVersion[20];    //硬件版本
-	char SoftVersion[20];    //软件版本
-	char DevName[60];  	 	 //设备名称;
+	DP_C_S8 DevMACAddress[13];  //设备MAC地址 //ASCII字符大写，包含结束符
+	DP_C_S8 DevID[40];          //设备ID(前四个字符为设备类型)
+	DP_C_S8 DevType[20];        //设备型号
+	DP_C_S8 HardVersion[20];    //硬件版本
+	DP_C_S8 SoftVersion[20];    //软件版本
+	DP_C_S8 DevName[60];  	 	 //设备名称;
 	UINT16 RecordingPort;   //2B（网路字节顺序)//无该设置则为0 //2018.05.23 add
 	UINT16 Mask[4];		//无该设置则为FFFFFFFF  0000 for exception //2018.05.23 add
 } DEV_Reply_GetDevMsg;
@@ -79,12 +79,12 @@ typedef struct DEV_Reply_GetDevMsg_tag {
 //PC端发送
 typedef struct PC_Request_ParameterSetting_tag {
 	PC_DEV_Header header;
-	char DevID[40];          //设备ID(前四个字符为设备类型) //2018.05.23 add
+	DP_C_S8 DevID[40];          //设备ID(前四个字符为设备类型) //2018.05.23 add
 	UINT8 ParameterNum; //add 1B
-	//unsigned char NameLen;
-	//char* name;
-	//unsigned char ValueLen;
-	//char* value;
+	//DP_U8 NameLen;
+	//DP_C_S8* name;
+	//DP_U8 ValueLen;
+	//DP_C_S8* value;
 //......
 } PC_Request_ParameterSetting;
 //设备端返回
@@ -93,7 +93,7 @@ typedef struct DEV_Reply_ParameterSetting_tag {
 	INT8 DevID[40]; //设备ID(前四个字符为设备类型)//add
 	UINT8 Result; //1:成功,0:失败
 	// UINT8 FailReasonLen;
-	// char* FailReason;
+	// DP_C_S8* FailReason;
 //......
 } DEV_Reply_ParameterSetting; 	//暂时没有具体失败理由.
 //-------------------------------------------------------------------//
@@ -102,20 +102,20 @@ typedef struct DEV_Reply_ParameterSetting_tag {
 //PC端发送
 typedef struct PC_Request_DevUpgrade_tag {
 	PC_DEV_Header header;
-	char HardVersion[20];       //硬件版本
-	char NewSoftVersion[20];    //新软件版本 V01.01
+	DP_C_S8 HardVersion[20];       //硬件版本
+	DP_C_S8 NewSoftVersion[20];    //新软件版本 V01.01
 	/*在字符串"V01.01"后加上"WEB"表示由web端发送的升级指令*/
 	UINT32 NewSoftDocumentSize; //新软件版本文件大小
-	char UpgradeFileMd5[16];	//MD5校验值//add
+	DP_C_S8 UpgradeFileMd5[16];	//MD5校验值//add
 } PC_Request_DevUpgrade;
 //设备升级功放
 //设备端返回
 typedef struct DEV_Reply_DevUpgrade_tag {
 	PC_DEV_Header header;
-	char DevID[40]; //设备ID(前四个字符为设备类型)//add
+	DP_C_S8 DevID[40]; //设备ID(前四个字符为设备类型)//add
 	UINT8 Result; //1:可以升级,0:不可以升级  web无需升级 定协议 "No need to upgrade !"
 	//UINT8 FailReasonLen;
-	//char* FailReason;
+	//DP_C_S8* FailReason;
 //......
 } DEV_Reply_DevUpgrade;
 //-------------------------------------------------------------------//
@@ -124,9 +124,9 @@ typedef struct DEV_Reply_DevUpgrade_tag {
 //设备端请求
 typedef struct DEV_Request_FileProtocal_tag {
 	PC_DEV_Header header;
-	char DevType[20];           //设备型号
-	char HardVersion[20];       //硬件版本
-	char NewSoftVersion[20];    //新软件版本
+	DP_C_S8 DevType[20];           //设备型号
+	DP_C_S8 HardVersion[20];       //硬件版本
+	DP_C_S8 NewSoftVersion[20];    //新软件版本
 	UINT32 StartPosition;       //起始位置,0xFFFFFFFF传输完毕，PC不用返回
 	UINT16 FileDataLen;         //数据长度
 } DEV_Request_FileProtocal;
@@ -135,7 +135,7 @@ typedef struct PC_Reply_FileProtocal_tag {
 	PC_DEV_Header header;
 	UINT32 StartPosition;       //起始位置,0xFFFFFFFF传输完毕，PC不用返回
 	UINT16 FileDataLen;         //数据长度
-	//char* FileData            //数据内容
+	//DP_C_S8* FileData            //数据内容
 } PC_Reply_FileProtocal;
 //-------------------------------------------------------------------//
 
@@ -146,7 +146,7 @@ typedef struct DEV_Request_UpgradeReply_tag {
 	INT8 DevID[40]; //设备ID(前四个字符为设备类型)//add
 	UINT8 Result; //升级结果反馈 成功:1, 失败:0 	升级完毕 :2
 	//UINT8 FailReasonLen;
-	//char* text
+	//DP_C_S8* text
 } DEV_Request_UpgradeReply;
 /* text :
  * "Upgrade failed!" 表示升级失败
@@ -159,9 +159,9 @@ typedef struct DEV_Request_UpgradeReply_tag {
 //设备端请求
 typedef struct DEV_Request_DevBroadcast_tag {
 	PC_DEV_Header header;
-	char DevType[20];           //设备型号
-	char HardVersion[20];       //硬件版本
-	char SoftVersion[20];       //软件版本
+	DP_C_S8 DevType[20];           //设备型号
+	DP_C_S8 HardVersion[20];       //硬件版本
+	DP_C_S8 SoftVersion[20];       //软件版本
 	UINT32 IP;
 } DEV_Request_DevBroadcast;
 //PC端无返回

@@ -35,7 +35,7 @@ public:
 
 		if (file == NULL)
 			return false;
-		fwrite(content.c_str(), sizeof(char), content.size(), file);
+		fwrite(content.c_str(), sizeof(DP_C_S8), content.size(), file);
 		fclose(file);
 		return true;
 	}
@@ -51,8 +51,8 @@ public:
 		int len = ftell(file);
 		rewind(file);
 		content.clear();
-		char *buffer = new char[len];
-		fread(buffer, sizeof(char), len, file);
+		DP_C_S8 *buffer = new DP_C_S8[len];
+		fread(buffer, sizeof(DP_C_S8), len, file);
 		content.assign(buffer, len);
 		delete[] buffer;
 		fclose(file);
@@ -68,7 +68,7 @@ public:
 		}
 
 		lines.clear();
-		char buffer[BUFFER_SIZE];
+		DP_C_S8 buffer[BUFFER_SIZE];
 
 		while (file.getline(buffer, BUFFER_SIZE, '\n')) {
 			lines.push_back(buffer);
@@ -76,11 +76,11 @@ public:
 
 		return true;
 	}
-	static bool CreateDir(const char *pszDir) {
+	static bool CreateDir(const DP_C_S8 *pszDir) {
 		size_t i = 0;
 		size_t iRet;
 		size_t iLen = strlen(pszDir);
-		char *buf = new char[iLen + 1];
+		DP_C_S8 *buf = new DP_C_S8[iLen + 1];
 		strncpy(buf, pszDir, iLen + 1);
 		for (i = 0; i < iLen; i++) {
 			if (pszDir[i] == '\\' || pszDir[i] == '/') {

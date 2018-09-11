@@ -5,14 +5,14 @@
 // UpgradeServiceConfig.h
 
 /*switch type*/
-#define DSP9903 0
+#define DSP9903 1
 #define DSP9906 0
-#define DSP9909 1
+#define DSP9909 0
 /*switch type*/
 /*type switch setting*/
 #if (DSP9903)
 /*upgrade soft version*/
-static const INT8 *UpgradeSoftVersion = "V01.35.01";
+static const INT8 *UpgradeSoftVersion = "V01.37.01";
 /*03: adding that system will up rootfs and reboot with failed upgrading some modules.
  * 04:modify protocol of set mask and network
  * 05 : upgrade zip : Begin to upgrade! fix this bug.
@@ -45,7 +45,7 @@ enum DEV_MODULES_TYPE {
 
 #if (DSP9906)
 /*upgrade soft version*/
-static const INT8 *UpgradeSoftVersion = "V01.27.01";
+static const INT8 *UpgradeSoftVersion = "V01.28.01";
 //update
 /*upgrade soft version*/
 //static const TERMINAL_DEV_TYPE Terminal_Dev_DSP = TERMINAL_DEV_DSP9906;
@@ -181,7 +181,7 @@ static const INT8 *LOWERVERSION =
 		"Request soft version lower than local soft version !";
 static const INT8 *GETVERSIONFAILED = "Get local version failed!";
 static const INT8 *UPFILENOTEXIST = "Upgrade file is not existed !";
-static const INT8 *upSysRespond = "Upgrade system successed !";
+static const INT8 *upSysRespond = "Upgrade system succeeded !";
 //static const INT8 *PRODUCT_TYPE = "DSP9903";
 static const INT8 *UpgradeShell = "upgrade.sh";
 static const INT8 *UpgradeShellWithPath = "/nand/Update_File/upgrade.sh";

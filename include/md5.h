@@ -22,7 +22,7 @@ typedef struct
 {
     unsigned int count[2];
     unsigned int state[4];
-    unsigned char buffer[64];
+    DP_U8 buffer[64];
 } MD5_CTX;
 
 
@@ -61,12 +61,12 @@ typedef struct
     a += b; \
 }
 void MD5Init(MD5_CTX *context);
-void MD5Update(MD5_CTX *context, unsigned char *input, unsigned int inputlen);
-void MD5Final(MD5_CTX *context, unsigned char digest[16]);
-void MD5Transform(unsigned int state[4], unsigned char block[64]);
-void MD5Encode(unsigned char *output, unsigned int *input, unsigned int len);
-void MD5Decode(unsigned int *output, unsigned char *input, unsigned int len);
+void MD5Update(MD5_CTX *context, DP_U8 *input, unsigned int inputlen);
+void MD5Final(MD5_CTX *context, DP_U8 digest[16]);
+void MD5Transform(unsigned int state[4], DP_U8 block[64]);
+void MD5Encode(DP_U8 *output, unsigned int *input, unsigned int len);
+void MD5Decode(unsigned int *output, DP_U8 *input, unsigned int len);
 
-bool GetFileMD5(const char *file_path,unsigned char *md5_str);
-//bool ChartoHex(char *md5_str, char *md5_str_end);
+bool GetFileMD5(const DP_C_S8 *file_path,DP_U8 *md5_str);
+//bool ChartoHex(DP_C_S8 *md5_str, DP_C_S8 *md5_str_end);
 #endif /* MD5_MD5_H_ */

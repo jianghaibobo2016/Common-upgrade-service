@@ -188,7 +188,7 @@ INT32 UpgradeDSP::modifyVersionFile() {
 
 	chmod(pathVersionFile, S_IWUSR | S_IWGRP | S_IWOTH);
 	ifstream in;
-	char line[64];
+	DP_C_S8 line[64];
 	in.open(pathVersionFile);
 	string strTemp;
 	while (in.getline(line, sizeof(line))) {
@@ -398,10 +398,10 @@ INT32 UpgradeDSPSubItem::upgradeItem(UINT32 num) {
 }
 INT32 UpgradeDSPSubItem::excuteUpgradeShell(UINT32 num, INT8 *PCIP) {
 	FILE *fstream = NULL;
-	char buff[256] = { 0 };
+	DP_C_S8 buff[256] = { 0 };
 	UINT32 iPosBuff = 0;
-	char module[3] = { 0 };
-	char upStatus[3] = { 0 };
+	DP_C_S8 module[3] = { 0 };
+	DP_C_S8 upStatus[3] = { 0 };
 	bool upSuccessed = false;
 	string exeCMD = "cd ";
 	exeCMD += upFilePath;
@@ -444,7 +444,7 @@ INT32 UpgradeDSPSubItem::excuteUpgradeShell(UINT32 num, INT8 *PCIP) {
 	}
 	if (upSuccessed == true) {
 		memset(record, 0, msgLen);
-		Logger::GetInstance().Info("Upgrade item : %s--%s successed !", module,
+		Logger::GetInstance().Info("Upgrade item : %s--%s succeeded !", module,
 				aUpSubItem->getMemberItemName());
 //		sprintf(record, "Upgrade item : %s--%s successed !", module,
 //				aUpSubItem->getMemberItemName());
@@ -466,7 +466,7 @@ INT32 UpgradeDSPSubItem::excuteUpgradeShell(UINT32 num, INT8 *PCIP) {
 
 bool UpgradeDSPSubItem::excuteDevShell() {
 	FILE *fstream = NULL;
-	char buff[256] = { 0 };
+	DP_C_S8 buff[256] = { 0 };
 	string exeCMD = "cd ";
 	exeCMD += upFilePath;
 	exeCMD += " && chmod +x ";
@@ -521,7 +521,7 @@ INT32 UpgradeDSPSubItem::modifyVersionFile() {
 	newVersionLine += (aUpSubItem->getNewVersion() + 1);
 	chmod(pathVersionFile, S_IWUSR | S_IWGRP | S_IWOTH);
 	ifstream in;
-	char line[64];
+	DP_C_S8 line[64];
 	in.open(pathVersionFile);
 	string strTemp;
 	while (in.getline(line, sizeof(line))) {
