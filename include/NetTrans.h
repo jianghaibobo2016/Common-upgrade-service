@@ -24,7 +24,7 @@ public:
 	;
 
 	//! Returns a C-string describing the cause of the current error.
-	const DP_C_S8 *what() const throw () {
+	const char *what() const throw () {
 		return m_message.c_str();
 	}
 

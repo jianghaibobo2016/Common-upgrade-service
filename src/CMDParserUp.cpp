@@ -481,7 +481,7 @@ INT32 CMDParserUp::isDevModulesUpgradeEnable(
 					getDevStatus.dev_type);
 			struct timeval timeout = { 8, 0 }; //10s
 			setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_RCVTIMEO,
-					(const DP_C_S8 *) &timeout, sizeof(timeout));
+					(const char *) &timeout, sizeof(timeout));
 			INT8 recvBuff[16] = { 0 };
 			INT32 retRecv = recvfrom(netTrans.getSockfd(), recvBuff,
 					sizeof(recvBuff), 0, (struct sockaddr*) netTrans.getAddr(),
@@ -747,7 +747,7 @@ INT32 CMDParserUp::setParams(SetNetworkTerminal *net,
 			INT8 recvBuff[sizeof(SERVER_REPLY_SET_CONF)] = { 0 };
 			struct timeval timeout = { 2, 0 }; //2s for waiting
 			setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_RCVTIMEO,
-					(const DP_C_S8 *) &timeout, sizeof(timeout));
+					(const char *) &timeout, sizeof(timeout));
 			INT32 retRecv = recvfrom(netTrans.getSockfd(), recvBuff,
 					sizeof(SERVER_REPLY_SET_CONF), 0,
 					(struct sockaddr*) netTrans.getAddr(),

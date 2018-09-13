@@ -837,7 +837,7 @@ INT32 SetNetwork::stringToHex(const string &strNum) {
 	return h * 16 + l;
 }
 
-INT32 SetNetwork::charToHex(const DP_C_S8 cNum) {
+INT32 SetNetwork::charToHex(const INT8 cNum) {
 	if (cNum >= '0' && cNum <= '9') {
 		return cNum - '0';
 	} else if (cNum >= 'a' && cNum <= 'f') {

@@ -534,7 +534,7 @@ void HandleUp::devGetMaskCMDHandle(sockaddr_in &recvAddr,
 	maskInfo->header.HeadCmd = CMD_DEV_GETMASK;
 	maskInfo->header.DataLen = sizeof(maskInfo->DevID)
 			+ sizeof(maskInfo->m_mask);
-	DP_C_S8 mac[13] = { 0 };
+	INT8 mac[13] = { 0 };
 	strcpy(mac,
 			setNetworkTerminal->castMacToChar13(mac,
 					setNetworkTerminal->getNetConfStruct().macAddr));
@@ -615,7 +615,7 @@ void HandleUp::devGetCastModeCMDHandle(sockaddr_in &recvAddr,
 		inUpgradingMsgSend(recvAddr, setNetworkTerminal, sockfd);
 		return;
 	}
-	DP_C_S8 mac[13] = { 0 };
+	INT8 mac[13] = { 0 };
 	strcpy(mac,
 			setNetworkTerminal->castMacToChar13(mac,
 					setNetworkTerminal->getNetConfStruct().macAddr));
@@ -1129,7 +1129,7 @@ INT32 HandleUp::upTerminalDevs(UPDATE_DEV_TYPE type, INT32 &sockfd,
 	INT8 replyText[msgLen] = { 0 };
 	INT32 retUpStatus = retOk;
 	setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_RCVTIMEO,
-			(const DP_C_S8 *) &timeout, sizeof(timeout));
+			(const INT8 *) &timeout, sizeof(timeout));
 	while (1) {
 		INT32 retRecv = recvfrom(netTrans.getSockfd(), recvBuff,
 				sizeof(recvBuff), 0, (struct sockaddr*) netTrans.getAddr(),
@@ -1325,7 +1325,7 @@ INT32 HandleUp::getMaskInfo(UINT16 *mask) {
 	INT8 recvBuff[16] = { 0 };
 	struct timeval timeout = { 2, 0 }; //2s
 	setsockopt(netTrans.getSockfd(), SOL_SOCKET, SO_RCVTIMEO,
-			(const DP_C_S8 *) &timeout, sizeof(timeout));
+			(const INT8 *) &timeout, sizeof(timeout));
 	INT32 retRecv = recvfrom(netTrans.getSockfd(), recvBuff, sizeof(recvBuff),
 			0, (struct sockaddr*) netTrans.getAddr(), netTrans.getAddrLen());
 	if (retRecv == -1) {

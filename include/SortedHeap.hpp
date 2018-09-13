@@ -74,14 +74,13 @@ public:
 	 * @param cmp 用来比较
 	 */
 //	SortedHeap(std::function<bool(T &, T &)> cmp);
-	SortedHeap (bool(*cmp)(T &, T &));
-
+	SortedHeap(bool (*cmp)(T &, T &));
 
 	/**
 	 * 插入节点
 	 * @param node 插入的节点
 	 */
-unsigned	int insertNode(T &node);
+	unsigned int insertNode(T &node);
 	/**
 	 * 删除节点，时间复杂度为O(n)
 	 * @param id  要删除的节点id
@@ -108,7 +107,7 @@ unsigned	int insertNode(T &node);
 };
 
 template<typename T>
-SortedHeap<T>::SortedHeap(bool(*cmp)(T &, T &)) {
+SortedHeap<T>::SortedHeap(bool (*cmp)(T &, T &)) {
 	this->cmp = cmp;
 	this->autoIncrementId = 0;
 }
@@ -248,6 +247,5 @@ void SortedHeap<T>::deleteTopNode() {
 		this->deleteNodeByPos(0);
 	}
 }
-
 
 #endif /* INCLUDE_SORTEDHEAP_HPP_ */

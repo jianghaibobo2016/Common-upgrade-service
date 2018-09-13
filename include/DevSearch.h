@@ -50,14 +50,14 @@ public:
 	const string path;
 
 	bool xmlInit();
-	const string getString(const DP_C_S8 *section, const DP_C_S8 *strKey,
+	const string getString(const INT8 *section, const INT8 *strKey,
 			const string &strDefualtValue);
-	const int getInt(const DP_C_S8* section, const DP_C_S8* strKey,
+	const int getInt(const INT8* section, const INT8* strKey,
 			const int defualtvalue);
-	const unsigned short getUShort(const DP_C_S8* section, const DP_C_S8* strKey,
+	const unsigned short getUShort(const INT8* section, const INT8* strKey,
 			const unsigned short defualtvalue);
-	void updateServerNetConfig(const DP_C_S8 *section, const DP_C_S8 *strKey,
-			const DP_C_S8 *fmt, ...);
+	void updateServerNetConfig(const INT8 *section, const INT8 *strKey,
+			const INT8 *fmt, ...);
 
 private:
 	string _strcurpath;

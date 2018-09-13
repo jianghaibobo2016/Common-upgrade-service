@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include "GlobDefine.h"
 
 #define READ_DATA_SIZE  1024
 #define MD5_SIZE        16
@@ -22,7 +23,7 @@ typedef struct
 {
     unsigned int count[2];
     unsigned int state[4];
-    DP_U8 buffer[64];
+    UINT8 buffer[64];
 } MD5_CTX;
 
 
@@ -61,12 +62,12 @@ typedef struct
     a += b; \
 }
 void MD5Init(MD5_CTX *context);
-void MD5Update(MD5_CTX *context, DP_U8 *input, unsigned int inputlen);
-void MD5Final(MD5_CTX *context, DP_U8 digest[16]);
-void MD5Transform(unsigned int state[4], DP_U8 block[64]);
-void MD5Encode(DP_U8 *output, unsigned int *input, unsigned int len);
-void MD5Decode(unsigned int *output, DP_U8 *input, unsigned int len);
+void MD5Update(MD5_CTX *context, UINT8 *input, unsigned int inputlen);
+void MD5Final(MD5_CTX *context, UINT8 digest[16]);
+void MD5Transform(unsigned int state[4], UINT8 block[64]);
+void MD5Encode(UINT8 *output, unsigned int *input, unsigned int len);
+void MD5Decode(unsigned int *output, UINT8 *input, unsigned int len);
 
-bool GetFileMD5(const DP_C_S8 *file_path,DP_U8 *md5_str);
-//bool ChartoHex(DP_C_S8 *md5_str, DP_C_S8 *md5_str_end);
+bool GetFileMD5(const INT8 *file_path,UINT8 *md5_str);
+//bool ChartoHex(INT8 *md5_str, INT8 *md5_str_end);
 #endif /* MD5_MD5_H_ */

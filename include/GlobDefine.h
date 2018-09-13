@@ -8,13 +8,13 @@
 #define _GLOBDEFINE_H
 
 // Defines unsigned types
-typedef DP_U8           UINT8;
+typedef unsigned char           UINT8;
 typedef unsigned short          UINT16;
 typedef unsigned int            UINT32;
 typedef unsigned long long      UINT64;
 
 // Defines signed types
-typedef DP_C_S8                    INT8;
+typedef char                    INT8;
 typedef signed short            INT16;
 typedef int                     INT32;
 typedef signed long long        INT64;

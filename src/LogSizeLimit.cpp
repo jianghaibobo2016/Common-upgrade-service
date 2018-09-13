@@ -180,14 +180,14 @@ bool LogSizeLimit::readConfig() {
 //   long d_ino; /* inode number 索引节点号 */
 //   off_t d_off; /* offset to this dirent 在目录文件中的偏移 */
 //   unsigned short d_reclen; /* length of this d_name 文件名长 */
-//   DP_U8 d_type; /* the type of d_name 文件类型 */其中d_type表明该文件的类型：文件(8)、目录(4)、链接文件(10)等。
-//   DP_C_S8 d_name [NAME_MAX+1]; /* file name (null-terminated) 文件名，最长255字符 */
+//   UINT8 d_type; /* the type of d_name 文件类型 */其中d_type表明该文件的类型：文件(8)、目录(4)、链接文件(10)等。
+//   INT8 d_name [NAME_MAX+1]; /* file name (null-terminated) 文件名，最长255字符 */
 //}
 
 bool LogSizeLimit::readFileList(const INT8 *mapStrPath, const INT8 *basePath) {
 	DIR *dir;
 	struct dirent *direntPtr;
-	DP_C_S8 base[LogFilePathMaxLen] = { 0 };
+	INT8 base[LogFilePathMaxLen] = { 0 };
 
 	if ((dir = opendir(basePath)) == NULL) {
 		Logger::GetInstance().Error("Can not open directory %s ! ", basePath);
