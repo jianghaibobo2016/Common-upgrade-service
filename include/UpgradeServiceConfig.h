@@ -76,7 +76,7 @@ enum DEV_MODULES_TYPE {
 
 #if (DSP9909)
 /*upgrade soft version*/
-static const INT8 *UpgradeSoftVersion = "V01.06.01";
+static const INT8 *UpgradeSoftVersion = "V01.07.01";
 //update
 /*upgrade soft version*/
 static const INT8 *TerminalDevTypeID = "0068";

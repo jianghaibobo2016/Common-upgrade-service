@@ -1236,29 +1236,71 @@ INT32 HandleUp::upMainRootfsRespond(INT32 m_socket, SetNetworkTerminal &net) {
 	struct sockaddr_in addr;
 	memset(&addr, 0, addrlen);
 	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = inet_addr(net.getPCIP()); //任何主机地址
+	addr.sin_addr.s_addr = inet_addr(net.getPCIP());
 	addr.sin_port = htons(UpUDPTransPort);
-	struct sockaddr_in addr_OldVersion;
-	memset(&addr_OldVersion, 0, addrlen);
-	addr_OldVersion.sin_family = AF_INET;
-	addr_OldVersion.sin_addr.s_addr = inet_addr(net.getPCIP()); //任何主机地址
-	addr_OldVersion.sin_port = htons(UpRespondPort);
+//	struct sockaddr_in addr_OldVersion;
+//	memset(&addr_OldVersion, 0, addrlen);
+//	addr_OldVersion.sin_family = AF_INET;
+//	addr_OldVersion.sin_addr.s_addr = inet_addr(net.getPCIP()); //任何主机地址
+//	addr_OldVersion.sin_port = htons(UpRespondPort);
 	INT8 sendtoBuff[SendBufferSizeMax] = { 0 };
 	INT8 respond[32] = { 0 };
+	INT32 retSend = 0;
 	memcpy(respond, upSysRespond, strlen(upSysRespond));
 	devReplyHandle<DEV_Request_UpgradeReply>(sendtoBuff, *devReply.get(),
 			strlen(respond), respond, 0, &net);
-	sleep(2);
-	INT32 retSend = sendto(m_socket, sendtoBuff,
+	sleep(1);
+	retSend = sendto(m_socket, sendtoBuff,
 			sizeof(PC_DEV_Header) + devReply->header.DataLen, 0,
 			(struct sockaddr*) &addr, addrlen);
 	cout << "sendto pc upgrade system success ...num : " << retSend << endl;
+	NetTrans::printBufferByHex("send to pc success ", sendtoBuff, retSend);
 
-	INT32 retSend_OldVersion = sendto(m_socket, sendtoBuff,
-			sizeof(PC_DEV_Header) + devReply->header.DataLen, 0,
-			(struct sockaddr*) &addr_OldVersion, addrlen);
-	cout << "sendto pc_OldVersion upgrade system success ...num : "
-			<< retSend_OldVersion << endl;
+	//judge PC recved or not
+	if (retSend > 0) {
+//		INT8 recvBuff[retSend] = { 0 };
+		INT8 *recvBuff = new INT8[retSend];
+		struct timeval timeout = { 3, 0 }; //2s for waiting
+		setsockopt(m_socket, SOL_SOCKET, SO_RCVTIMEO, (const char *) &timeout,
+				sizeof(timeout));
+		INT32 retRecv = recvfrom(m_socket, recvBuff, retSend, 0,
+				(struct sockaddr*) &addr, &addrlen);
+		if (retRecv > 0) {
+			if (strcmp(sendtoBuff, recvBuff) != 0) {
+				Logger::GetInstance().Error("Recv a msg but diff !");
+			} else
+				NetTrans::printBufferByHex("Send to pc success ", recvBuff,
+						retSend);
+		} else {
+			Logger::GetInstance().Error(
+					"Did not recv a msg from PC ,will send again !");
+			INT32 retSend = sendto(m_socket, sendtoBuff,
+					sizeof(PC_DEV_Header) + devReply->header.DataLen, 0,
+					(struct sockaddr*) &addr, addrlen);
+			if (retSend > 0) {
+				Logger::GetInstance().Info("Send to PC again !");
+				memset(recvBuff, 0, retSend);
+				INT32 retRecv = recvfrom(m_socket, recvBuff, retSend, 0,
+						(struct sockaddr*) &addr, &addrlen);
+				if (retRecv > 0) {
+					if (strcmp(sendtoBuff, recvBuff) != 0) {
+						Logger::GetInstance().Error("Recv a msg but diff !");
+					} else
+						NetTrans::printBufferByHex("send to pc success 2 ",
+								recvBuff, retSend);
+				}
+			}
+
+		}
+		delete[] recvBuff;
+	} else {
+		Logger::GetInstance().Error("Can not send to PC : %s", sendtoBuff);
+	}
+//	INT32 retSend_OldVersion = sendto(m_socket, sendtoBuff,
+//			sizeof(PC_DEV_Header) + devReply->header.DataLen, 0,
+//			(struct sockaddr*) &addr_OldVersion, addrlen);
+//	cout << "sendto pc_OldVersion upgrade system success ...num : "
+//			<< retSend_OldVersion << endl;
 
 	return retSend;
 }
